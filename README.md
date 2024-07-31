@@ -13,7 +13,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [x] Check and Radio Buttons
 - [x] Tabs
 - [ ] Scroll Bars - **Partially**
-- [ ] Sliders
+- [x] Sliders
 - [ ] Spin Boxes
 - [ ] Title Bar
 - [ ] Combo Box
@@ -31,3 +31,6 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [ ] Rubber Band
 - [ ] Dock Widgets
 
+
+## TODO
+- `Style::drawComplexControl` -> CC_Slider `std::acos` is expensive so remove it - the parameters are constants from PixelMetric so it should be replaced by a precalculated value

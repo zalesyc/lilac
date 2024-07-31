@@ -35,5 +35,8 @@ class Style : public SuperStyle {
 
   protected:
     static const std::optional<const QString> getStyle();
+
+  private:
+    static const void sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptionSlider* slider, const QRect& tickmarksRect, const int sliderLen, const int interval);
 };
 } // namespace Orchid

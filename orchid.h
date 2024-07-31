@@ -33,6 +33,15 @@ enum Color {
     scrollBarSlider,
     scrollbarSliderHover,
     scrollbarSliderClick,
+    sliderHandle,
+    sliderHandleHoverCircle,
+    sliderHandleHoverCircleClick,
+    sliderHandleDisabled,
+    sliderLineBefore,
+    sliderLineAfter,
+    sliderLineBeforeDisabled,
+    sliderLineAfterDisabled,
+    sliderTickmarks,
     focusColor,
     other,
 };
@@ -43,6 +52,9 @@ bool isDarkMode(const QPalette& pal);
 
 namespace Constants {
 constexpr int btnRadius = 10;
-}
+constexpr int sliderHandleHoverCircleDiameter = 32;
+constexpr int sliderHandleCircleDiameter = 12;
+constexpr int sliderTickmarksLen = 8;
+} // namespace Constants
 
 } // namespace Orchid

@@ -76,6 +76,42 @@ QColor getColor(const QPalette& pal, const Color color) {
             const auto base = getColor(pal, Color::scrollBarSlider);
             return isDarkMode(pal) ? base.lighter(170) : base.darker(170);
         }
+        case sliderHandle:
+            return pal.color(CGroup::Normal, CRole::Accent);
+
+        case sliderHandleHoverCircle: {
+            auto base = pal.color(CGroup::Normal, CRole::Accent);
+            base.setAlpha(50);
+            return base;
+        }
+
+        case sliderHandleHoverCircleClick: {
+            auto base = pal.color(CGroup::Normal, CRole::Accent);
+            base.setAlpha(80);
+            return base;
+        }
+
+        case sliderHandleDisabled:
+            return pal.color(CGroup::Disabled, CRole::Accent);
+
+        case sliderLineBefore:
+            return pal.color(CGroup::Normal, CRole::Accent);
+
+        case sliderLineAfter: {
+            const auto base = getColor(pal, sliderLineBeforeDisabled);
+            return isDarkMode(pal) ? base.lighter(180) : base.darker(180);
+        }
+
+        case sliderLineBeforeDisabled:
+            return pal.color(CGroup::Disabled, CRole::Accent);
+
+        case sliderLineAfterDisabled: {
+            const auto base = getColor(pal, sliderLineBeforeDisabled);
+            return isDarkMode(pal) ? base.darker(110) : base.lighter(110);
+        }
+
+        case sliderTickmarks:
+            return getColor(pal, sliderLineAfter);
 
         case focusColor:
             return pal.color(CGroup::Normal, CRole::Highlight);

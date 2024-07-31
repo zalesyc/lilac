@@ -5,8 +5,8 @@
 #include <QPainterPath>
 #include <QPalette>
 #include <QStyleFactory>
+#include <QtMath>
 #include <cmath>
-
 namespace Orchid {
 
 void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget) const {
@@ -29,7 +29,166 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
 
                 return;
             }
+            break;
+        case CC_Slider:
+            if (const auto* slider = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
+                const bool stateEnabled = slider->state & QStyle::State_Enabled;
+                const bool stateHover = slider->state & QStyle::State_MouseOver;
+                const bool statePressed = slider->state & QStyle::State_Sunken;
 
+                const QRect grooveRect = subControlRect(QStyle::CC_Slider, slider, QStyle::SC_SliderGroove, widget);
+                const QRect handleHoverRect = subControlRect(QStyle::CC_Slider, slider, QStyle::SC_SliderHandle, widget);
+                QRect handleRect;
+                handleRect.setWidth(Constants::sliderHandleCircleDiameter);
+                handleRect.setHeight(Constants::sliderHandleCircleDiameter);
+                handleRect.moveCenter(handleHoverRect.center());
+
+                const int len = slider->orientation == Qt::Horizontal ? handleHoverRect.width() : handleHoverRect.height();
+
+                p->save();
+                p->setRenderHint(QPainter::Antialiasing);
+
+                if (slider->orientation == Qt::Horizontal) {
+                    if (slider->upsideDown) {
+                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineAfter : sliderLineAfterDisabled), 2));
+                    } else {
+                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineBefore : sliderLineBeforeDisabled), 2));
+                    }
+                    p->drawLine(grooveRect.left() + (len / 2),
+                                grooveRect.center().y() + 1,
+                                handleRect.center().x(),
+                                grooveRect.center().y() + 1);
+
+                    if (slider->upsideDown) {
+                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineBefore : sliderLineBeforeDisabled), 2));
+                    } else {
+                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineAfter : sliderLineAfterDisabled), 2));
+                    }
+                    p->drawLine(handleRect.center().x(),
+                                grooveRect.center().y() + 1,
+                                grooveRect.right() - (len / 2),
+                                grooveRect.center().y() + 1);
+                } else {
+                    if (slider->upsideDown) {
+                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineAfter : sliderLineAfterDisabled), 2));
+                    } else {
+                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineBefore : sliderLineBeforeDisabled), 2));
+                    }
+                    p->drawLine(grooveRect.center().x() + 1,
+                                grooveRect.top() + (len / 2),
+                                grooveRect.center().x() + 1,
+                                handleRect.center().y());
+
+                    if (slider->upsideDown) {
+                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineBefore : sliderLineBeforeDisabled), 2));
+                    } else {
+                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineAfter : sliderLineAfterDisabled), 2));
+                    }
+                    p->drawLine(grooveRect.center().x() + 1,
+                                handleRect.center().y(),
+                                grooveRect.center().x() + 1,
+                                grooveRect.bottom() - (len / 2));
+                }
+
+                if (slider->subControls & SC_SliderTickmarks) {
+                    // ------------ tickmarks
+                    const int tickOffset = this->pixelMetric(PM_SliderTickmarkOffset, slider, widget);
+                    int interval = slider->tickInterval;
+                    if (interval <= 0)
+                        interval = 10;
+                    QList<QLine> lines;
+                    if (slider->tickPosition == QSlider::TicksBothSides) {
+                        QStyleOptionSlider customOpt(*slider);
+                        QRect tickmarksRect = subControlRect(QStyle::CC_Slider, slider, QStyle::SC_SliderTickmarks, widget);
+                        // tickmarksRect is initially the bottom/right one and then gets moved to the top
+
+                        // bottom/right ticks
+                        this->sliderGetTickmarks(&lines, slider, tickmarksRect, len, interval);
+
+                        // top/left ticks
+                        if (slider->orientation == Qt::Horizontal) {
+                            tickmarksRect.moveTop(slider->rect.top());
+                        } else {
+                            tickmarksRect.moveLeft(slider->rect.left());
+                        }
+                        this->sliderGetTickmarks(&lines, slider, tickmarksRect, len, interval);
+
+                    } else {
+                        const QRect tickmarksRect = subControlRect(QStyle::CC_Slider, slider, QStyle::SC_SliderTickmarks, widget);
+                        this->sliderGetTickmarks(&lines, slider, tickmarksRect, len, interval);
+                    }
+                    p->setRenderHint(QPainter::Antialiasing, false);
+                    p->setPen(QPen(getBrush(slider->palette, sliderTickmarks), 1));
+                    p->drawLines(lines);
+                    p->setRenderHint(QPainter::Antialiasing);
+
+                    // ------------- slider
+                    const QRectF handleRectF(handleRect);
+                    // TODO: remove the std::acos func as it is expensive - the parameters are constants
+                    // from PixelMetric so it should be replaced by a precalculated value
+                    const qreal handleRadius = handleRectF.height() / 2.0;
+                    const qreal targentsAngle = qRadiansToDegrees(std::acos(handleRadius /
+                                                                            (handleRadius + tickOffset)));
+                    const qreal circleRestAngle = 360 - (2 * targentsAngle);
+                    const qreal circleBetweenTargentsAngle = 180 - (2 * targentsAngle);
+
+                    QPainterPath path;
+                    if (slider->orientation == Qt::Horizontal) {
+                        switch (slider->tickPosition) {
+                            case QSlider::TicksAbove:
+                                path.moveTo(handleRectF.center().x(), handleRectF.top() - tickOffset);
+                                path.arcTo(handleRectF, 90 - targentsAngle, -circleRestAngle);
+                                break;
+                            case QSlider::TicksBothSides:
+                                path.moveTo(handleRectF.center().x(), handleRectF.top() - tickOffset);
+                                path.arcTo(handleRectF, 90 - targentsAngle, -circleBetweenTargentsAngle);
+                                path.lineTo(handleRectF.center().x(), handleRectF.bottom() + tickOffset);
+                                path.arcTo(handleRectF, 270 - targentsAngle, -circleBetweenTargentsAngle);
+                                break;
+                            case QSlider::NoTicks:
+                            case QSlider::TicksBelow:
+                                path.moveTo(handleRectF.center().x(), handleRectF.bottom() + tickOffset);
+                                path.arcTo(handleRectF, 270 - targentsAngle, -circleRestAngle);
+                                break;
+                        }
+                    } else {
+                        switch (slider->tickPosition) {
+                            case QSlider::TicksLeft:
+                                path.moveTo(handleRectF.left() - tickOffset, handleRectF.center().y());
+                                path.arcTo(handleRectF, 180 - targentsAngle, -circleRestAngle);
+                                break;
+                            case QSlider::TicksBothSides:
+                                path.moveTo(handleRectF.left() - tickOffset, handleRectF.center().y());
+                                path.arcTo(handleRectF, 180 - targentsAngle, -circleBetweenTargentsAngle);
+                                path.lineTo(handleRectF.right() + tickOffset, handleRectF.center().y());
+                                path.arcTo(handleRectF, 360 - targentsAngle, -circleBetweenTargentsAngle);
+                                break;
+                            case QSlider::NoTicks:
+                            case QSlider::TicksRight:
+                                path.moveTo(handleRectF.right() + tickOffset, handleRectF.center().y());
+                                path.arcTo(handleRectF, 360 - targentsAngle, -circleRestAngle);
+                                break;
+                        }
+                    }
+
+                    p->setPen(Qt::NoPen);
+                    p->setBrush(getBrush(slider->palette, stateEnabled ? sliderHandle : sliderHandleDisabled));
+                    p->drawPath(path);
+                } else {
+                    p->setPen(Qt::NoPen);
+                    p->setBrush(getBrush(slider->palette, stateEnabled ? sliderHandle : sliderHandleDisabled));
+                    p->drawEllipse(handleRect);
+                }
+
+                // hover circle
+                if (stateHover) {
+                    p->setPen(Qt::NoPen);
+                    p->setBrush(getBrush(slider->palette, statePressed ? sliderHandleHoverCircleClick : sliderHandleHoverCircle));
+                    p->drawEllipse(handleHoverRect);
+                }
+                p->restore();
+            }
+            return;
             break;
         default:
             break;
@@ -365,14 +524,14 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
 }
 void Style::polish(QWidget* widget) {
     SuperStyle::polish(widget);
-    if (widget->inherits("QAbstractButton") || widget->inherits("QTabBar") || widget->inherits("QScrollBar")) {
+    if (widget->inherits("QAbstractButton") || widget->inherits("QTabBar") || widget->inherits("QScrollBar") || widget->inherits("QAbstractSlider")) {
         widget->setAttribute(Qt::WA_Hover, true);
     }
 }
 
 void Style::unpolish(QWidget* widget) {
     SuperStyle::unpolish(widget);
-    if (widget->inherits("QAbstractButton") || widget->inherits("QTabBar") || widget->inherits("QScrollBar")) {
+    if (widget->inherits("QAbstractButton") || widget->inherits("QTabBar") || widget->inherits("QScrollBar") || widget->inherits("QAbstractSlider")) {
         widget->setAttribute(Qt::WA_Hover, false);
     }
 }
@@ -395,6 +554,12 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_TabBarTabShiftHorizontal:
         case PM_TabBarTabShiftVertical:
             return 0;
+        case PM_SliderThickness:
+        case PM_SliderControlThickness:
+        case PM_SliderLength:
+            return Constants::sliderHandleHoverCircleDiameter;
+        case PM_SliderTickmarkOffset:
+            return 3;
         default:
             break;
     }
@@ -413,6 +578,101 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
 }
 
 QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex* opt, QStyle::SubControl element, const QWidget* widget) const {
+    switch (cc) {
+        case QStyle::CC_Slider:
+            if (const QStyleOptionSlider* slider = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
+                switch (element) {
+                    case SC_SliderGroove: {
+                        int thickness = this->pixelMetric(PM_SliderControlThickness, slider, widget);
+                        QRect rect(slider->rect);
+                        if (slider->orientation == Qt::Horizontal) {
+                            rect.setHeight(thickness);
+                            switch (slider->tickPosition) {
+                                case QSlider::TicksAbove:
+                                    rect.moveBottom(slider->rect.bottom());
+                                    break;
+                                case QSlider::TicksBothSides:
+                                    rect.moveCenter(slider->rect.center());
+                                    break;
+                                case QSlider::TicksBelow:
+                                case QSlider::NoTicks:
+                                    rect.moveTop(slider->rect.top());
+                                    break;
+                            }
+
+                        } else {
+                            rect.setWidth(thickness);
+                            switch (slider->tickPosition) {
+                                case QSlider::TicksLeft:
+                                    rect.moveRight(slider->rect.right());
+                                    break;
+                                case QSlider::TicksBothSides:
+                                    rect.moveCenter(slider->rect.center());
+                                    break;
+                                case QSlider::TicksRight:
+                                case QSlider::NoTicks:
+                                    rect.moveLeft(slider->rect.left());
+                                    break;
+                            }
+                        }
+                        return rect;
+                    }
+                    case SC_SliderHandle: {
+                        const QRect groove = this->subControlRect(QStyle::CC_Slider, slider, QStyle::SC_SliderGroove, widget);
+                        const int len = this->pixelMetric(PM_SliderLength, slider, widget);
+                        const int thickness = this->pixelMetric(PM_SliderControlThickness, slider, widget);
+
+                        if (slider->orientation == Qt::Horizontal) {
+                            const int pos = sliderPositionFromValue(slider->minimum, slider->maximum, slider->sliderPosition, groove.width() - len, slider->upsideDown);
+                            return QRect(groove.left() + pos, groove.top(), len, thickness);
+                        } else {
+                            const int pos = sliderPositionFromValue(slider->minimum, slider->maximum, slider->sliderPosition, groove.height() - len, slider->upsideDown);
+                            return QRect(groove.left(), groove.top() + pos, thickness, len);
+                        }
+                    }
+                    case SC_SliderTickmarks: {
+                        const int grooveTicksGap = this->pixelMetric(PM_SliderTickmarkOffset, slider, widget);
+                        const QRect grooveRect = this->subControlRect(CC_Slider, slider, SC_SliderGroove, widget);
+                        constexpr int handleRadius = Constants::sliderHandleCircleDiameter / 2;
+                        QRect rect(slider->rect);
+                        // case QSlider::TicksBothSides returns the ticks below, the above ones are handled in DrawComplexControl where they are drawn
+                        if (slider->orientation == Qt::Horizontal) {
+                            rect.setHeight(Constants::sliderTickmarksLen);
+                            switch (slider->tickPosition) {
+                                case QSlider::TicksAbove:
+                                    rect.moveBottom(grooveRect.center().y() - handleRadius - grooveTicksGap);
+                                    break;
+                                case QSlider::TicksBothSides:
+                                case QSlider::TicksBelow:
+                                case QSlider::NoTicks:
+                                    rect.moveTop(grooveRect.center().y() + handleRadius + grooveTicksGap);
+                                    break;
+                            }
+                        } else {
+                            rect.setWidth(Constants::sliderTickmarksLen);
+                            switch (slider->tickPosition) {
+                                case QSlider::TicksLeft:
+                                    rect.moveRight(grooveRect.center().x() - handleRadius - grooveTicksGap);
+                                    break;
+                                case QSlider::TicksBothSides:
+                                case QSlider::TicksRight:
+                                case QSlider::NoTicks:
+                                    rect.moveLeft(grooveRect.center().x() + handleRadius + grooveTicksGap);
+                                    break;
+                            }
+                        }
+                        return rect;
+                    }
+
+                    default:
+                        break;
+                }
+            }
+
+            break;
+        default:
+            break;
+    }
     switch (element) {
         case SC_ScrollBarGroove:
             return opt->rect;
@@ -434,4 +694,15 @@ const std::optional<const QString> Style::getStyle() { // this is not ideal, but
     return std::nullopt;
 }
 
+const void Style::sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptionSlider* slider, const QRect& tickmarksRect, const int sliderLen, const int interval) {
+    for (int val = slider->minimum; val < slider->maximum; val += interval) {
+        if (slider->orientation == Qt::Horizontal) {
+            int pos = sliderPositionFromValue(slider->minimum, slider->maximum, val, tickmarksRect.width() - sliderLen, slider->upsideDown) + (sliderLen / 2);
+            *returnList += QLine(pos, tickmarksRect.top() + 0.5, pos, tickmarksRect.bottom() + 0.5);
+        } else {
+            int pos = sliderPositionFromValue(slider->minimum, slider->maximum, val, tickmarksRect.height() - sliderLen, slider->upsideDown) + (sliderLen / 2);
+            *returnList += QLine(tickmarksRect.left() + 0.5, pos, tickmarksRect.right() + 0.5, pos);
+        }
+    }
+}
 } // namespace Orchid
