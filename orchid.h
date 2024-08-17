@@ -14,7 +14,7 @@ using SuperStyle = QCommonStyle;
 enum Color {
     /*
      * letters after elements are for their possible states, that should be handled
-     * D: disabled, H: hover, P: pressed
+     * D: disabled, H: hover, P: pressed, F: has focus
      */
     outline,
     button, // DHP
@@ -34,6 +34,8 @@ enum Color {
     sliderLineBefore,        // D
     sliderLineAfter,         // D
     sliderTickmarks,
+    lineEditBackground, // D
+    lineEditOutline,    // DF
     focusColor,
     other,
 };
@@ -42,9 +44,10 @@ struct State {
     State() {}
     State(const QStyle::State& state);
 
-    bool enabled = true;  // QStyle::State_Enabled
-    bool hovered = false; // QStyle::State_MouseOver
-    bool pressed = false; // QStyle::State_Sunken
+    bool enabled = true;   // QStyle::State_Enabled
+    bool hovered = false;  // QStyle::State_MouseOver
+    bool pressed = false;  // QStyle::State_Sunken
+    bool hasFocus = false; // QStyle::State_HasFocus
 };
 
 QColor getColor(const QPalette& pal, const Color color, const State& state = State());

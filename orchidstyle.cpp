@@ -184,9 +184,10 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                     p->drawEllipse(handleHoverRect);
                 }
                 p->restore();
+                return;
             }
-            return;
             break;
+
         default:
             break;
     }
@@ -498,6 +499,33 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->setBrush(Qt::NoBrush);
             p->setPen(QPen(getBrush(opt->palette, Color::tabCheckedOutline), 1));
             p->drawRect(opt->rect);
+            p->restore();
+            return;
+
+        case PE_PanelLineEdit:
+            if (const QStyleOptionFrame* edit = qstyleoption_cast<const QStyleOptionFrame*>(opt)) {
+                if (edit->lineWidth > 0) {
+                    p->save();
+                    p->setRenderHints(QPainter::Antialiasing);
+                    p->setPen(Qt::NoPen);
+                    p->setBrush(getBrush(edit->palette, Color::lineEditBackground, state));
+                    p->drawRoundedRect(opt->rect, Constants::btnRadius, Constants::btnRadius);
+                    p->restore();
+                    this->drawPrimitive(PE_FrameLineEdit, edit, p, widget);
+                } else {
+                    p->fillRect(edit->rect, QBrush(Qt::blue));
+                }
+
+                return;
+            }
+            break;
+
+        case PE_FrameLineEdit:
+            p->save();
+            p->setRenderHints(QPainter::Antialiasing);
+            p->setPen(QPen(getBrush(opt->palette, Color::lineEditOutline, state), 2));
+            p->setBrush(Qt::NoBrush);
+            p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), Constants::btnRadius, Constants::btnRadius);
             p->restore();
             return;
 

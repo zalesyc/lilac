@@ -99,6 +99,16 @@ QColor getColor(const QPalette& pal, const Color color, const State& state) {
         case sliderTickmarks:
             return getColor(pal, sliderLineAfter);
 
+        case lineEditBackground:
+            if (!state.enabled)
+                return pal.color(CGroup::Disabled, CRole::Button);
+            return pal.color(CGroup::Normal, CRole::Button);
+
+        case lineEditOutline:
+            if (state.hasFocus)
+                return pal.color(CGroup::Normal, CRole::Accent);
+            return getColor(pal, lineEditBackground, state);
+
         case focusColor:
             return pal.color(CGroup::Normal, CRole::Highlight);
 
@@ -110,6 +120,7 @@ State::State(const QStyle::State& state) {
     enabled = state & QStyle::State_Enabled;
     hovered = state & QStyle::State_MouseOver;
     pressed = state & QStyle::State_Sunken;
+    hasFocus = state & QStyle::State_HasFocus;
 }
 
 QBrush getBrush(const QPalette& pal, const Color color, const State& state) {
