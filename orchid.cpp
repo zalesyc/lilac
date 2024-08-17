@@ -5,44 +5,41 @@ namespace Orchid {
 using CRole = QPalette::ColorRole;
 using CGroup = QPalette::ColorGroup;
 
-QColor getColor(const QPalette& pal, const Color color) {
+QColor getColor(const QPalette& pal, const Color color, const State& state) {
     switch (color) {
         case outline: {
             const auto base = pal.color(CGroup::Normal, CRole::Base);
             return isDarkMode(pal) ? base.lighter(150) : base.darker(150);
         }
+        case button: {
+            if (!state.enabled)
+                return pal.color(CGroup::Disabled, CRole::Button);
 
-        case buttonBackground:
-            return pal.color(CGroup::Normal, CRole::Button);
-
-        case disabledButtonBackground:
-            return pal.color(CGroup::Disabled, CRole::Button);
-
-        case buttonHover: {
-            const auto base = getColor(pal, buttonBackground);
-            return isDarkMode(pal) ? base.lighter(120) : base.darker(120);
+            const auto base = pal.color(CGroup::Normal, CRole::Button);
+            if (state.pressed)
+                return isDarkMode(pal) ? base.lighter(140) : base.darker(140);
+            if (state.hovered)
+                return isDarkMode(pal) ? base.lighter(120) : base.darker(120);
+            return base;
         }
-        case buttonClicked: {
-            const auto base = getColor(pal, buttonBackground);
-            return isDarkMode(pal) ? base.lighter(140) : base.darker(140);
-        }
-        case buttonChecked:
+
+        case toggleButtonChecked:
             return pal.color(CGroup::Normal, CRole::Accent);
 
         case checkBoxCheck:
-        case disabledCheckBoxCheck:
             return pal.color(CGroup::Normal, CRole::Window);
 
         case checkBoxOutline: {
+            if (!state.enabled)
+                return pal.color(CGroup::Disabled, CRole::Text);
             const auto base = pal.color(CGroup::Normal, CRole::Text);
             return isDarkMode(pal) ? base.darker(120) : base.lighter(120);
         }
-        case checkBoxInside:
+        case checkBoxInside: {
+            if (!state.enabled)
+                return pal.color(CGroup::Disabled, CRole::Text);
             return isDarkMode(pal) ? QColor(128, 200, 148) : QColor(14, 156, 87);
-
-        case disabledCheckBoxInside:
-        case disabledCheckBoxOutline:
-            return pal.color(CGroup::Disabled, CRole::Text);
+        }
 
         case tabCheckedFill:
             return getColor(pal, Color::tabWidgetPageArea);
@@ -51,7 +48,7 @@ QColor getColor(const QPalette& pal, const Color color) {
             return getColor(pal, Color::outline);
 
         case tabUncheckedHover:
-            return getColor(pal, tabCheckedFill);
+            return getColor(pal, Color::tabCheckedFill);
 
         case tabWidgetPageArea:
             return pal.color(CGroup::Normal, CRole::Base);
@@ -66,50 +63,39 @@ QColor getColor(const QPalette& pal, const Color color) {
 
         case scrollBarSlider: {
             const auto base = getColor(pal, Color::scrollBarHoverBackground);
+            if (state.pressed)
+                return isDarkMode(pal) ? base.lighter(170) : base.darker(170);
+            if (state.hovered)
+                return isDarkMode(pal) ? base.lighter(140) : base.darker(140);
             return isDarkMode(pal) ? base.lighter(130) : base.darker(130);
         }
-        case scrollbarSliderHover: {
-            const auto base = getColor(pal, Color::scrollBarSlider);
-            return isDarkMode(pal) ? base.lighter(140) : base.darker(140);
-        }
-        case scrollbarSliderClick: {
-            const auto base = getColor(pal, Color::scrollBarSlider);
-            return isDarkMode(pal) ? base.lighter(170) : base.darker(170);
-        }
+
         case sliderHandle:
+            if (!state.enabled)
+                return pal.color(CGroup::Disabled, CRole::Accent);
             return pal.color(CGroup::Normal, CRole::Accent);
 
         case sliderHandleHoverCircle: {
             auto base = pal.color(CGroup::Normal, CRole::Accent);
+            if (state.pressed) {
+                base.setAlpha(80);
+                return base;
+            }
             base.setAlpha(50);
             return base;
         }
 
-        case sliderHandleHoverCircleClick: {
-            auto base = pal.color(CGroup::Normal, CRole::Accent);
-            base.setAlpha(80);
-            return base;
-        }
-
-        case sliderHandleDisabled:
-            return pal.color(CGroup::Disabled, CRole::Accent);
-
         case sliderLineBefore:
+            if (!state.enabled)
+                return pal.color(CGroup::Disabled, CRole::Accent);
             return pal.color(CGroup::Normal, CRole::Accent);
 
         case sliderLineAfter: {
-            const auto base = getColor(pal, sliderLineBeforeDisabled);
+            const auto base = pal.color(CGroup::Disabled, CRole::Accent);
+            if (!state.enabled)
+                return isDarkMode(pal) ? base.darker(110) : base.lighter(110);
             return isDarkMode(pal) ? base.lighter(180) : base.darker(180);
         }
-
-        case sliderLineBeforeDisabled:
-            return pal.color(CGroup::Disabled, CRole::Accent);
-
-        case sliderLineAfterDisabled: {
-            const auto base = getColor(pal, sliderLineBeforeDisabled);
-            return isDarkMode(pal) ? base.darker(110) : base.lighter(110);
-        }
-
         case sliderTickmarks:
             return getColor(pal, sliderLineAfter);
 
@@ -120,9 +106,14 @@ QColor getColor(const QPalette& pal, const Color color) {
             return QColor::fromString("red");
     }
 }
+State::State(const QStyle::State& state) {
+    enabled = state & QStyle::State_Enabled;
+    hovered = state & QStyle::State_MouseOver;
+    pressed = state & QStyle::State_Sunken;
+}
 
-QBrush getBrush(const QPalette& pal, const Color color) {
-    return QBrush(getColor(pal, color));
+QBrush getBrush(const QPalette& pal, const Color color, const State& state) {
+    return QBrush(getColor(pal, color, state));
 }
 
 bool isDarkMode(const QPalette& pal) {

@@ -10,6 +10,7 @@
 namespace Orchid {
 
 void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget) const {
+    const Orchid::State state(opt->state); // this hat to be defined as Orchid::State because just State would conflict with State from QStyle
     switch (control) {
         case CC_ScrollBar:
             if (const QStyleOptionSlider* bar = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
@@ -32,10 +33,6 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
             break;
         case CC_Slider:
             if (const auto* slider = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
-                const bool stateEnabled = slider->state & QStyle::State_Enabled;
-                const bool stateHover = slider->state & QStyle::State_MouseOver;
-                const bool statePressed = slider->state & QStyle::State_Sunken;
-
                 const QRect grooveRect = subControlRect(QStyle::CC_Slider, slider, QStyle::SC_SliderGroove, widget);
                 const QRect handleHoverRect = subControlRect(QStyle::CC_Slider, slider, QStyle::SC_SliderHandle, widget);
                 QRect handleRect;
@@ -50,9 +47,9 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
 
                 if (slider->orientation == Qt::Horizontal) {
                     if (slider->upsideDown) {
-                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineAfter : sliderLineAfterDisabled), 2));
+                        p->setPen(QPen(getBrush(slider->palette, sliderLineAfter, state), 2));
                     } else {
-                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineBefore : sliderLineBeforeDisabled), 2));
+                        p->setPen(QPen(getBrush(slider->palette, sliderLineBefore, state), 2));
                     }
                     p->drawLine(grooveRect.left() + (len / 2),
                                 grooveRect.center().y() + 1,
@@ -60,9 +57,9 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                                 grooveRect.center().y() + 1);
 
                     if (slider->upsideDown) {
-                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineBefore : sliderLineBeforeDisabled), 2));
+                        p->setPen(QPen(getBrush(slider->palette, sliderLineBefore, state), 2));
                     } else {
-                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineAfter : sliderLineAfterDisabled), 2));
+                        p->setPen(QPen(getBrush(slider->palette, sliderLineAfter, state), 2));
                     }
                     p->drawLine(handleRect.center().x(),
                                 grooveRect.center().y() + 1,
@@ -70,9 +67,9 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                                 grooveRect.center().y() + 1);
                 } else {
                     if (slider->upsideDown) {
-                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineAfter : sliderLineAfterDisabled), 2));
+                        p->setPen(QPen(getBrush(slider->palette, sliderLineAfter, state), 2));
                     } else {
-                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineBefore : sliderLineBeforeDisabled), 2));
+                        p->setPen(QPen(getBrush(slider->palette, sliderLineBefore, state), 2));
                     }
                     p->drawLine(grooveRect.center().x() + 1,
                                 grooveRect.top() + (len / 2),
@@ -80,9 +77,9 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                                 handleRect.center().y());
 
                     if (slider->upsideDown) {
-                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineBefore : sliderLineBeforeDisabled), 2));
+                        p->setPen(QPen(getBrush(slider->palette, sliderLineBefore, state), 2));
                     } else {
-                        p->setPen(QPen(getBrush(slider->palette, stateEnabled ? sliderLineAfter : sliderLineAfterDisabled), 2));
+                        p->setPen(QPen(getBrush(slider->palette, sliderLineAfter, state), 2));
                     }
                     p->drawLine(grooveRect.center().x() + 1,
                                 handleRect.center().y(),
@@ -172,18 +169,18 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                     }
 
                     p->setPen(Qt::NoPen);
-                    p->setBrush(getBrush(slider->palette, stateEnabled ? sliderHandle : sliderHandleDisabled));
+                    p->setBrush(getBrush(slider->palette, sliderHandle, state));
                     p->drawPath(path);
                 } else {
                     p->setPen(Qt::NoPen);
-                    p->setBrush(getBrush(slider->palette, stateEnabled ? sliderHandle : sliderHandleDisabled));
+                    p->setBrush(getBrush(slider->palette, sliderHandle, state));
                     p->drawEllipse(handleRect);
                 }
 
                 // hover circle
-                if (stateHover) {
+                if (state.hovered) {
                     p->setPen(Qt::NoPen);
-                    p->setBrush(getBrush(slider->palette, statePressed ? sliderHandleHoverCircleClick : sliderHandleHoverCircle));
+                    p->setBrush(getBrush(slider->palette, sliderHandleHoverCircle, state));
                     p->drawEllipse(handleHoverRect);
                 }
                 p->restore();
@@ -197,6 +194,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
 }
 
 void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget) const {
+    const Orchid::State state(opt->state);
     switch (element) {
         case CE_PushButtonBevel:
             if (const auto* btn = qstyleoption_cast<const QStyleOptionButton*>(opt)) {
@@ -390,13 +388,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
             p->setPen(Qt::NoPen);
-            if (opt->state & QStyle::State_Sunken) {
-                p->setBrush(getBrush(opt->palette, Color::scrollbarSliderClick));
-            } else if (opt->state & QStyle::State_MouseOver) {
-                p->setBrush(getBrush(opt->palette, Color::scrollbarSliderHover));
-            } else {
-                p->setBrush(getBrush(opt->palette, Color::scrollBarSlider));
-            }
+            p->setBrush(getBrush(opt->palette, Color::scrollBarSlider, state));
 
             const double rectSize = (opt->state & QStyle::State_Horizontal) ? rect.height() / 2.0 : rect.width() / 2.0;
             p->drawRoundedRect(rect, rectSize, rectSize);
@@ -412,24 +404,19 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 }
 
 void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget) const {
+    const Orchid::State state(opt->state);
     switch (element) {
         case PE_PanelButtonCommand:
             if (const auto* btn = qstyleoption_cast<const QStyleOptionButton*>(opt)) {
                 p->save();
                 p->setRenderHints(QPainter::Antialiasing);
                 p->setPen(Qt::NoPen);
-                if (btn->state & QStyle::State_On) {
-                    p->setBrush(getBrush(btn->palette, (btn->state & QStyle::State_Enabled) ? Color::buttonChecked : Color::disabledButtonBackground));
-                } else if (btn->state & QStyle::State_Sunken) {
-                    p->setBrush(getBrush(btn->palette, Color::buttonClicked));
-                } else if (btn->state & QStyle::State_MouseOver) {
-                    p->setBrush(getBrush(btn->palette, Color::buttonHover));
-                } else if (btn->features & QStyleOptionButton::Flat) {
+                if (btn->state & QStyle::State_On && state.enabled) {
+                    p->setBrush(getBrush(btn->palette, Color::toggleButtonChecked));
+                } else if (btn->features & QStyleOptionButton::Flat && !state.hovered && !state.hovered) {
                     p->setBrush(Qt::NoBrush);
-                } else if (!btn->state & QStyle::State_Enabled) {
-                    p->setBrush(getBrush(btn->palette, Color::disabledButtonBackground));
                 } else {
-                    p->setBrush(getBrush(btn->palette, Color::buttonBackground));
+                    p->setBrush(getBrush(btn->palette, Color::button, state));
                 }
 
                 p->drawRoundedRect(btn->rect, Constants::btnRadius, Constants::btnRadius);
@@ -451,11 +438,8 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
         case PE_IndicatorRadioButton: {
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
-
-            bool enabled = opt->state & State_Enabled;
-
             if (opt->state & (QStyle::State_Off)) {
-                p->setPen(QPen(getBrush(opt->palette, enabled ? Color::checkBoxOutline : Color::disabledCheckBoxOutline), 2));
+                p->setPen(QPen(getBrush(opt->palette, Color::checkBoxOutline, state), 2));
                 p->setBrush(Qt::NoBrush);
                 p->drawChord(opt->rect.adjusted(1, 1, -1, -1), 0, 16 * 360); // the angle is in 1/16th of a degree
                 p->restore();
@@ -463,13 +447,13 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             }
 
             p->setPen(Qt::NoPen);
-            p->setBrush(getBrush(opt->palette, enabled ? Color::checkBoxInside : Color::disabledCheckBoxInside));
+            p->setBrush(getBrush(opt->palette, Color::checkBoxInside, state));
             p->drawChord(opt->rect, 0, 16 * 360); // the angle is in 1/16th of a degree
 
             const int smallerSide = std::min(opt->rect.width(), opt->rect.height());
 
             if (element == QStyle::PE_IndicatorCheckBox) {
-                p->setPen(QPen(getBrush(opt->palette, enabled ? Color::checkBoxCheck : Color::disabledCheckBoxCheck), 2));
+                p->setPen(QPen(getBrush(opt->palette, Color::checkBoxCheck, state), 2));
                 p->setBrush(Qt::NoBrush);
 
                 const double widthOffset = opt->rect.width() - smallerSide;
@@ -494,7 +478,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                 const double adjustment = smallerSide * 0.35;
 
                 p->setPen(Qt::NoPen);
-                p->setBrush(getBrush(opt->palette, enabled ? Color::checkBoxCheck : Color::disabledCheckBoxCheck));
+                p->setBrush(getBrush(opt->palette, Color::checkBoxCheck, state));
                 p->drawChord(opt->rect.toRectF().adjusted(adjustment, adjustment, -adjustment, -adjustment), 0, 16 * 3600);
             }
 
