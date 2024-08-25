@@ -59,7 +59,7 @@ QBrush getBrush(const QPalette& pal, const Color color, const State& state = Sta
 bool isDarkMode(const QPalette& pal);
 
 namespace Constants {
-constexpr int btnRadius = 10;
+constexpr int btnRadius = 12;
 constexpr int sliderHandleHoverCircleDiameter = 32;
 constexpr int sliderHandleCircleDiameter = 12;
 constexpr int sliderTickmarksLen = 8;

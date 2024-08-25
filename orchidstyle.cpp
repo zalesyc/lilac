@@ -802,6 +802,23 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
     return SuperStyle::subControlRect(cc, opt, element, widget);
 }
 
+QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, const QSize& contentsSize, const QWidget* widget) const {
+    QSize original = SuperStyle::sizeFromContents(ct, opt, contentsSize, widget);
+    switch (ct) {
+        case CT_PushButton:
+        case CT_LineEdit:
+        case CT_SpinBox:
+        case CT_ComboBox: {
+            const int heigth = qMax(36, original.height());
+            original.setHeight(heigth);
+        }
+
+        default:
+            break;
+    }
+    return original;
+}
+
 const QString Style::getStyle() { // this is not ideal, but shold work - todo: make this configurable in settings
     const QStringList availibleStyles = QStyleFactory::keys();
     if (availibleStyles.contains("breeze", Qt::CaseInsensitive)) {
