@@ -187,6 +187,52 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 return;
             }
             break;
+        case CC_SpinBox:
+            if (const auto* spin = qstyleoption_cast<const QStyleOptionSpinBox*>(opt)) {
+                if (spin->frame && (spin->subControls & SC_SpinBoxFrame)) {
+                    p->save();
+                    p->setRenderHint(QPainter::Antialiasing);
+                    p->setPen(QPen(getBrush(spin->palette, Color::spinBoxOutline, state), 2));
+                    p->setBrush(getBrush(spin->palette, Color::spinBoxBackground, state));
+                    p->drawRoundedRect(spin->rect.adjusted(1, 1, -1, -1), Constants::btnRadius, Constants::btnRadius);
+                    p->restore();
+                }
+
+                if (spin->subControls & SC_SpinBoxUp) {
+                    QStyleOptionSpinBox copy(*spin);
+                    copy.subControls = SC_SpinBoxUp;
+                    if (!(spin->stepEnabled & QAbstractSpinBox::StepUpEnabled)) {
+                        copy.state &= ~State_Enabled;
+                    }
+
+                    if (spin->activeSubControls != SC_SpinBoxUp) {
+                        copy.state &= ~State_Sunken;
+                        copy.state &= ~State_MouseOver;
+                    }
+                    const auto pe = (spin->buttonSymbols == QAbstractSpinBox::PlusMinus ? PE_IndicatorSpinPlus : PE_IndicatorSpinUp);
+
+                    copy.rect = subControlRect(CC_SpinBox, spin, SC_SpinBoxUp, widget);
+                    drawPrimitive(pe, &copy, p, widget);
+                }
+
+                if (spin->subControls & SC_SpinBoxDown) {
+                    QStyleOptionSpinBox copy(*spin);
+                    copy.subControls = SC_SpinBoxDown;
+                    if (!(spin->stepEnabled & QAbstractSpinBox::StepDownEnabled)) {
+                        copy.state &= ~State_Enabled;
+                    }
+                    if (spin->activeSubControls != SC_SpinBoxDown) {
+                        copy.state &= ~State_Sunken;
+                        copy.state &= ~State_MouseOver;
+                    }
+                    const auto pe = (spin->buttonSymbols == QAbstractSpinBox::PlusMinus ? PE_IndicatorSpinMinus : PE_IndicatorSpinDown);
+
+                    copy.rect = subControlRect(CC_SpinBox, spin, SC_SpinBoxDown, widget);
+                    drawPrimitive(pe, &copy, p, widget);
+                }
+                return;
+            }
+            break;
 
         default:
             break;
@@ -512,10 +558,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                     p->drawRoundedRect(opt->rect, Constants::btnRadius, Constants::btnRadius);
                     p->restore();
                     this->drawPrimitive(PE_FrameLineEdit, edit, p, widget);
-                } else {
-                    p->fillRect(edit->rect, QBrush(Qt::blue));
                 }
-
                 return;
             }
             break;
@@ -529,6 +572,40 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->restore();
             return;
 
+        case PE_IndicatorSpinUp:
+        case PE_IndicatorSpinPlus:
+        case PE_IndicatorSpinDown:
+        case PE_IndicatorSpinMinus:
+            if (const auto* spin = qstyleoption_cast<const QStyleOptionSpinBox*>(opt)) {
+                if ((state.hovered || state.pressed) && state.enabled) {
+                    const int outlineSize = qMin(
+                        qMin(spin->rect.width(), spin->rect.height()),
+                        Constants::spinIndicatorHoverCircleSize);
+
+                    p->save();
+                    p->setRenderHints(QPainter::Antialiasing);
+                    p->setPen(Qt::NoPen);
+                    p->setBrush(getColor(spin->palette, Color::spinBoxIndicatorHoverCircle, state));
+                    p->drawEllipse(spin->rect.center() + QPoint(1, 1), outlineSize / 2, outlineSize / 2);
+                    p->restore();
+                }
+                const int indicatorSize = qMin(
+                    qMin(spin->rect.width(), spin->rect.height()),
+                    Constants::spinIndicatorSize);
+                QRect indicatorRect(0, 0, indicatorSize, indicatorSize);
+                indicatorRect.moveCenter(spin->rect.center());
+
+                p->save();
+                p->setBrush(Qt::NoBrush);
+                p->setPen(QPen(QBrush(getColor(spin->palette, Color::spinBoxIndicator, state)), 2));
+                p->drawLine(indicatorRect.left() + 1, indicatorRect.center().y() + 1, indicatorRect.right(), indicatorRect.center().y() + 1);
+                if (element == QStyle::PE_IndicatorSpinUp || element == QStyle::PE_IndicatorSpinPlus)
+                    p->drawLine(indicatorRect.center().x() + 1, indicatorRect.top() + 1, indicatorRect.center().x() + 1, indicatorRect.bottom());
+                p->restore();
+                return;
+            }
+            break;
+
         default:
             break;
     }
@@ -536,14 +613,14 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
 }
 void Style::polish(QWidget* widget) {
     SuperStyle::polish(widget);
-    if (widget->inherits("QAbstractButton") || widget->inherits("QTabBar") || widget->inherits("QScrollBar") || widget->inherits("QAbstractSlider")) {
+    if (widget->inherits("QAbstractButton") || widget->inherits("QTabBar") || widget->inherits("QScrollBar") || widget->inherits("QAbstractSlider") || widget->inherits("QAbstractSpinBox")) {
         widget->setAttribute(Qt::WA_Hover, true);
     }
 }
 
 void Style::unpolish(QWidget* widget) {
     SuperStyle::unpolish(widget);
-    if (widget->inherits("QAbstractButton") || widget->inherits("QTabBar") || widget->inherits("QScrollBar") || widget->inherits("QAbstractSlider")) {
+    if (widget->inherits("QAbstractButton") || widget->inherits("QTabBar") || widget->inherits("QScrollBar") || widget->inherits("QAbstractSlider") || widget->inherits("QAbstractSpinBox")) {
         widget->setAttribute(Qt::WA_Hover, false);
     }
 }
@@ -680,7 +757,37 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                         break;
                 }
             }
-
+            break;
+        case CC_SpinBox:
+            if (const auto spin = qstyleoption_cast<const QStyleOptionSpinBox*>(opt)) {
+                switch (element) {
+                    case SC_SpinBoxFrame:
+                        return spin->rect;
+                    case SC_SpinBoxUp: {
+                        const int width = qMin(spin->rect.width() / 3, Constants::spinBoxIndicatorWidth);
+                        QRect rect(spin->rect);
+                        rect.setWidth(width);
+                        rect.moveRight(spin->rect.right());
+                        return rect;
+                    }
+                    case SC_SpinBoxDown: {
+                        const int width = qMin(spin->rect.width() / 3, Constants::spinBoxIndicatorWidth);
+                        QRect rect(spin->rect);
+                        rect.setWidth(width);
+                        rect.moveRight(spin->rect.right() - width);
+                        return rect;
+                    }
+                    case SC_SpinBoxEditField: {
+                        const int indicatorWidth = qMin(spin->rect.width() / 3, Constants::spinBoxIndicatorWidth);
+                        QRect rect(spin->rect);
+                        rect.setLeft(spin->rect.left() + Constants::spinBoxSpacing);
+                        rect.setRight(spin->rect.right() - indicatorWidth * 2 - Constants::spinBoxSpacing);
+                        return rect;
+                    } break;
+                    default:
+                        break;
+                }
+            }
             break;
         default:
             break;
@@ -695,15 +802,13 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
     return SuperStyle::subControlRect(cc, opt, element, widget);
 }
 
-const std::optional<const QString> Style::getStyle() { // this is not ideal, but shold work - todo: make this configurable in settings
+const QString Style::getStyle() { // this is not ideal, but shold work - todo: make this configurable in settings
     const QStringList availibleStyles = QStyleFactory::keys();
     if (availibleStyles.contains("breeze", Qt::CaseInsensitive)) {
         return QString("Breeze");
     }
-    if (availibleStyles.contains("fusion", Qt::CaseInsensitive)) {
-        return QString("Fusion");
-    }
-    return std::nullopt;
+
+    return QString("Fusion");
 }
 
 const void Style::sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptionSlider* slider, const QRect& tickmarksRect, const int sliderLen, const int interval) {

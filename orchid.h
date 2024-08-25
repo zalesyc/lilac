@@ -16,8 +16,8 @@ enum Color {
      * letters after elements are for their possible states, that should be handled
      * D: disabled, H: hover, P: pressed, F: has focus
      */
-    outline,
-    button, // DHP
+    outline, // outline or separator line
+    button,  // DHP
     toggleButtonChecked,
     checkBoxInside,  // D all checkbox colors are also for radiobuttons
     checkBoxCheck,   // D
@@ -34,8 +34,12 @@ enum Color {
     sliderLineBefore,        // D
     sliderLineAfter,         // D
     sliderTickmarks,
-    lineEditBackground, // D
-    lineEditOutline,    // DF
+    lineEditBackground,          // D
+    lineEditOutline,             // DF
+    spinBoxBackground,           // D
+    spinBoxOutline,              // DF
+    spinBoxIndicator,            // DHP
+    spinBoxIndicatorHoverCircle, // HP
     focusColor,
     other,
 };
@@ -59,6 +63,10 @@ constexpr int btnRadius = 10;
 constexpr int sliderHandleHoverCircleDiameter = 32;
 constexpr int sliderHandleCircleDiameter = 12;
 constexpr int sliderTickmarksLen = 8;
+constexpr int spinBoxSpacing = btnRadius / 2;
+constexpr int spinBoxIndicatorWidth = 30;
+constexpr int spinIndicatorSize = 10;
+constexpr int spinIndicatorHoverCircleSize = 24;
 } // namespace Constants
 
 } // namespace Orchid

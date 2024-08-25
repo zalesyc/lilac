@@ -100,15 +100,38 @@ QColor getColor(const QPalette& pal, const Color color, const State& state) {
             return getColor(pal, sliderLineAfter);
 
         case lineEditBackground:
+        case spinBoxBackground:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Button);
             return pal.color(CGroup::Normal, CRole::Button);
 
         case lineEditOutline:
+        case spinBoxOutline:
             if (state.hasFocus)
                 return pal.color(CGroup::Normal, CRole::Accent);
             return getColor(pal, lineEditBackground, state);
 
+        case spinBoxIndicator: {
+            if (!state.enabled)
+                return pal.color(CGroup::Disabled, CRole::Text);
+            const QColor base = pal.color(CGroup::Normal, CRole::Text);
+            if (state.pressed)
+                return isDarkMode(pal) ? base.lighter(150) : base.darker(150);
+            if (state.hovered)
+                return isDarkMode(pal) ? base.lighter(130) : base.darker(130);
+            return base;
+        }
+        case spinBoxIndicatorHoverCircle: {
+            QColor base = pal.color(CGroup::Normal, CRole::Text);
+            if (state.pressed) {
+                base.setAlpha(100);
+                return base;
+            }
+            if (state.hovered) {
+                base.setAlpha(40);
+                return base;
+            }
+        }
         case focusColor:
             return pal.color(CGroup::Normal, CRole::Highlight);
 
