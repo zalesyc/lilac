@@ -178,7 +178,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 }
 
                 // hover circle
-                if (state.hovered) {
+                if (state.hovered && state.enabled) {
                     p->setPen(Qt::NoPen);
                     p->setBrush(getBrush(slider->palette, sliderHandleHoverCircle, state));
                     p->drawEllipse(handleHoverRect);
