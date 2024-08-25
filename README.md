@@ -13,7 +13,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [x] Tabs
 - [ ] Scroll Bars - **Partially**
 - [x] Sliders
-- [ ] Spin Boxes
+- [x] Spin Boxes
 - [ ] Title Bar
 - [ ] Combo Box
 - [ ] Group Boxes
@@ -32,6 +32,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 
 Widgets not mentioned in the docs
 - [ ] Dial
+- [x] LineEdits 
 
 ## TODO
 - `Style::drawComplexControl` -> CC_Slider `std::acos` is expensive so remove it - the parameters are constants from PixelMetric so it should be replaced by a precalculated value
