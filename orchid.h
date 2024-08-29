@@ -3,6 +3,7 @@
 #include <QCommonStyle>
 #include <QPainter>
 #include <QPair>
+#include <QPen>
 #include <QProxyStyle>
 #include <QStyle>
 #include <QStyleOption>
@@ -54,8 +55,11 @@ struct State {
     bool hasFocus = false; // QStyle::State_HasFocus
 };
 
-QColor getColor(const QPalette& pal, const Color color, const State& state = State());
-QBrush getBrush(const QPalette& pal, const Color color, const State& state = State());
+const QColor getColor(const QPalette& pal, const Color color, const State& state = State());
+const QBrush getBrush(const QPalette& pal, const Color color, const State& state = State());
+const QPen getPen(const QPalette& pal, const Color color, const State& state, const qreal penWidth = 1); // this needs to have an overload due to
+const QPen getPen(const QPalette& pal, const Color color, const qreal penWidth = 1);                     // the way optional parameters are handled
+
 bool isDarkMode(const QPalette& pal);
 
 namespace Constants {

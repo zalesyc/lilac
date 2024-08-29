@@ -47,9 +47,9 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
 
                 if (slider->orientation == Qt::Horizontal) {
                     if (slider->upsideDown) {
-                        p->setPen(QPen(getBrush(slider->palette, sliderLineAfter, state), 2));
+                        p->setPen(getPen(slider->palette, sliderLineAfter, state, 2));
                     } else {
-                        p->setPen(QPen(getBrush(slider->palette, sliderLineBefore, state), 2));
+                        p->setPen(getPen(slider->palette, sliderLineBefore, state, 2));
                     }
                     p->drawLine(grooveRect.left() + (len / 2),
                                 grooveRect.center().y() + 1,
@@ -57,9 +57,9 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                                 grooveRect.center().y() + 1);
 
                     if (slider->upsideDown) {
-                        p->setPen(QPen(getBrush(slider->palette, sliderLineBefore, state), 2));
+                        p->setPen(getPen(slider->palette, sliderLineBefore, state, 2));
                     } else {
-                        p->setPen(QPen(getBrush(slider->palette, sliderLineAfter, state), 2));
+                        p->setPen(getPen(slider->palette, sliderLineAfter, state, 2));
                     }
                     p->drawLine(handleRect.center().x(),
                                 grooveRect.center().y() + 1,
@@ -67,9 +67,9 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                                 grooveRect.center().y() + 1);
                 } else {
                     if (slider->upsideDown) {
-                        p->setPen(QPen(getBrush(slider->palette, sliderLineAfter, state), 2));
+                        p->setPen(getPen(slider->palette, sliderLineAfter, state, 2));
                     } else {
-                        p->setPen(QPen(getBrush(slider->palette, sliderLineBefore, state), 2));
+                        p->setPen(getPen(slider->palette, sliderLineBefore, state, 2));
                     }
                     p->drawLine(grooveRect.center().x() + 1,
                                 grooveRect.top() + (len / 2),
@@ -77,9 +77,9 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                                 handleRect.center().y());
 
                     if (slider->upsideDown) {
-                        p->setPen(QPen(getBrush(slider->palette, sliderLineBefore, state), 2));
+                        p->setPen(getPen(slider->palette, sliderLineBefore, state, 2));
                     } else {
-                        p->setPen(QPen(getBrush(slider->palette, sliderLineAfter, state), 2));
+                        p->setPen(getPen(slider->palette, sliderLineAfter, state, 2));
                     }
                     p->drawLine(grooveRect.center().x() + 1,
                                 handleRect.center().y(),
@@ -115,7 +115,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                         this->sliderGetTickmarks(&lines, slider, tickmarksRect, len, interval);
                     }
                     p->setRenderHint(QPainter::Antialiasing, false);
-                    p->setPen(QPen(getBrush(slider->palette, sliderTickmarks), 1));
+                    p->setPen(getPen(slider->palette, sliderTickmarks, 1));
                     p->drawLines(lines);
                     p->setRenderHint(QPainter::Antialiasing);
 
@@ -192,7 +192,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 if (spin->frame && (spin->subControls & SC_SpinBoxFrame)) {
                     p->save();
                     p->setRenderHint(QPainter::Antialiasing);
-                    p->setPen(QPen(getBrush(spin->palette, Color::spinBoxOutline, state), 2));
+                    p->setPen(getPen(spin->palette, Color::spinBoxOutline, state, 2));
                     p->setBrush(getBrush(spin->palette, Color::spinBoxBackground, state));
                     p->drawRoundedRect(spin->rect.adjusted(1, 1, -1, -1), Constants::btnRadius, Constants::btnRadius);
                     p->restore();
@@ -383,7 +383,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 p->setRenderHints(QPainter::Antialiasing);
 
                 if (tab->state & (QStyle::State_Selected | QStyle::State_HasFocus)) {
-                    p->setPen(QPen(getBrush(tab->palette, Color::tabCheckedOutline), 1));
+                    p->setPen(getPen(tab->palette, Color::tabCheckedOutline, 1));
                     p->setBrush(getBrush(tab->palette, Color::tabCheckedFill));
                     p->drawPath(path);
                 } else {
@@ -401,7 +401,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             const QRect rect = opt->rect;
 
             p->save();
-            p->setPen(QPen(getBrush(opt->palette, Color::scrollBarHoverOutline), 1));
+            p->setPen(getPen(opt->palette, Color::scrollBarHoverOutline, 1));
             p->setBrush(Qt::NoBrush);
             p->fillRect(rect, getBrush(opt->palette, Color::scrollBarHoverBackground));
 
@@ -476,7 +476,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
             p->setBrush(Qt::NoBrush);
-            p->setPen(QPen(getBrush(opt->palette, Color::focusColor), 2));
+            p->setPen(getPen(opt->palette, Color::focusColor, 2));
             p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), Constants::btnRadius, Constants::btnRadius);
             p->restore();
             return;
@@ -486,7 +486,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
             if (opt->state & (QStyle::State_Off)) {
-                p->setPen(QPen(getBrush(opt->palette, Color::checkBoxOutline, state), 2));
+                p->setPen(getPen(opt->palette, Color::checkBoxOutline, state, 2));
                 p->setBrush(Qt::NoBrush);
                 p->drawChord(opt->rect.adjusted(1, 1, -1, -1), 0, 16 * 360); // the angle is in 1/16th of a degree
                 p->restore();
@@ -500,7 +500,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             const int smallerSide = std::min(opt->rect.width(), opt->rect.height());
 
             if (element == QStyle::PE_IndicatorCheckBox) {
-                p->setPen(QPen(getBrush(opt->palette, Color::checkBoxCheck, state), 2));
+                p->setPen(getPen(opt->palette, Color::checkBoxCheck, state, 2));
                 p->setBrush(Qt::NoBrush);
 
                 const double widthOffset = opt->rect.width() - smallerSide;
@@ -535,7 +535,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
         case PE_FrameTabWidget:
             p->save();
             p->setBrush(getBrush(opt->palette, Color::tabWidgetPageArea));
-            p->setPen(QPen(getBrush(opt->palette, Color::tabCheckedOutline), 1));
+            p->setPen(getPen(opt->palette, Color::tabCheckedOutline, 1));
             p->drawRect(opt->rect.adjusted(1, 1, -1, -1));
             p->restore();
             return;
@@ -543,7 +543,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
         case PE_FrameTabBarBase:
             p->save();
             p->setBrush(Qt::NoBrush);
-            p->setPen(QPen(getBrush(opt->palette, Color::tabCheckedOutline), 1));
+            p->setPen(getPen(opt->palette, Color::tabCheckedOutline, 1));
             p->drawRect(opt->rect);
             p->restore();
             return;
@@ -566,7 +566,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
         case PE_FrameLineEdit:
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
-            p->setPen(QPen(getBrush(opt->palette, Color::lineEditOutline, state), 2));
+            p->setPen(getPen(opt->palette, Color::lineEditOutline, state, 2));
             p->setBrush(Qt::NoBrush);
             p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), Constants::btnRadius, Constants::btnRadius);
             p->restore();
@@ -597,7 +597,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
 
                 p->save();
                 p->setBrush(Qt::NoBrush);
-                p->setPen(QPen(QBrush(getColor(spin->palette, Color::spinBoxIndicator, state)), 2));
+                p->setPen(getPen(spin->palette, Color::spinBoxIndicator, state, 2));
                 p->drawLine(indicatorRect.left() + 1, indicatorRect.center().y() + 1, indicatorRect.right(), indicatorRect.center().y() + 1);
                 if (element == QStyle::PE_IndicatorSpinUp || element == QStyle::PE_IndicatorSpinPlus)
                     p->drawLine(indicatorRect.center().x() + 1, indicatorRect.top() + 1, indicatorRect.center().x() + 1, indicatorRect.bottom());
