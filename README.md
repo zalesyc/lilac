@@ -1,9 +1,10 @@
 # Orchid
 
 
-## Docs
+## Docs and useful
 - https://doc.qt.io/qt-6/style-reference.html
 - https://doc.qt.io/qt-6/qstyle.html
+- https://www.olivierclero.com/code/custom-qstyle/
 
 
 ## Implemented Widgets

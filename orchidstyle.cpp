@@ -267,6 +267,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 return;
             }
             break;
+
         case CE_TabBarTabShape:
             if (const auto* tab = qstyleoption_cast<const QStyleOptionTab*>(opt)) {
                 if (!(tab->state & (QStyle::State_Selected | QStyle::State_HasFocus | QStyle::State_Sunken | QStyle::State_MouseOver))) {
@@ -483,30 +484,43 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
 
         case PE_IndicatorCheckBox:
         case PE_IndicatorRadioButton: {
+            const int indicatorSize = qMin(Constants::checkBoxSize, qMin(opt->rect.height() - 1, opt->rect.width()) - 1);
+            QRect indicatorRect = QRect(0, 0, indicatorSize, indicatorSize);
+            indicatorRect.moveCenter(opt->rect.center());
+
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
+
+            if (state.hovered && state.enabled) {
+                const int size = qMin(Constants::checkBoxHoverCircleSize, qMin(opt->rect.height(), opt->rect.width()));
+                QRect hoverRect(0, 0, size, size);
+                hoverRect.moveCenter(opt->rect.center());
+                p->setPen(getPen(opt->palette, Color::checkBoxHoverCircle, state, indicatorRect.left() - hoverRect.left()));
+                p->setBrush(Qt::NoBrush);
+                const int adjustment = ((indicatorRect.left() - hoverRect.left()) / 2) + 1;
+                p->drawEllipse(hoverRect.adjusted(adjustment, adjustment, -adjustment, -adjustment));
+            }
+
             if (opt->state & (QStyle::State_Off)) {
                 p->setPen(getPen(opt->palette, Color::checkBoxOutline, state, 2));
                 p->setBrush(Qt::NoBrush);
-                p->drawChord(opt->rect.adjusted(1, 1, -1, -1), 0, 16 * 360); // the angle is in 1/16th of a degree
+                p->drawEllipse(indicatorRect.adjusted(1, 1, -1, -1));
                 p->restore();
                 return;
             }
 
             p->setPen(Qt::NoPen);
             p->setBrush(getBrush(opt->palette, Color::checkBoxInside, state));
-            p->drawChord(opt->rect, 0, 16 * 360); // the angle is in 1/16th of a degree
-
-            const int smallerSide = std::min(opt->rect.width(), opt->rect.height());
+            p->drawEllipse(indicatorRect);
 
             if (element == QStyle::PE_IndicatorCheckBox) {
                 p->setPen(getPen(opt->palette, Color::checkBoxCheck, state, 2));
                 p->setBrush(Qt::NoBrush);
 
-                const double widthOffset = opt->rect.width() - smallerSide;
+                const double widthOffset = opt->rect.width() - indicatorSize;
 
                 if (opt->state & QStyle::State_NoChange) {
-                    const double adjustment = smallerSide / 4.0f;
+                    const double adjustment = indicatorSize / 4.0f;
                     const double y = opt->rect.center().y() + 1;
 
                     p->drawLine(QLineF(opt->rect.left() + widthOffset + adjustment + 1, y, opt->rect.right() - widthOffset - adjustment, y));
@@ -514,19 +528,19 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                 } else {
                     const auto center = opt->rect.center();
                     const QPointF poinsts[3] = {
-                        QPointF(center.x() - smallerSide / 4.0f, center.y()),
-                        QPointF(center.x() - smallerSide / 10.0f, center.y() + smallerSide / 5.0f),
-                        QPointF(center.x() + smallerSide / 4.0f, center.y() - smallerSide / 7.5f),
+                        QPointF(center.x() - indicatorSize / 4.0f, center.y()),
+                        QPointF(center.x() - indicatorSize / 10.0f, center.y() + indicatorSize / 5.0f),
+                        QPointF(center.x() + indicatorSize / 4.0f, center.y() - indicatorSize / 7.5f),
                     };
 
                     p->drawPolyline(poinsts, 3);
                 }
             } else {
-                const double adjustment = smallerSide * 0.35;
+                const double adjustment = indicatorSize * 0.35;
 
                 p->setPen(Qt::NoPen);
                 p->setBrush(getBrush(opt->palette, Color::checkBoxCheck, state));
-                p->drawChord(opt->rect.toRectF().adjusted(adjustment, adjustment, -adjustment, -adjustment), 0, 16 * 3600);
+                p->drawEllipse(indicatorRect.toRectF().adjusted(adjustment, adjustment, -adjustment, -adjustment));
             }
 
             p->restore();
@@ -655,11 +669,29 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
     return SuperStyle::pixelMetric(m, opt, widget);
 }
 
+int Style::styleHint(QStyle::StyleHint hint, const QStyleOption* option, const QWidget* widget, QStyleHintReturn* returnData) const {
+    switch (hint) {
+        case SH_UnderlineShortcut:
+            return false;
+        default:
+            break;
+    }
+    return SuperStyle::styleHint(hint, option, widget, returnData);
+}
+
 QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt, const QWidget* widget) const {
     switch (element) {
         case SE_PushButtonFocusRect:
             return opt->rect;
             break;
+        case SE_RadioButtonIndicator:
+        case SE_CheckBoxIndicator: {
+            const int size = qMin(Constants::checkBoxHoverCircleSize, qMin(opt->rect.width(), opt->rect.height()));
+            QRect rect(0, 0, size, size);
+            rect.moveTopLeft(opt->rect.topLeft());
+            return rect;
+        }
+
         default:
             break;
     }
@@ -812,6 +844,10 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
             const int heigth = qMax(36, original.height());
             original.setHeight(heigth);
         }
+        case CT_RadioButton:
+        case CT_CheckBox:
+            original.setHeight(qMax(Constants::checkBoxHoverCircleSize, original.height()));
+            original.setWidth(original.width() + (Constants::checkBoxHoverCircleSize - Constants::checkBoxSize));
 
         default:
             break;
@@ -839,4 +875,5 @@ const void Style::sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptio
         }
     }
 }
+
 } // namespace Orchid

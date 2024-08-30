@@ -20,9 +20,10 @@ enum Color {
     outline, // outline or separator line
     button,  // DHP
     toggleButtonChecked,
-    checkBoxInside,  // D all checkbox colors are also for radiobuttons
-    checkBoxCheck,   // D
-    checkBoxOutline, // D
+    checkBoxInside,      // D all checkbox colors are also for radiobuttons
+    checkBoxCheck,       // D
+    checkBoxOutline,     // D
+    checkBoxHoverCircle, // HP
     tabCheckedOutline,
     tabCheckedFill,
     tabUncheckedHover,
@@ -41,8 +42,7 @@ enum Color {
     spinBoxOutline,              // DF
     spinBoxIndicator,            // DHP
     spinBoxIndicatorHoverCircle, // HP
-    focusColor,
-    other,
+    focusColor
 };
 
 struct State {
@@ -64,6 +64,9 @@ bool isDarkMode(const QPalette& pal);
 
 namespace Constants {
 constexpr int btnRadius = 12;
+constexpr int layoutSpacing = 6;
+constexpr int checkBoxSize = 20;
+constexpr int checkBoxHoverCircleSize = 34;
 constexpr int sliderHandleHoverCircleDiameter = 32;
 constexpr int sliderHandleCircleDiameter = 12;
 constexpr int sliderTickmarksLen = 8;

@@ -1,4 +1,5 @@
 #include "orchid.h"
+#include <QFont>
 
 namespace Orchid {
 
@@ -9,7 +10,7 @@ using CRole = QPalette::ColorRole;
 using CGroup = QPalette::ColorGroup;
 
 const QColor getColor(const QPalette& pal, const Color color, const State& state) {
-    return getColorHardcoded(pal, color, state);
+    return getColorFromPallete(pal, color, state);
 }
 
 const QBrush getBrush(const QPalette& pal, const Color color, const State& state) {
@@ -23,40 +24,37 @@ const QPen getPen(const QPalette& pal, const Color color, const qreal penWidth) 
     return QPen(QBrush(getColor(pal, color)), penWidth);
 }
 
-static QColor getColorHardcoded(const QPalette& pal, const Color color, const State& state) {
-    switch (color) {
-        case outline:
-            return QColor(58, 58, 58);
-        case button: {
-            if (!state.enabled)
-                return QColor(143, 143, 143);
-            if (state.pressed)
-                return QColor(84, 84, 84);
-            if (state.hovered)
-                return QColor(60, 60, 60);
-            return QColor(42, 42, 42);
-        }
-        case toggleButtonChecked:
-            return pal.color(CGroup::Normal, CRole::Accent);
+// static QColor getColorHardcoded(const QPalette& pal, const Color color, const State& state) {
+//     switch (color) {
+//         case outline:
+//             return QColor(58, 58, 58);
+//         case button: {
+//             if (!state.enabled)
+//                 return QColor(143, 143, 143);
+//             if (state.pressed)
+//                 return QColor(84, 84, 84);
+//             if (state.hovered)
+//                 return QColor(60, 60, 60);
+//             return QColor(42, 42, 42);
+//         }
+//         case toggleButtonChecked:
+//             return pal.color(CGroup::Normal, CRole::Accent);
 
-        case checkBoxCheck:
-            return pal.color(CGroup::Normal, CRole::Window);
+//         case checkBoxCheck:
+//             return pal.color(CGroup::Normal, CRole::Window);
 
-        case checkBoxOutline: {
-            if (!state.enabled)
-                return pal.color(CGroup::Disabled, CRole::Text);
-            const auto base = pal.color(CGroup::Normal, CRole::Text);
-            return isDarkMode(pal) ? base.darker(120) : base.lighter(120);
-        }
+//         case checkBoxOutline: {
+//             return QColor(188, 188, 188);
+//         }
 
-        case checkBoxInside:
-            return QColor(129, 201, 149);
+//         case checkBoxInside:
+//             return QColor(129, 201, 149);
 
-        default:
-            break;
-    }
-    return getColorFromPallete(pal, color, state); // TODO: remove this fallback and make This function the fallback
-}
+//         default:
+//             break;
+//     }
+//     return getColorFromPallete(pal, color, state); // TODO: remove this fallback and make This function the fallback
+// }
 
 static QColor getColorFromPallete(const QPalette& pal, const Color color, const State& state) {
     switch (color) {
@@ -92,6 +90,17 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Text);
             return isDarkMode(pal) ? QColor(129, 201, 149) : QColor(14, 156, 87);
+        }
+        case checkBoxHoverCircle: {
+            QColor base = getColor(pal, Color::checkBoxInside, state);
+
+            if (state.pressed) {
+                base.setAlpha(40);
+                return base;
+            }
+
+            base.setAlpha(20);
+            return base;
         }
 
         case tabCheckedFill:
@@ -184,12 +193,12 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
                 base.setAlpha(40);
                 return base;
             }
+            return base;
         }
         case focusColor:
             return pal.color(CGroup::Normal, CRole::Highlight);
-
         default:
-            return QColor::fromString("red");
+            return QColor(Qt::red);
     }
 }
 
