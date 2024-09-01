@@ -44,6 +44,11 @@ class Style : public SuperStyle {
     static const QString getStyle();
 
   private:
+    struct MenuItemText {
+        QString label = "";
+        QString shortcut = "";
+    };
     static const void sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptionSlider* slider, const QRect& tickmarksRect, const int sliderLen, const int interval);
+    static const MenuItemText menuItemGetText(const QStyleOptionMenuItem* menu);
 };
 } // namespace Orchid

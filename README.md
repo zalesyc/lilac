@@ -22,7 +22,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [ ] Progress Bar
 - [ ] Tool Buttons
 - [ ] Toolbars
-- [ ] Menus
+- [x] Menus
 - [ ] Menu Bar
 - [ ] Item View Headers
 - [ ] Tree Branch Indicators
@@ -37,3 +37,4 @@ Widgets not mentioned in the docs
 
 ## TODO
 - `Style::drawComplexControl` -> CC_Slider `std::acos` is expensive so remove it - the parameters are constants from PixelMetric so it should be replaced by a precalculated value
+- look at `PE_IndicatorArrow*` -> there is commented out implementation that has some bugs

@@ -58,6 +58,7 @@ const QPen getPen(const QPalette& pal, const Color color, const qreal penWidth) 
 
 static QColor getColorFromPallete(const QPalette& pal, const Color color, const State& state) {
     switch (color) {
+        case menuSeparator:
         case outline: {
             const auto base = pal.color(CGroup::Normal, CRole::Base);
             return isDarkMode(pal) ? base.lighter(150) : base.darker(150);
@@ -195,11 +196,35 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             }
             return base;
         }
+        case menuText:
+            if (!state.enabled)
+                return pal.color(CGroup::Disabled, CRole::Text);
+            return pal.color(CGroup::Normal, CRole::Text);
+        case menuShortcutText:
+            if (isDarkMode(pal))
+                return getColor(pal, Color::menuText, state).darker(130);
+            return getColor(pal, Color::menuText, state).lighter(130);
+
+        case menuBackground: {
+            QColor base = pal.color(CGroup::Normal, CRole::AlternateBase);
+            base.setAlpha(Constants::menuTransparency);
+            return base;
+        }
+
+        case menuItemHoverBackground:
+            if (isDarkMode(pal))
+                return QColor(255, 255, 255, 26);
+            return QColor(0, 0, 0, 26);
+
+        case indicatorArrow:
+            return pal.color(state.enabled ? CGroup::Normal : CGroup::Disabled, CRole::Text);
+
         case focusColor:
             return pal.color(CGroup::Normal, CRole::Highlight);
         default:
-            return QColor(Qt::red);
+            break;
     }
+    return QColor(Qt::red);
 }
 
 State::State(const QStyle::State& state) {

@@ -1,6 +1,8 @@
 #include "orchidstyle.h"
 #include "orchid.h"
 
+#include <QGraphicsDropShadowEffect>
+#include <QMenu>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPalette>
@@ -241,7 +243,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
 }
 
 void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget) const {
-    const Orchid::State state(opt->state);
+    Orchid::State state(opt->state);
     switch (element) {
         case CE_PushButtonBevel:
             if (const auto* btn = qstyleoption_cast<const QStyleOptionButton*>(opt)) {
@@ -398,6 +400,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             }
             break;
 
+        case CE_ScrollBarSubPage:
         case CE_ScrollBarAddPage: {
             const QRect rect = opt->rect;
 
@@ -418,10 +421,6 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
             return;
         }
-
-        case CE_ScrollBarSubPage:
-            drawControl(QStyle::CE_ScrollBarAddPage, opt, p, widget);
-            return;
 
         case CE_ScrollBarSlider: {
             drawControl(QStyle::CE_ScrollBarAddPage, opt, p, widget);
@@ -444,6 +443,155 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
             return;
         }
+        case CE_MenuItem:
+            if (const auto* menu = qstyleoption_cast<const QStyleOptionMenuItem*>(opt)) {
+                switch (menu->menuItemType) {
+                    case QStyleOptionMenuItem::Normal:
+                    case QStyleOptionMenuItem::DefaultItem:
+                    case QStyleOptionMenuItem::SubMenu: {
+                        state.hovered = menu->state & State_Selected;
+
+                        const QRect contentsRect = menu->rect.adjusted(Constants::menuItemVerticalExternalPadding + Constants::menuItemVerticalInternalPadding,
+                                                                       0,
+                                                                       -(Constants::menuItemVerticalExternalPadding + Constants::menuItemVerticalInternalPadding),
+                                                                       0);
+
+                        // hover rect
+                        if (state.hovered && state.enabled) {
+                            const QRect hoverRect = menu->rect.adjusted(Constants::menuItemVerticalExternalPadding,
+                                                                        0,
+                                                                        -(Constants::menuItemVerticalExternalPadding),
+                                                                        0);
+                            p->save();
+                            p->setRenderHints(QPainter::Antialiasing);
+                            p->setPen(Qt::NoPen);
+                            p->setBrush(getBrush(menu->palette, Color::menuItemHoverBackground, state));
+                            p->drawRoundedRect(hoverRect, Constants::menuItemBorderRadius, Constants::menuItemBorderRadius);
+                            p->restore();
+                        }
+
+                        // checks
+                        int checkSize = 0;
+                        if (menu->menuHasCheckableItems || menu->checkType != QStyleOptionMenuItem::NotCheckable)
+                            checkSize = qMin(Constants::checkBoxSize, contentsRect.height());
+
+                        if (menu->checkType != QStyleOptionMenuItem::NotCheckable) {
+                            QStyleOption checkOpt(*menu);
+                            checkOpt.rect = QRect(contentsRect.left(), contentsRect.top(), checkSize, contentsRect.height());
+                            if (menu->checked) {
+                                checkOpt.state |= QStyle::State_On;
+                                checkOpt.state &= ~QStyle::State_Off;
+                            } else {
+                                checkOpt.state |= QStyle::State_Off;
+                                checkOpt.state &= ~QStyle::State_On;
+                            }
+                            this->drawPrimitive(menu->checkType == QStyleOptionMenuItem::Exclusive ? QStyle::PE_IndicatorRadioButton :
+                                                                                                     QStyle::PE_IndicatorCheckBox,
+                                                &checkOpt, p, nullptr);
+                        }
+
+                        // icon
+                        if (!menu->icon.isNull()) {
+                            const QRect iconRect(checkSize > 0 ? contentsRect.left() + checkSize + Constants::menuHorizontalSpacing : contentsRect.left(),
+                                                 contentsRect.top(),
+                                                 menu->maxIconWidth,
+                                                 contentsRect.height());
+
+                            QIcon::Mode iconMode = QIcon::Normal;
+                            if (!state.enabled) {
+                                iconMode = QIcon::Disabled;
+                            } else if (state.hovered) {
+                                iconMode = QIcon::Selected;
+                            }
+
+                            menu->icon.paint(p, iconRect, Qt::AlignCenter, iconMode);
+                        }
+
+                        // label
+                        if (!menu->text.isEmpty()) {
+                            int textFlags = Qt::TextShowMnemonic;
+                            if (!styleHint(SH_UnderlineShortcut, menu, widget))
+                                textFlags |= Qt::TextHideMnemonic;
+
+                            const MenuItemText text = menuItemGetText(menu);
+
+                            p->save();
+                            p->setFont(menu->font);
+                            if (!text.label.isEmpty()) {
+                                const int rightElementSize = menu->menuItemType == QStyleOptionMenuItem::SubMenu ?
+                                                                 (text.shortcut.isEmpty() ?
+                                                                      qMax(menu->reservedShortcutWidth, Constants::menuSubMenuArrowSize) :
+                                                                      (menu->reservedShortcutWidth + Constants::menuSubMenuArrowSize + Constants::menuHorizontalSpacing)) :
+                                                                 menu->reservedShortcutWidth;
+                                int leftElementsSize = (menu->maxIconWidth > 0 ? menu->maxIconWidth + Constants::menuHorizontalSpacing : 0) +
+                                                       (checkSize > 0 ? checkSize + Constants::menuHorizontalSpacing : 0);
+
+                                const QRect labelRect(QPoint(contentsRect.left() + leftElementsSize, contentsRect.top()), QPoint(contentsRect.right() - rightElementSize, contentsRect.bottom()));
+
+                                p->setPen(getPen(menu->palette, Color::menuText, state));
+                                p->drawText(labelRect, textFlags | Qt::AlignLeft | Qt::AlignVCenter, text.label);
+                            }
+
+                            // shortcut
+                            if (!text.shortcut.isEmpty()) {
+                                QRect shortcutRect(0, contentsRect.top(), menu->reservedShortcutWidth, contentsRect.height());
+                                if (menu->menuItemType == QStyleOptionMenuItem::SubMenu) {
+                                    shortcutRect.moveRight(contentsRect.right() - Constants::menuSubMenuArrowSize - Constants::menuHorizontalSpacing);
+                                } else {
+                                    shortcutRect.moveRight(contentsRect.right());
+                                }
+                                p->setPen(getPen(menu->palette, Color::menuShortcutText, state));
+                                p->drawText(shortcutRect, textFlags | Qt::AlignRight | Qt::AlignVCenter, text.shortcut);
+                            }
+                            p->restore();
+                        }
+
+                        // sub menu arrow
+                        if (menu->menuItemType == QStyleOptionMenuItem::SubMenu) {
+                            QStyleOption arrowOpt(*menu);
+                            arrowOpt.rect = QRect(0, contentsRect.top(), Constants::menuSubMenuArrowSize, contentsRect.height());
+                            arrowOpt.rect.moveRight(contentsRect.right());
+                            drawPrimitive(QStyle::PE_IndicatorArrowRight, &arrowOpt, p, widget);
+                        }
+                        return;
+                    }
+                    case QStyleOptionMenuItem::Separator: {
+                        p->save();
+                        const MenuItemText text = menuItemGetText(menu);
+
+                        QRect lineRect;
+                        if (text.label.isEmpty()) {
+                            lineRect = menu->rect.adjusted(Constants::menuItemVerticalExternalPadding, 0, -Constants::menuItemVerticalExternalPadding, 0);
+                        } else {
+                            int textFlags = Qt::TextShowMnemonic;
+                            if (!styleHint(SH_UnderlineShortcut, menu, widget))
+                                textFlags |= Qt::TextHideMnemonic;
+
+                            const QSize labelSize = menu->fontMetrics.size((Qt::TextShowMnemonic | Qt::AlignLeft | Qt::AlignVCenter), text.label);
+                            const QRect labelRect(menu->rect.left() + Constants::menuItemVerticalExternalPadding, menu->rect.top(), labelSize.width(), menu->rect.height());
+                            p->setPen(getPen(menu->palette, Color::menuText));
+                            p->setFont(menu->font);
+                            p->drawText(labelRect, (textFlags | Qt::AlignLeft | Qt::AlignVCenter), menu->text);
+
+                            lineRect = QRect(QPoint(labelRect.right() + Constants::menuHorizontalSpacing, menu->rect.top()),
+                                             QPoint(menu->rect.right() - Constants::menuItemVerticalExternalPadding, menu->rect.bottom()));
+                        }
+
+                        p->setPen(getPen(menu->palette, Color::menuSeparator, state));
+                        p->drawLine(
+                            lineRect.left(),
+                            lineRect.center().y(),
+                            lineRect.right(),
+                            lineRect.center().y());
+                        p->restore();
+                        return;
+                    }
+
+                    default:
+                        break;
+                }
+            }
+            break;
 
         default:
             break;
@@ -619,6 +767,71 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                 return;
             }
             break;
+        case PE_PanelMenu: {
+            p->save();
+            p->setRenderHints(QPainter::Antialiasing);
+            p->setPen(Qt::NoPen);
+            p->setBrush(getBrush(opt->palette, Color::menuBackground, state));
+            p->drawRoundedRect(opt->rect.adjusted(Constants::menuTransparentPadding,
+                                                  Constants::menuTransparentPadding,
+                                                  -Constants::menuTransparentPadding,
+                                                  -Constants::menuTransparentPadding),
+                               Constants::menuBorderRadius,
+                               Constants::menuBorderRadius);
+            p->restore();
+            return;
+        }
+
+        case PE_FrameMenu:
+            return;
+
+            // case PE_IndicatorArrowUp:    // ---> this works ok but there are some issues,
+            // case PE_IndicatorArrowDown: // QCommonstyle implementation is good except for disabled colors
+            // case PE_IndicatorArrowLeft:
+            // case PE_IndicatorArrowRight: {
+            //     const int size = qMin(opt->rect.width(), opt->rect.height());
+            //     QRect rect;
+            //     if (element == PE_IndicatorArrowUp || element == PE_IndicatorArrowDown) {
+            //         rect.setWidth(size);
+            //         rect.setHeight(size / 2);
+            //     } else {
+            //         rect.setHeight(size);
+            //         rect.setWidth(size / 2);
+            //     }
+            //     rect.moveCenter(opt->rect.center());
+            //     QPoint points[3];
+            //     switch (element) {
+            //         case PE_IndicatorArrowUp:
+            //             points[0] = rect.bottomLeft();
+            //             points[1] = QPoint(rect.center().x(), rect.top());
+            //             points[2] = rect.bottomRight();
+            //             break;
+            //         case PE_IndicatorArrowDown:
+            //             points[0] = rect.topLeft();
+            //             points[1] = QPoint(rect.center().x(), rect.bottom());
+            //             points[2] = rect.topRight();
+            //             break;
+            //         case PE_IndicatorArrowRight:
+            //             points[0] = rect.topLeft();
+            //             points[1] = QPoint(rect.right(), rect.center().y() + 1);
+            //             points[2] = rect.bottomLeft();
+            //             break;
+            //         case PE_IndicatorArrowLeft:
+            //             points[0] = rect.topRight();
+            //             points[1] = QPoint(rect.left(), rect.center().y());
+            //             points[2] = rect.bottomRight();
+            //             break;
+            //         default:
+            //             break;
+            //     }
+            //     p->save();
+            //     // p->setRenderHints(QPainter::Antialiasing);
+            //     p->setPen(Qt::NoPen);
+            //     p->setBrush(getBrush(opt->palette, Color::indicatorArrow, state));
+            //     p->drawPolygon(points, 3);
+            //     p->restore();
+            //     return;
+            // }
 
         default:
             break;
@@ -627,15 +840,40 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
 }
 void Style::polish(QWidget* widget) {
     SuperStyle::polish(widget);
-    if (widget->inherits("QAbstractButton") || widget->inherits("QTabBar") || widget->inherits("QScrollBar") || widget->inherits("QAbstractSlider") || widget->inherits("QAbstractSpinBox")) {
+    if (widget->inherits("QAbstractButton") ||
+        widget->inherits("QTabBar") ||
+        widget->inherits("QScrollBar") ||
+        widget->inherits("QAbstractSlider") ||
+        widget->inherits("QAbstractSpinBox")) {
         widget->setAttribute(Qt::WA_Hover, true);
+    }
+    if (QMenu* menu = qobject_cast<QMenu*>(widget)) {
+        if (Constants::menuTransparency < 255 || 1) {
+            menu->setAttribute(Qt::WA_TranslucentBackground);
+        }
+
+        if (menu->graphicsEffect() == nullptr) {
+            QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(menu);
+            shadow->setColor(QColor(10, 10, 10, 100));
+            shadow->setOffset(0, 1);
+            shadow->setBlurRadius(Constants::menuShadowSize);
+            menu->setGraphicsEffect(shadow);
+        }
     }
 }
 
 void Style::unpolish(QWidget* widget) {
     SuperStyle::unpolish(widget);
-    if (widget->inherits("QAbstractButton") || widget->inherits("QTabBar") || widget->inherits("QScrollBar") || widget->inherits("QAbstractSlider") || widget->inherits("QAbstractSpinBox")) {
+    if (widget->inherits("QAbstractButton") ||
+        widget->inherits("QTabBar") ||
+        widget->inherits("QScrollBar") ||
+        widget->inherits("QAbstractSlider") ||
+        widget->inherits("QAbstractSpinBox")) {
         widget->setAttribute(Qt::WA_Hover, false);
+    }
+    if (QMenu* menu = qobject_cast<QMenu*>(widget)) {
+        menu->setAttribute(Qt::WA_TranslucentBackground, false);
+        menu->setGraphicsEffect(nullptr);
     }
 }
 
@@ -663,6 +901,12 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
             return Constants::sliderHandleHoverCircleDiameter;
         case PM_SliderTickmarkOffset:
             return 3;
+        case PM_MenuHMargin:
+            return 0 + Constants::menuTransparentPadding;
+        case PM_MenuVMargin:
+            return 5 + Constants::menuTransparentPadding;
+        case PM_SubMenuOverlap:
+            return 0;
         default:
             break;
     }
@@ -673,6 +917,18 @@ int Style::styleHint(QStyle::StyleHint hint, const QStyleOption* option, const Q
     switch (hint) {
         case SH_UnderlineShortcut:
             return false;
+        case SH_MenuBar_MouseTracking:
+            return true;
+        case SH_Menu_Scrollable:
+            return true;
+        case SH_Menu_MouseTracking:
+            return true;
+        case SH_Menu_SubMenuPopupDelay:
+            return 150;
+        case SH_Menu_SloppySubMenus:
+            return true;
+        case SH_Menu_SupportsSections:
+            return true;
         default:
             break;
     }
@@ -691,7 +947,6 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
             rect.moveTopLeft(opt->rect.topLeft());
             return rect;
         }
-
         default:
             break;
     }
@@ -849,6 +1104,75 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
             original.setHeight(qMax(Constants::checkBoxHoverCircleSize, original.height()));
             original.setWidth(original.width() + (Constants::checkBoxHoverCircleSize - Constants::checkBoxSize));
 
+        case CT_MenuItem:
+            if (const auto* menu = qstyleoption_cast<const QStyleOptionMenuItem*>(opt)) {
+                switch (menu->menuItemType) {
+                    case QStyleOptionMenuItem::Normal:
+                    case QStyleOptionMenuItem::DefaultItem:
+                    case QStyleOptionMenuItem::SubMenu: {
+
+                        // textSize
+                        QSize labelSize(0, 0);
+                        QSize shortcutSize(0, 0);
+                        const MenuItemText text = menuItemGetText(menu);
+                        if (!text.label.isEmpty()) {
+                            labelSize = menu->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), text.label);
+                        }
+                        if (!text.shortcut.isEmpty()) {
+                            shortcutSize = menu->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), text.shortcut);
+                        }
+
+                        // width
+                        int width = 0;
+                        width += (Constants::menuItemVerticalExternalPadding * 2);
+                        if (menu->menuHasCheckableItems) {
+                            width += Constants::checkBoxHoverCircleSize;
+                            width += Constants::menuHorizontalSpacing;
+                        }
+                        if (menu->maxIconWidth > 0) {
+                            width += menu->maxIconWidth;
+                            width += Constants::menuHorizontalSpacing;
+                        }
+                        if (labelSize.width() > 0) {
+                            width += labelSize.width();
+                            width += Constants::menuHorizontalSpacing;
+                        }
+                        if (menu->reservedShortcutWidth > 0) {
+                            width += menu->reservedShortcutWidth;
+                        }
+                        if (menu->menuItemType == QStyleOptionMenuItem::SubMenu) {
+                            width += Constants::menuSubMenuArrowSize;
+                        }
+
+                        // height
+                        const int heigth = qMax(labelSize.height(), shortcutSize.height()) + (Constants::menuItemHorizontalInternalPadding * 2);
+
+                        return QSize(width, heigth);
+                    }
+
+                    case QStyleOptionMenuItem::Separator: {
+                        const MenuItemText text = menuItemGetText(menu);
+                        if (text.label.isEmpty()) {
+                            // 1 is for the separator thickness
+                            original.setHeight(1 + (Constants::menuSeparatorHorizontalPadding * 2));
+                            break;
+                        }
+                        const QSize labelSize = menu->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), text.label);
+                        const int width = (Constants::menuSeparatorHorizontalPadding * 2) +
+                                          labelSize.width() +
+                                          (Constants::menuSeparatorMinLen > 0 ? Constants::menuSeparatorMinLen + Constants::menuHorizontalSpacing : 0);
+
+                        const int height = labelSize.height() + (Constants::menuItemHorizontalInternalPadding * 2);
+
+                        return QSize(width, height % 2 == 1 ? height : height + 1); // height will always be odd
+                    }
+
+                    default:
+                        break;
+                }
+            }
+            break;
+
         default:
             break;
     }
@@ -874,6 +1198,19 @@ const void Style::sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptio
             *returnList += QLine(tickmarksRect.left() + 0.5, pos, tickmarksRect.right() + 0.5, pos);
         }
     }
+}
+
+const Style::MenuItemText Style::menuItemGetText(const QStyleOptionMenuItem* menu) {
+    const auto tabPosition = menu->text.lastIndexOf('\t');
+    Style::MenuItemText text;
+    if (tabPosition >= 0) {
+        text.label = menu->text.first(tabPosition);
+        if (menu->text.size() > tabPosition + 1)
+            text.shortcut = menu->text.sliced(tabPosition + 1);
+    } else {
+        text.label = menu->text;
+    }
+    return text;
 }
 
 } // namespace Orchid
