@@ -23,7 +23,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [ ] Tool Buttons
 - [ ] Toolbars
 - [x] Menus
-- [ ] Menu Bar
+- [x] Menu Bar
 - [ ] Item View Headers
 - [ ] Tree Branch Indicators
 - [ ] Tool Boxes

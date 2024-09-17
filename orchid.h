@@ -47,7 +47,9 @@ enum Color {
     menuSeparator,               // D
     menuItemHoverBackground,
     menuBackground,
-    indicatorArrow, // D
+    indicatorArrow,     // D
+    menuBarItemHoverBg, // HP - hover: hover without open menu, pressed: menu open
+    menuBarItemText,    // D
     focusColor
 };
 
@@ -82,15 +84,18 @@ constexpr int spinIndicatorHoverCircleSize = 24;
 constexpr int menuSubMenuArrowSize = 10;
 constexpr int menuHorizontalSpacing = 8;
 constexpr int menuItemBorderRadius = 5;
-constexpr int menuItemVerticalExternalPadding = 5;         // left and right of the menuItem, outside hover rect
-constexpr int menuItemVerticalInternalPadding = 5;         // left and right, inside hover rect
-constexpr int menuItemHorizontalInternalPadding = 5;       // top and bottom, inside hover rect
-constexpr int menuSeparatorHorizontalPadding = 3;          // top and bottom
-constexpr int menuShadowSize = 5;                          // the size of the shadow,the shadow is added in polish.
-constexpr int menuTransparentPadding = menuShadowSize + 2; // transparent padding added to the menu, that contains the shadow and is spacing
+constexpr int menuItemVerticalExternalPadding = 5;   // left and right of the menuItem, outside hover rect
+constexpr int menuItemVerticalInternalPadding = 5;   // left and right, inside hover rect
+constexpr int menuItemHorizontalInternalPadding = 5; // top and bottom, inside hover rect
+constexpr int menuSeparatorHorizontalPadding = 3;    // top and bottom
+constexpr int menuShadowSize = 4;                    // the size of the shadow,the shadow is added in polish.
+constexpr int menuTransparentPadding = 4;            // transparent padding added to the menu, that contains the shadow and is spacing
 constexpr int menuBorderRadius = 10;
 constexpr int menuTransparency = 255; // value between 0 and 255, 0: transparent; 255: opaque
 constexpr int menuSeparatorMinLen = 5;
+constexpr int menuBarItemMinHeight = 24; // without the padding
+constexpr int menuBarItemBorderRadius = 4;
+constexpr int menuBarItemExternalPadding = 2;
 } // namespace Constants
 
 namespace Config {

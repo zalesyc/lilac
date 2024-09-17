@@ -197,9 +197,11 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return base;
         }
         case menuText:
+        case menuBarItemText:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Text);
             return pal.color(CGroup::Normal, CRole::Text);
+
         case menuShortcutText:
             if (isDarkMode(pal))
                 return getColor(pal, Color::menuText, state).darker(130);
@@ -212,6 +214,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         }
 
         case menuItemHoverBackground:
+        case menuBarItemHoverBg:
             if (isDarkMode(pal))
                 return QColor(255, 255, 255, 26);
             return QColor(0, 0, 0, 26);

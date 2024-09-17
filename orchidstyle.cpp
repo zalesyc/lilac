@@ -593,6 +593,67 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             }
             break;
 
+        case CE_MenuBarItem:
+            if (const auto* bar = qstyleoption_cast<const QStyleOptionMenuItem*>(opt)) {
+                state.hovered = bar->state & State_Selected;
+
+                QRect contentsRect(0, 0,
+                                   bar->rect.width() - (Constants::menuBarItemExternalPadding * 2),
+                                   bar->rect.height() - (Constants::menuBarItemExternalPadding * 2));
+                contentsRect.moveCenter(bar->rect.center());
+
+                int iconWidth = 0;
+                if (!bar->icon.isNull()) {
+                    iconWidth = qMin(this->pixelMetric(PM_SmallIconSize, bar, widget), contentsRect.height());
+                }
+
+                p->save();
+                p->setRenderHints(QPainter::Antialiasing);
+
+                if (state.hovered || state.pressed) {
+                    p->setPen(Qt::NoPen);
+                    p->setBrush(getBrush(bar->palette, Color::menuBarItemHoverBg, state));
+                    p->drawRoundedRect(contentsRect, Constants::menuBarItemBorderRadius, Constants::menuBarItemBorderRadius);
+                }
+
+                p->setPen(getPen(bar->palette, Color::menuBarItemText));
+                p->setBrush(getBrush(bar->palette, Color::menuBarItemText));
+
+                if (iconWidth > 0) {
+                    const QRect iconRect(contentsRect.left() + Constants::menuItemVerticalInternalPadding,
+                                         contentsRect.top(),
+                                         iconWidth,
+                                         contentsRect.height());
+
+                    QIcon::Mode iconMode = QIcon::Normal;
+                    if (!state.enabled) {
+                        iconMode = QIcon::Disabled;
+                    } else if (state.hovered) {
+                        iconMode = QIcon::Selected;
+                    }
+
+                    bar->icon.paint(p, iconRect, Qt::AlignCenter, iconMode);
+                }
+                if (!bar->text.isEmpty()) {
+                    int textFlags = Qt::TextShowMnemonic;
+                    if (!styleHint(SH_UnderlineShortcut, bar, widget))
+                        textFlags |= Qt::TextHideMnemonic;
+
+                    QRect labelRect(0, contentsRect.top(), 0, contentsRect.height());
+                    labelRect.setLeft(
+                        contentsRect.left() + Constants::menuItemVerticalInternalPadding + (iconWidth > 0 ? iconWidth + Constants::menuHorizontalSpacing : 0));
+                    labelRect.setRight(
+                        contentsRect.right() - Constants::menuItemVerticalInternalPadding);
+                    p->drawText(labelRect, (Qt::AlignLeft | Qt::AlignVCenter | textFlags | Qt::TextSingleLine), bar->text);
+                }
+                p->restore();
+                return;
+            }
+            break;
+
+        case CE_MenuBarEmptyArea:
+            return;
+
         default:
             break;
     }
@@ -907,6 +968,14 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
             return 5 + Constants::menuTransparentPadding;
         case PM_SubMenuOverlap:
             return 0;
+        case PM_MenuBarItemSpacing:
+            return 0;
+        case PM_MenuBarHMargin:
+            return 2;
+        case PM_MenuBarVMargin:
+            return 0;
+        case PM_MenuBarPanelWidth:
+            return 0;
         default:
             break;
     }
@@ -929,6 +998,8 @@ int Style::styleHint(QStyle::StyleHint hint, const QStyleOption* option, const Q
             return true;
         case SH_Menu_SupportsSections:
             return true;
+        case SH_DrawMenuBarSeparator:
+            return false;
         default:
             break;
     }
@@ -1123,8 +1194,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                         }
 
                         // width
-                        int width = 0;
-                        width += (Constants::menuItemVerticalExternalPadding * 2);
+                        int width = (Constants::menuItemVerticalExternalPadding * 2);
                         if (menu->menuHasCheckableItems) {
                             width += Constants::checkBoxHoverCircleSize;
                             width += Constants::menuHorizontalSpacing;
@@ -1172,6 +1242,30 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                 }
             }
             break;
+        case CT_MenuBarItem:
+            if (const auto* bar = qstyleoption_cast<const QStyleOptionMenuItem*>(opt)) {
+                QSize textSize(0, 0);
+                if (!bar->text.isEmpty()) {
+                    textSize = bar->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), bar->text);
+                }
+                const int height = qMax(textSize.height(), Constants::menuBarItemMinHeight) + (Constants::menuBarItemExternalPadding * 2);
+
+                int width = 0;
+                width += textSize.width();
+                if (!bar->icon.isNull()) {
+                    const int iconWidth = qMin(this->pixelMetric(PM_SmallIconSize, bar, widget), height);
+                    width += iconWidth;
+                    if (!bar->text.isEmpty())
+                        width += Constants::menuHorizontalSpacing;
+                }
+                if (width < 1) {
+                    return QSize(0, 0);
+                }
+                width += (Constants::menuItemHorizontalInternalPadding * 2);
+                width += (Constants::menuBarItemExternalPadding * 2);
+
+                return QSize(width, height);
+            }
 
         default:
             break;
