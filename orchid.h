@@ -42,6 +42,9 @@ enum Color {
     spinBoxOutline,              // DF
     spinBoxIndicator,            // DHP
     spinBoxIndicatorHoverCircle, // HP
+    comboBoxBackground,          // DHPF - pressed: menu is open
+    comboBoxOutline,             // DHPF
+    comboBoxUneditableText,      // D
     menuText,                    // D
     menuShortcutText,            // D
     menuSeparator,               // D
@@ -77,11 +80,11 @@ constexpr int checkBoxHoverCircleSize = 34;
 constexpr int sliderHandleHoverCircleDiameter = 32;
 constexpr int sliderHandleCircleDiameter = 12;
 constexpr int sliderTickmarksLen = 8;
-constexpr int spinBoxSpacing = btnRadius / 2;
 constexpr int spinBoxIndicatorWidth = 30;
 constexpr int spinIndicatorSize = 10;
 constexpr int spinIndicatorHoverCircleSize = 24;
-constexpr int menuSubMenuArrowSize = 10;
+constexpr int lineEditTextVerticalPadding = 6; // left and right, also used for combobox (combobox only left, right is arrow)
+constexpr int smallArrowSize = 10;
 constexpr int menuHorizontalSpacing = 8;
 constexpr int menuItemBorderRadius = 5;
 constexpr int menuItemVerticalExternalPadding = 5;   // left and right of the menuItem, outside hover rect
@@ -96,6 +99,7 @@ constexpr int menuSeparatorMinLen = 5;
 constexpr int menuBarItemMinHeight = 24; // without the padding
 constexpr int menuBarItemBorderRadius = 4;
 constexpr int menuBarItemExternalPadding = 2;
+constexpr int comboboxArrowWidth = 30; // the part that is clickable, the indicator is smaller
 } // namespace Constants
 
 namespace Config {

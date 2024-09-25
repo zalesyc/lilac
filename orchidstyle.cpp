@@ -12,7 +12,7 @@
 namespace Orchid {
 
 void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget) const {
-    const Orchid::State state(opt->state); // this hat to be defined as Orchid::State because just State would conflict with State from QStyle
+    Orchid::State state(opt->state); // this hat to be defined as Orchid::State because just State would conflict with State from QStyle
     switch (control) {
         case CC_ScrollBar:
             if (const QStyleOptionSlider* bar = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
@@ -232,6 +232,28 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                     copy.rect = subControlRect(CC_SpinBox, spin, SC_SpinBoxDown, widget);
                     drawPrimitive(pe, &copy, p, widget);
                 }
+                return;
+            }
+            break;
+
+        case CC_ComboBox:
+            if (const auto combo = qstyleoption_cast<const QStyleOptionComboBox*>(opt)) {
+                state.pressed = (combo->state & State_On);
+                p->save();
+                p->setRenderHint(QPainter::Antialiasing);
+                p->setPen(getPen(combo->palette, Color::comboBoxOutline, state, 2));
+                p->setBrush(getBrush(combo->palette, Color::comboBoxBackground, state));
+                p->drawRoundedRect(combo->rect.adjusted(1, 1, -1, -1), Constants::btnRadius, Constants::btnRadius);
+                p->restore();
+
+                // arrow
+                const QRect arrowAreaRect = this->subControlRect(CC_ComboBox, combo, SC_ComboBoxArrow, widget);
+                const int arrowSize = Constants::smallArrowSize;
+                QStyleOption arrowOpt(*combo);
+                arrowOpt.rect = QRect(0, 0, arrowSize, arrowSize);
+                arrowOpt.rect.moveCenter(arrowAreaRect.center());
+                this->drawPrimitive(PE_IndicatorArrowDown, &arrowOpt, p, widget);
+
                 return;
             }
             break;
@@ -520,8 +542,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                             if (!text.label.isEmpty()) {
                                 const int rightElementSize = menu->menuItemType == QStyleOptionMenuItem::SubMenu ?
                                                                  (text.shortcut.isEmpty() ?
-                                                                      qMax(menu->reservedShortcutWidth, Constants::menuSubMenuArrowSize) :
-                                                                      (menu->reservedShortcutWidth + Constants::menuSubMenuArrowSize + Constants::menuHorizontalSpacing)) :
+                                                                      qMax(menu->reservedShortcutWidth, Constants::smallArrowSize) :
+                                                                      (menu->reservedShortcutWidth + Constants::smallArrowSize + Constants::menuHorizontalSpacing)) :
                                                                  menu->reservedShortcutWidth;
                                 int leftElementsSize = (menu->maxIconWidth > 0 ? menu->maxIconWidth + Constants::menuHorizontalSpacing : 0) +
                                                        (checkSize > 0 ? checkSize + Constants::menuHorizontalSpacing : 0);
@@ -536,7 +558,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                             if (!text.shortcut.isEmpty()) {
                                 QRect shortcutRect(0, contentsRect.top(), menu->reservedShortcutWidth, contentsRect.height());
                                 if (menu->menuItemType == QStyleOptionMenuItem::SubMenu) {
-                                    shortcutRect.moveRight(contentsRect.right() - Constants::menuSubMenuArrowSize - Constants::menuHorizontalSpacing);
+                                    shortcutRect.moveRight(contentsRect.right() - Constants::smallArrowSize - Constants::menuHorizontalSpacing);
                                 } else {
                                     shortcutRect.moveRight(contentsRect.right());
                                 }
@@ -549,7 +571,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                         // sub menu arrow
                         if (menu->menuItemType == QStyleOptionMenuItem::SubMenu) {
                             QStyleOption arrowOpt(*menu);
-                            arrowOpt.rect = QRect(0, contentsRect.top(), Constants::menuSubMenuArrowSize, contentsRect.height());
+                            arrowOpt.rect = QRect(0, contentsRect.top(), Constants::smallArrowSize, contentsRect.height());
                             arrowOpt.rect.moveRight(contentsRect.right());
                             drawPrimitive(QStyle::PE_IndicatorArrowRight, &arrowOpt, p, widget);
                         }
@@ -647,6 +669,44 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     p->drawText(labelRect, (Qt::AlignLeft | Qt::AlignVCenter | textFlags | Qt::TextSingleLine), bar->text);
                 }
                 p->restore();
+                return;
+            }
+            break;
+
+        case CE_ComboBoxLabel:
+            if (const auto* combo = qstyleoption_cast<const QStyleOptionComboBox*>(opt)) {
+                const int leftPadding = (combo->editable || !combo->currentIcon.isNull()) ? Constants::lineEditTextVerticalPadding : 0;
+                const QRect fieldRect = subControlRect(CC_ComboBox, combo, SC_ComboBoxEditField, widget).adjusted(leftPadding, 0, 0, 0);
+
+                const bool hasIcon = !combo->currentIcon.isNull() && combo->iconSize.isValid();
+                if (hasIcon) {
+                    QRect iconRect(QPoint(0, 0), combo->iconSize);
+                    iconRect.moveCenter(fieldRect.center());
+                    iconRect.moveLeft(fieldRect.left());
+                    combo->currentIcon.paint(p,
+                                             iconRect,
+                                             Qt::AlignCenter,
+                                             state.enabled ? QIcon::Normal : QIcon::Disabled);
+                }
+
+                if (!combo->currentText.isEmpty() && !combo->editable) {
+                    int textFlags = Qt::TextShowMnemonic;
+                    if (!styleHint(SH_UnderlineShortcut, combo, widget))
+                        textFlags |= Qt::TextHideMnemonic;
+
+                    QRect textRect(fieldRect);
+                    if (hasIcon) {
+                        textRect.setLeft(fieldRect.left() + combo->iconSize.width() + Constants::lineEditTextVerticalPadding);
+                    } else {
+                        textRect.setLeft(fieldRect.left() + Constants::lineEditTextVerticalPadding);
+                    }
+
+                    p->save();
+                    p->setPen(getPen(combo->palette, Orchid::comboBoxUneditableText));
+                    p->setBrush(Qt::NoBrush);
+                    p->drawText(textRect, (textFlags | Qt::AlignLeft | Qt::AlignVCenter), combo->currentText);
+                    p->restore();
+                }
                 return;
             }
             break;
@@ -905,7 +965,9 @@ void Style::polish(QWidget* widget) {
         widget->inherits("QTabBar") ||
         widget->inherits("QScrollBar") ||
         widget->inherits("QAbstractSlider") ||
-        widget->inherits("QAbstractSpinBox")) {
+        widget->inherits("QAbstractSpinBox") ||
+        widget->inherits("QComboBox") ||
+        widget->inherits("QLineEdit")) {
         widget->setAttribute(Qt::WA_Hover, true);
     }
     if (QMenu* menu = qobject_cast<QMenu*>(widget)) {
@@ -929,7 +991,9 @@ void Style::unpolish(QWidget* widget) {
         widget->inherits("QTabBar") ||
         widget->inherits("QScrollBar") ||
         widget->inherits("QAbstractSlider") ||
-        widget->inherits("QAbstractSpinBox")) {
+        widget->inherits("QAbstractSpinBox") ||
+        widget->inherits("QComboBox") ||
+        widget->inherits("QLineEdit")) {
         widget->setAttribute(Qt::WA_Hover, false);
     }
     if (QMenu* menu = qobject_cast<QMenu*>(widget)) {
@@ -1000,6 +1064,10 @@ int Style::styleHint(QStyle::StyleHint hint, const QStyleOption* option, const Q
             return true;
         case SH_DrawMenuBarSeparator:
             return false;
+        case SH_ComboBox_Popup:
+            return false;
+        case SH_ComboBox_PopupFrameStyle:
+            return 0;
         default:
             break;
     }
@@ -1018,6 +1086,14 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
             rect.moveTopLeft(opt->rect.topLeft());
             return rect;
         }
+        case SE_LineEditContents:
+            if (const QStyleOptionFrame* edit = qstyleoption_cast<const QStyleOptionFrame*>(opt)) {
+                return edit->rect.adjusted(Constants::lineEditTextVerticalPadding,
+                                           edit->lineWidth,
+                                           -Constants::lineEditTextVerticalPadding,
+                                           -edit->lineWidth);
+            }
+            break;
         default:
             break;
     }
@@ -1138,8 +1214,7 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                     case SC_SpinBoxEditField: {
                         const int indicatorWidth = qMin(spin->rect.width() / 3, Constants::spinBoxIndicatorWidth);
                         QRect rect(spin->rect);
-                        rect.setLeft(spin->rect.left() + Constants::spinBoxSpacing);
-                        rect.setRight(spin->rect.right() - indicatorWidth * 2 - Constants::spinBoxSpacing);
+                        rect.setRight(spin->rect.right() - indicatorWidth * 2);
                         return rect;
                     } break;
                     default:
@@ -1147,16 +1222,35 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                 }
             }
             break;
-        default:
-            break;
-    }
-    switch (element) {
-        case SC_ScrollBarGroove:
-            return opt->rect;
+        case CC_ComboBox:
+            if (const auto* combo = qstyleoption_cast<const QStyleOptionComboBox*>(opt)) {
+                switch (element) {
+                    case SC_ComboBoxArrow: {
+                        QRect rect(0, combo->rect.top(), Constants::comboboxArrowWidth, combo->rect.height());
+                        rect.moveRight(combo->rect.right());
+                        return rect;
+                    }
+                    case SC_ComboBoxEditField: {
+                        return combo->rect.adjusted(0, 0, -Constants::comboboxArrowWidth, 0);
+                    }
+                    case SC_ComboBoxFrame:
+                        return combo->rect;
 
-        default:
+                    default:
+                        break;
+                }
+            }
             break;
+        default:
+            switch (element) {
+                case SC_ScrollBarGroove:
+                    return opt->rect;
+
+                default:
+                    break;
+            }
     }
+
     return SuperStyle::subControlRect(cc, opt, element, widget);
 }
 
@@ -1211,7 +1305,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                             width += menu->reservedShortcutWidth;
                         }
                         if (menu->menuItemType == QStyleOptionMenuItem::SubMenu) {
-                            width += Constants::menuSubMenuArrowSize;
+                            width += Constants::smallArrowSize;
                         }
 
                         // height

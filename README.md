@@ -16,7 +16,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [x] Sliders
 - [x] Spin Boxes
 - [ ] Title Bar
-- [ ] Combo Box
+- [ ] Combo Box - **Partially:** without the popup menu
 - [ ] Group Boxes
 - [ ] Splitters
 - [ ] Progress Bar

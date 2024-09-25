@@ -164,15 +164,22 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 
         case lineEditBackground:
         case spinBoxBackground:
+        case comboBoxBackground:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Button);
             return pal.color(CGroup::Normal, CRole::Button);
 
         case lineEditOutline:
-        case spinBoxOutline:
+        case spinBoxOutline: {
             if (state.hasFocus)
                 return pal.color(CGroup::Normal, CRole::Accent);
-            return getColor(pal, lineEditBackground, state);
+            const QColor base = getColor(pal, lineEditBackground, state);
+
+            if (state.hovered)
+                return isDarkMode(pal) ? base.lighter(140) : base.darker(140);
+
+            return base;
+        }
 
         case spinBoxIndicator: {
             if (!state.enabled)
@@ -196,8 +203,24 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             }
             return base;
         }
+
+        case comboBoxOutline: {
+            if (!state.enabled)
+                return getColor(pal, lineEditBackground, state);
+            if (state.pressed || state.hasFocus)
+                return pal.color(CGroup::Normal, CRole::Accent);
+
+            const QColor base = getColor(pal, lineEditBackground, state);
+
+            if (state.hovered)
+                return isDarkMode(pal) ? base.lighter(140) : base.darker(140);
+
+            return base;
+        }
+
         case menuText:
         case menuBarItemText:
+        case comboBoxUneditableText:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Text);
             return pal.color(CGroup::Normal, CRole::Text);
