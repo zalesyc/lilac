@@ -9,6 +9,7 @@
 #include <QStyleFactory>
 #include <QtMath>
 #include <cmath>
+#include <iostream>
 namespace Orchid {
 
 void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget) const {
@@ -675,14 +676,12 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
         case CE_ComboBoxLabel:
             if (const auto* combo = qstyleoption_cast<const QStyleOptionComboBox*>(opt)) {
-                const int leftPadding = (combo->editable || !combo->currentIcon.isNull()) ? Constants::lineEditTextVerticalPadding : 0;
-                const QRect fieldRect = subControlRect(CC_ComboBox, combo, SC_ComboBoxEditField, widget).adjusted(leftPadding, 0, 0, 0);
-
+                const QRect labelRect = combo->rect.adjusted(Constants::comboTextLeftPadding, 0, -Constants::comboArrowWidth, 0);
                 const bool hasIcon = !combo->currentIcon.isNull() && combo->iconSize.isValid();
                 if (hasIcon) {
                     QRect iconRect(QPoint(0, 0), combo->iconSize);
-                    iconRect.moveCenter(fieldRect.center());
-                    iconRect.moveLeft(fieldRect.left());
+                    iconRect.moveCenter(labelRect.center());
+                    iconRect.moveLeft(labelRect.left());
                     combo->currentIcon.paint(p,
                                              iconRect,
                                              Qt::AlignCenter,
@@ -694,12 +693,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     if (!styleHint(SH_UnderlineShortcut, combo, widget))
                         textFlags |= Qt::TextHideMnemonic;
 
-                    QRect textRect(fieldRect);
-                    if (hasIcon) {
-                        textRect.setLeft(fieldRect.left() + combo->iconSize.width() + Constants::lineEditTextVerticalPadding);
-                    } else {
-                        textRect.setLeft(fieldRect.left() + Constants::lineEditTextVerticalPadding);
-                    }
+                    QRect textRect(labelRect);
+                    textRect.setLeft(labelRect.left() + (hasIcon ? combo->iconSize.width() + Constants::lineEditTextVerticalPadding : 0));
 
                     p->save();
                     p->setPen(getPen(combo->palette, Orchid::comboBoxUneditableText));
@@ -874,7 +869,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                 }
                 const int indicatorSize = qMin(
                     qMin(spin->rect.width(), spin->rect.height()),
-                    Constants::spinIndicatorSize);
+                    Constants::spinIndicatorIconSize);
                 QRect indicatorRect(0, 0, indicatorSize, indicatorSize);
                 indicatorRect.moveCenter(spin->rect.center());
 
@@ -1088,6 +1083,9 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
         }
         case SE_LineEditContents:
             if (const QStyleOptionFrame* edit = qstyleoption_cast<const QStyleOptionFrame*>(opt)) {
+                if (edit->lineWidth <= 0) {
+                    return edit->rect;
+                }
                 return edit->rect.adjusted(Constants::lineEditTextVerticalPadding,
                                            edit->lineWidth,
                                            -Constants::lineEditTextVerticalPadding,
@@ -1198,25 +1196,23 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                     case SC_SpinBoxFrame:
                         return spin->rect;
                     case SC_SpinBoxUp: {
-                        const int width = qMin(spin->rect.width() / 3, Constants::spinBoxIndicatorWidth);
+                        const int width = qMin(spin->rect.width() / 3, Constants::spinIndicatorWidth);
                         QRect rect(spin->rect);
                         rect.setWidth(width);
                         rect.moveRight(spin->rect.right());
                         return rect;
                     }
                     case SC_SpinBoxDown: {
-                        const int width = qMin(spin->rect.width() / 3, Constants::spinBoxIndicatorWidth);
+                        const int width = qMin(spin->rect.width() / 3, Constants::spinIndicatorWidth);
                         QRect rect(spin->rect);
                         rect.setWidth(width);
                         rect.moveRight(spin->rect.right() - width);
                         return rect;
                     }
                     case SC_SpinBoxEditField: {
-                        const int indicatorWidth = qMin(spin->rect.width() / 3, Constants::spinBoxIndicatorWidth);
-                        QRect rect(spin->rect);
-                        rect.setRight(spin->rect.right() - indicatorWidth * 2);
-                        return rect;
-                    } break;
+                        const int indicatorWidth = qMin(spin->rect.width() / 3, Constants::spinIndicatorWidth);
+                        return spin->rect.adjusted(Constants::spinTextLeftPadding, 0, -(indicatorWidth * 2), 0);
+                    }
                     default:
                         break;
                 }
@@ -1226,12 +1222,12 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
             if (const auto* combo = qstyleoption_cast<const QStyleOptionComboBox*>(opt)) {
                 switch (element) {
                     case SC_ComboBoxArrow: {
-                        QRect rect(0, combo->rect.top(), Constants::comboboxArrowWidth, combo->rect.height());
+                        QRect rect(0, combo->rect.top(), Constants::comboArrowWidth, combo->rect.height());
                         rect.moveRight(combo->rect.right());
                         return rect;
                     }
                     case SC_ComboBoxEditField: {
-                        return combo->rect.adjusted(0, 0, -Constants::comboboxArrowWidth, 0);
+                        return combo->rect.adjusted(Constants::comboTextLeftPadding, 0, -Constants::comboArrowWidth, 0);
                     }
                     case SC_ComboBoxFrame:
                         return combo->rect;
@@ -1255,20 +1251,52 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
 }
 
 QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, const QSize& contentsSize, const QWidget* widget) const {
-    QSize original = SuperStyle::sizeFromContents(ct, opt, contentsSize, widget);
     switch (ct) {
-        case CT_PushButton:
-        case CT_LineEdit:
-        case CT_SpinBox:
-        case CT_ComboBox: {
-            const int heigth = qMax(36, original.height());
-            original.setHeight(heigth);
+        case CT_PushButton: {
+            const QSize original = SuperStyle::sizeFromContents(ct, opt, contentsSize, widget);
+            const int heigth = qMax(opt->fontMetrics.height() + (2 * Constants::controlsTextHorizontalPadding),
+                                    original.height());
+            return QSize(original.width(), heigth);
         }
-        case CT_RadioButton:
-        case CT_CheckBox:
-            original.setHeight(qMax(Constants::checkBoxHoverCircleSize, original.height()));
-            original.setWidth(original.width() + (Constants::checkBoxHoverCircleSize - Constants::checkBoxSize));
+        case CT_LineEdit: {
+            const int width = (opt->fontMetrics.averageCharWidth() * Constants::lineEditMinWidthChars) +
+                              this->pixelMetric(PM_LineEditIconSize, opt, widget) +
+                              (pixelMetric(PM_LineEditIconMargin, opt, widget) * 2);
+            const int height = qMax(
+                opt->fontMetrics.height() + (2 * Constants::controlsTextHorizontalPadding),
+                this->pixelMetric(PM_LineEditIconSize, opt, widget) + (pixelMetric(PM_LineEditIconMargin, opt, widget) * 2));
 
+            return QSize(width, height);
+        }
+
+        case CT_SpinBox:
+            if (const auto* spin = qstyleoption_cast<const QStyleOptionSpinBox*>(opt)) {
+                std::cout << spin->fontMetrics.averageCharWidth() << std::endl;
+                const int width = Constants::lineEditTextVerticalPadding +
+                                  (spin->fontMetrics.averageCharWidth() * Constants::spinMinWidthChars) +
+                                  (Constants::spinIndicatorWidth * 2);
+                const int height = opt->fontMetrics.height() + (2 * Constants::controlsTextHorizontalPadding);
+                return QSize(width, height);
+            }
+            break;
+
+        case CT_ComboBox:
+            if (const auto* combo = qstyleoption_cast<const QStyleOptionComboBox*>(opt)) {
+                const int width = Constants::lineEditTextVerticalPadding +
+                                  (combo->currentIcon.isNull() ? 0 : combo->iconSize.width() + Constants::lineEditTextVerticalPadding) +
+                                  (combo->fontMetrics.averageCharWidth() * Constants::comboMinWidthChars) +
+                                  Constants::comboArrowWidth;
+                const int height = qMax(opt->fontMetrics.height() + (2 * Constants::controlsTextHorizontalPadding),
+                                        combo->iconSize.height());
+                return QSize(width, height);
+            }
+            break;
+
+        case CT_RadioButton:
+        case CT_CheckBox: {
+            const QSize original = SuperStyle::sizeFromContents(ct, opt, contentsSize, widget);
+            return QSize(original.width() + (Constants::checkBoxHoverCircleSize - Constants::checkBoxSize), qMax(Constants::checkBoxHoverCircleSize, original.height()));
+        }
         case CT_MenuItem:
             if (const auto* menu = qstyleoption_cast<const QStyleOptionMenuItem*>(opt)) {
                 switch (menu->menuItemType) {
@@ -1318,8 +1346,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                         const MenuItemText text = menuItemGetText(menu);
                         if (text.label.isEmpty()) {
                             // 1 is for the separator thickness
-                            original.setHeight(1 + (Constants::menuSeparatorHorizontalPadding * 2));
-                            break;
+                            return QSize(Constants::menuSeparatorMinLen, 1 + (Constants::menuSeparatorHorizontalPadding * 2));
                         }
                         const QSize labelSize = menu->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), text.label);
                         const int width = (Constants::menuSeparatorHorizontalPadding * 2) +
@@ -1364,7 +1391,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
         default:
             break;
     }
-    return original;
+    return SuperStyle::sizeFromContents(ct, opt, contentsSize, widget);
 }
 
 const QString Style::getStyle() { // this is not ideal, but shold work - todo: make this configurable in settings
