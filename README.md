@@ -27,7 +27,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [ ] Item View Headers
 - [ ] Tree Branch Indicators
 - [ ] Tool Boxes
-- [ ] Size Grip
+- [x] Size Grip
 - [ ] Rubber Band
 - [ ] Dock Widgets
 

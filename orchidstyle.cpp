@@ -700,6 +700,9 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
         case CE_MenuBarEmptyArea:
             return;
 
+        case CE_SizeGrip:
+            return;
+
         default:
             break;
     }
@@ -1244,7 +1247,7 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                     case SC_ScrollBarAddLine:
                     case SC_ScrollBarFirst:
                     case SC_ScrollBarLast:
-                        return QRect(0, 0, 0, 0);
+                        return QRect();
 
                     case SC_ScrollBarGroove:
                         return bar->rect;
@@ -1450,6 +1453,9 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                 return QSize(Constants::scrollBarThicknessHover, 1);
             }
             break;
+
+        case CT_SizeGrip:
+            return QSize();
 
         default:
             break;
