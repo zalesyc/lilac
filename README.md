@@ -12,7 +12,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [x] Push Buttons 
 - [x] Check and Radio Buttons
 - [x] Tabs
-- [ ] Scroll Bars - **Partially**
+- [x] Scroll Bars
 - [x] Sliders
 - [x] Spin Boxes
 - [ ] Title Bar

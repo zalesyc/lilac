@@ -127,10 +127,10 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case scrollBarSlider: {
             const auto base = getColor(pal, Color::scrollBarHoverBackground);
             if (state.pressed)
-                return isDarkMode(pal) ? base.lighter(170) : base.darker(170);
+                return isDarkMode(pal) ? base.lighter(250) : base.darker(250);
             if (state.hovered)
-                return isDarkMode(pal) ? base.lighter(140) : base.darker(140);
-            return isDarkMode(pal) ? base.lighter(130) : base.darker(130);
+                return isDarkMode(pal) ? base.lighter(240) : base.darker(240);
+            return isDarkMode(pal) ? base.lighter(230) : base.darker(130);
         }
 
         case sliderHandle:

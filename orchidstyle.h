@@ -50,5 +50,6 @@ class Style : public SuperStyle {
     };
     static const void sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptionSlider* slider, const QRect& tickmarksRect, const int sliderLen, const int interval);
     static const MenuItemText menuItemGetText(const QStyleOptionMenuItem* menu);
+    const int scrollbarGetSliderLength(const QStyleOptionSlider* bar) const;
 };
 } // namespace Orchid

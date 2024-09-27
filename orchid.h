@@ -81,6 +81,7 @@ constexpr int checkBoxHoverCircleSize = 34;
 constexpr int sliderHandleHoverCircleDiameter = 32;
 constexpr int sliderHandleCircleDiameter = 12;
 constexpr int sliderTickmarksLen = 8;
+constexpr int scrollBarThicknessHover = 18;
 constexpr int lineEditTextVerticalPadding = 6; // left and right
 constexpr int lineEditMinWidthChars = 14;      // minimal width of lineedit: lineEditMinWidthChars * averageCharWidth
 constexpr int spinIndicatorWidth = 30;         // the width of the clickable space

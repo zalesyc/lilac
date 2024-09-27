@@ -9,7 +9,6 @@
 #include <QStyleFactory>
 #include <QtMath>
 #include <cmath>
-#include <iostream>
 namespace Orchid {
 
 void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget) const {
@@ -17,20 +16,25 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
     switch (control) {
         case CC_ScrollBar:
             if (const QStyleOptionSlider* bar = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
+                if (state.hovered) {
+                    p->save();
+                    p->setPen(getPen(opt->palette, Color::scrollBarHoverOutline, 1));
+                    p->setBrush(Qt::NoBrush);
+                    p->fillRect(bar->rect, getBrush(opt->palette, Color::scrollBarHoverBackground));
+                    if (opt->state & QStyle::State_Horizontal) {
+                        p->drawLine(bar->rect.topLeft(), bar->rect.topRight());
+                        p->drawLine(bar->rect.bottomLeft(), bar->rect.bottomRight());
+                    } else {
+                        p->drawLine(bar->rect.topLeft(), bar->rect.bottomLeft());
+                        p->drawLine(bar->rect.topRight(), bar->rect.bottomRight());
+                    }
+                    p->restore();
+                }
 
                 QStyleOptionSlider sliderOption(*bar);
                 sliderOption.rect = subControlRect(control, opt, SC_ScrollBarGroove, widget);
-
-                QStyleOption subOption(*opt);
-                subOption.rect = subControlRect(control, &sliderOption, SC_ScrollBarAddPage, widget);
-                drawControl(QStyle::CE_ScrollBarAddPage, &subOption, p, widget);
-
-                subOption.rect = subControlRect(control, &sliderOption, SC_ScrollBarSubPage, widget);
-                drawControl(QStyle::CE_ScrollBarSubPage, &subOption, p, widget);
-
-                subOption.rect = subControlRect(control, &sliderOption, SC_ScrollBarSlider, widget);
-                drawControl(QStyle::CE_ScrollBarSlider, &subOption, p, widget);
-
+                sliderOption.rect = subControlRect(control, &sliderOption, SC_ScrollBarSlider, widget);
+                drawControl(QStyle::CE_ScrollBarSlider, &sliderOption, p, widget);
                 return;
             }
             break;
@@ -424,35 +428,21 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             break;
 
         case CE_ScrollBarSubPage:
-        case CE_ScrollBarAddPage: {
-            const QRect rect = opt->rect;
-
-            p->save();
-            p->setPen(getPen(opt->palette, Color::scrollBarHoverOutline, 1));
-            p->setBrush(Qt::NoBrush);
-            p->fillRect(rect, getBrush(opt->palette, Color::scrollBarHoverBackground));
-
-            if (opt->state & QStyle::State_Horizontal) {
-                p->drawLine(rect.topLeft(), rect.topRight());
-                p->drawLine(rect.bottomLeft(), rect.bottomRight());
-            } else {
-                p->drawLine(rect.topLeft(), rect.bottomLeft());
-                p->drawLine(rect.topRight(), rect.bottomRight());
-            }
-
-            p->restore();
-
+        case CE_ScrollBarAddPage:
+        case CE_ScrollBarAddLine:
+        case CE_ScrollBarSubLine:
             return;
-        }
 
         case CE_ScrollBarSlider: {
-            drawControl(QStyle::CE_ScrollBarAddPage, opt, p, widget);
+            if (state.hovered) {
+                drawControl(QStyle::CE_ScrollBarAddPage, opt, p, widget);
+            }
             QRect rect;
             if (opt->state & QStyle::State_Horizontal) {
-                const int gapHeigth = std::floor(opt->rect.height() / 4.0);
+                const int gapHeigth = state.hovered ? qFloor(opt->rect.height() / 4.0) : 6;
                 rect = opt->rect.adjusted(0, gapHeigth, 0, -gapHeigth);
             } else {
-                const int gapWidth = std::floor(opt->rect.width() / 4.0);
+                const int gapWidth = state.hovered ? qFloor(opt->rect.width() / 4.0) : 6;
                 rect = opt->rect.adjusted(gapWidth, 0, -gapWidth, 0);
             }
             p->save();
@@ -466,6 +456,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
             return;
         }
+
         case CE_MenuItem:
             if (const auto* menu = qstyleoption_cast<const QStyleOptionMenuItem*>(opt)) {
                 switch (menu->menuItemType) {
@@ -965,11 +956,11 @@ void Style::polish(QWidget* widget) {
         widget->inherits("QLineEdit")) {
         widget->setAttribute(Qt::WA_Hover, true);
     }
+    if (widget->inherits("QScrollBar")) {
+        widget->setAttribute(Qt::WA_OpaquePaintEvent, false);
+    }
     if (QMenu* menu = qobject_cast<QMenu*>(widget)) {
-        if (Constants::menuTransparency < 255 || 1) {
-            menu->setAttribute(Qt::WA_TranslucentBackground);
-        }
-
+        menu->setAttribute(Qt::WA_TranslucentBackground);
         if (menu->graphicsEffect() == nullptr) {
             QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(menu);
             shadow->setColor(QColor(10, 10, 10, 100));
@@ -990,6 +981,9 @@ void Style::unpolish(QWidget* widget) {
         widget->inherits("QComboBox") ||
         widget->inherits("QLineEdit")) {
         widget->setAttribute(Qt::WA_Hover, false);
+    }
+    if (widget->inherits("QScrollBar")) {
+        widget->setAttribute(Qt::WA_OpaquePaintEvent, true);
     }
     if (QMenu* menu = qobject_cast<QMenu*>(widget)) {
         menu->setAttribute(Qt::WA_TranslucentBackground, false);
@@ -1021,6 +1015,8 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
             return Constants::sliderHandleHoverCircleDiameter;
         case PM_SliderTickmarkOffset:
             return 3;
+        case PM_ScrollBarSliderMin:
+            return 40;
         case PM_MenuHMargin:
             return 0 + Constants::menuTransparentPadding;
         case PM_MenuVMargin:
@@ -1035,6 +1031,8 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
             return 0;
         case PM_MenuBarPanelWidth:
             return 0;
+        case PM_ScrollView_ScrollBarOverlap:
+            return Constants::scrollBarThicknessHover;
         default:
             break;
     }
@@ -1063,6 +1061,8 @@ int Style::styleHint(QStyle::StyleHint hint, const QStyleOption* option, const Q
             return false;
         case SH_ComboBox_PopupFrameStyle:
             return 0;
+        case SH_ScrollBar_LeftClickAbsolutePosition:
+            return true;
         default:
             break;
     }
@@ -1237,14 +1237,69 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                 }
             }
             break;
-        default:
-            switch (element) {
-                case SC_ScrollBarGroove:
-                    return opt->rect;
+        case CC_ScrollBar:
+            if (const QStyleOptionSlider* bar = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
+                switch (element) {
+                    case SC_ScrollBarSubLine:
+                    case SC_ScrollBarAddLine:
+                    case SC_ScrollBarFirst:
+                    case SC_ScrollBarLast:
+                        return QRect(0, 0, 0, 0);
 
-                default:
-                    break;
+                    case SC_ScrollBarGroove:
+                        return bar->rect;
+
+                    case SC_ScrollBarSlider: {
+                        const int barLen = bar->orientation == Qt::Horizontal ? bar->rect.width() : bar->rect.height();
+                        const int sliderLen = scrollbarGetSliderLength(bar);
+                        int position = sliderPositionFromValue(bar->minimum,
+                                                               bar->maximum,
+                                                               bar->sliderPosition,
+                                                               barLen - sliderLen,
+                                                               bar->upsideDown);
+
+                        if (bar->orientation == Qt::Horizontal) {
+                            return QRect(bar->rect.left() + position, bar->rect.top(), sliderLen, bar->rect.height());
+                        } else {
+                            return QRect(bar->rect.left(), bar->rect.top() + position, bar->rect.width(), sliderLen);
+                        }
+                    }
+                    case SC_ScrollBarSubPage: {
+                        const int barLen = bar->orientation == Qt::Horizontal ? bar->rect.width() : bar->rect.height();
+                        const int sliderLen = scrollbarGetSliderLength(bar);
+                        int sliderPosition = sliderPositionFromValue(bar->minimum,
+                                                                     bar->maximum,
+                                                                     bar->sliderPosition,
+                                                                     barLen - sliderLen,
+                                                                     bar->upsideDown);
+
+                        if (bar->orientation == Qt::Horizontal) {
+                            return QRect(bar->rect.topLeft(), QPoint(bar->rect.left() + sliderPosition, bar->rect.bottom()));
+                        } else {
+                            return QRect(bar->rect.topLeft(), QPoint(bar->rect.right(), bar->rect.top() + sliderPosition));
+                        }
+                    }
+                    case SC_ScrollBarAddPage: {
+                        const int barLen = bar->orientation == Qt::Horizontal ? bar->rect.width() : bar->rect.height();
+                        const int sliderLen = scrollbarGetSliderLength(bar);
+                        int sliderPosition = sliderPositionFromValue(bar->minimum,
+                                                                     bar->maximum,
+                                                                     bar->sliderPosition,
+                                                                     barLen - sliderLen,
+                                                                     bar->upsideDown);
+                        if (bar->orientation == Qt::Horizontal) {
+                            return QRect(QPoint(bar->rect.left() + sliderPosition + sliderLen, bar->rect.top()), bar->rect.bottomRight());
+                        } else {
+                            return QRect(QPoint(bar->rect.left(), bar->rect.top() + sliderPosition + sliderLen), bar->rect.bottomRight());
+                        }
+                    }
+
+                    default:
+                        break;
+                }
             }
+        default:
+            break;
     }
 
     return SuperStyle::subControlRect(cc, opt, element, widget);
@@ -1271,7 +1326,6 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
 
         case CT_SpinBox:
             if (const auto* spin = qstyleoption_cast<const QStyleOptionSpinBox*>(opt)) {
-                std::cout << spin->fontMetrics.averageCharWidth() << std::endl;
                 const int width = Constants::lineEditTextVerticalPadding +
                                   (spin->fontMetrics.averageCharWidth() * Constants::spinMinWidthChars) +
                                   (Constants::spinIndicatorWidth * 2);
@@ -1387,6 +1441,15 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
 
                 return QSize(width, height);
             }
+            break;
+        case CT_ScrollBar:
+            if (const auto* bar = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
+                if (bar->orientation == Qt::Horizontal) {
+                    return QSize(1, Constants::scrollBarThicknessHover);
+                }
+                return QSize(Constants::scrollBarThicknessHover, 1);
+            }
+            break;
 
         default:
             break;
@@ -1396,7 +1459,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
 
 const QString Style::getStyle() { // this is not ideal, but shold work - todo: make this configurable in settings
     const QStringList availibleStyles = QStyleFactory::keys();
-    if (availibleStyles.contains("breeze", Qt::CaseInsensitive)) {
+    if (availibleStyles.contains("", Qt::CaseInsensitive)) {
         return QString("Breeze");
     }
 
@@ -1426,6 +1489,16 @@ const Style::MenuItemText Style::menuItemGetText(const QStyleOptionMenuItem* men
         text.label = menu->text;
     }
     return text;
+}
+
+const int Style::scrollbarGetSliderLength(const QStyleOptionSlider* bar) const {
+    const int barLen = bar->orientation == Qt::Horizontal ? bar->rect.width() : bar->rect.height();
+    const int contentLen = bar->maximum - bar->minimum + bar->pageStep;
+    const int minSliderLen = pixelMetric(PM_ScrollBarSliderMin, bar);
+
+    const int sliderLen = qreal(bar->pageStep) / contentLen * barLen;
+
+    return qMin(qMax(minSliderLen, sliderLen), barLen);
 }
 
 } // namespace Orchid
