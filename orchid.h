@@ -30,16 +30,16 @@ enum Color {
     tabWidgetPageArea,
     scrollBarHoverBackground,
     scrollBarHoverOutline,
-    scrollBarSlider,         // HP
+    scrollBarSlider,         // HPD
     sliderHandle,            // D
     sliderHandleHoverCircle, // P
     sliderLineBefore,        // D
     sliderLineAfter,         // D
     sliderTickmarks,
     lineEditBackground,          // D
-    lineEditOutline,             // DF
+    lineEditOutline,             // DFH
     spinBoxBackground,           // D
-    spinBoxOutline,              // DF
+    spinBoxOutline,              // DFH
     spinBoxIndicator,            // DHP
     spinBoxIndicatorHoverCircle, // HP
     comboBoxBackground,          // DHPF - pressed: menu is open

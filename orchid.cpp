@@ -126,6 +126,8 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 
         case scrollBarSlider: {
             const auto base = getColor(pal, Color::scrollBarHoverBackground);
+            if (!state.enabled)
+                return base;
             if (state.pressed)
                 return isDarkMode(pal) ? base.lighter(250) : base.darker(250);
             if (state.hovered)
@@ -171,6 +173,8 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 
         case lineEditOutline:
         case spinBoxOutline: {
+            if (!state.enabled)
+                return getColor(pal, lineEditBackground, state);
             if (state.hasFocus)
                 return pal.color(CGroup::Normal, CRole::Accent);
             const QColor base = getColor(pal, lineEditBackground, state);

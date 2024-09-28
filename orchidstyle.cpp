@@ -15,7 +15,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
     switch (control) {
         case CC_ScrollBar:
             if (const QStyleOptionSlider* bar = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
-                if (state.hovered) {
+                if (state.hovered && state.enabled) {
                     p->save();
                     p->setPen(getPen(opt->palette, Color::scrollBarHoverOutline, 1));
                     p->setBrush(Qt::NoBrush);
@@ -433,11 +433,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             return;
 
         case CE_ScrollBarSlider: {
-            if (state.hovered) {
-                drawControl(QStyle::CE_ScrollBarAddPage, opt, p, widget);
-            }
             QRect rect;
-            const int gapSize = state.hovered ? Constants::scrollBarSliderPaddingHover : Constants::scrollBarSliderPadding;
+            const int gapSize = (state.hovered && state.enabled) ? Constants::scrollBarSliderPaddingHover : Constants::scrollBarSliderPadding;
             if (opt->state & QStyle::State_Horizontal) {
                 rect = opt->rect.adjusted(0, gapSize, 0, -gapSize);
             } else {
