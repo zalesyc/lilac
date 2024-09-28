@@ -8,7 +8,6 @@
 #include <QPalette>
 #include <QStyleFactory>
 #include <QtMath>
-#include <cmath>
 namespace Orchid {
 
 void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget) const {
@@ -128,11 +127,10 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
 
                     // ------------- slider
                     const QRectF handleRectF(handleRect);
-                    // TODO: remove the std::acos func as it is expensive - the parameters are constants
+                    // TODO: remove the qAcos func as it is expensive - the parameters are constants
                     // from PixelMetric so it should be replaced by a precalculated value
                     const qreal handleRadius = handleRectF.height() / 2.0;
-                    const qreal targentsAngle = qRadiansToDegrees(std::acos(handleRadius /
-                                                                            (handleRadius + tickOffset)));
+                    const qreal targentsAngle = qRadiansToDegrees(qAcos(handleRadius / (handleRadius + tickOffset)));
                     const qreal circleRestAngle = 360 - (2 * targentsAngle);
                     const qreal circleBetweenTargentsAngle = 180 - (2 * targentsAngle);
 
@@ -320,18 +318,19 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QTabBar::TriangularNorth:
                     case QTabBar::RoundedSouth:
                     case QTabBar::TriangularSouth:
-                        cornerRectSize = std::min({Constants::btnRadius * 2, // the corner radius is still btnRadius,
-                                                   rect.width(),             // it has to be *2 due to implementation
-                                                   rect.height() * 2});
+                        cornerRectSize = qMin(Constants::btnRadius * 2, // the corner radius is still btnRadius,
+                                              qMin(rect.width(),        // it has to be *2 due to implementation
+                                                   rect.height() * 2));
+
                         break;
 
                     case QTabBar::RoundedEast:
                     case QTabBar::TriangularEast:
                     case QTabBar::RoundedWest:
                     case QTabBar::TriangularWest:
-                        cornerRectSize = std::min({Constants::btnRadius * 2,
-                                                   rect.height(),
-                                                   rect.width() * 2});
+                        cornerRectSize = qMin(Constants::btnRadius * 2,
+                                              qMin(rect.height(),
+                                                   rect.width() * 2));
                         break;
                 };
 
@@ -438,12 +437,11 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 drawControl(QStyle::CE_ScrollBarAddPage, opt, p, widget);
             }
             QRect rect;
+            const int gapSize = state.hovered ? Constants::scrollBarSliderPaddingHover : Constants::scrollBarSliderPadding;
             if (opt->state & QStyle::State_Horizontal) {
-                const int gapHeigth = state.hovered ? qFloor(opt->rect.height() / 4.0) : 6;
-                rect = opt->rect.adjusted(0, gapHeigth, 0, -gapHeigth);
+                rect = opt->rect.adjusted(0, gapSize, 0, -gapSize);
             } else {
-                const int gapWidth = state.hovered ? qFloor(opt->rect.width() / 4.0) : 6;
-                rect = opt->rect.adjusted(gapWidth, 0, -gapWidth, 0);
+                rect = opt->rect.adjusted(gapSize, 0, -gapSize, 0);
             }
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
@@ -1035,7 +1033,7 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_MenuBarPanelWidth:
             return 0;
         case PM_ScrollView_ScrollBarOverlap:
-            return Constants::scrollBarThicknessHover;
+            return Constants::scrollBarThickness;
         default:
             break;
     }
@@ -1448,9 +1446,9 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
         case CT_ScrollBar:
             if (const auto* bar = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
                 if (bar->orientation == Qt::Horizontal) {
-                    return QSize(1, Constants::scrollBarThicknessHover);
+                    return QSize(1, Constants::scrollBarThickness);
                 }
-                return QSize(Constants::scrollBarThicknessHover, 1);
+                return QSize(Constants::scrollBarThickness, 1);
             }
             break;
 
@@ -1501,7 +1499,8 @@ const int Style::scrollbarGetSliderLength(const QStyleOptionSlider* bar) const {
     const int barLen = bar->orientation == Qt::Horizontal ? bar->rect.width() : bar->rect.height();
     const int contentLen = bar->maximum - bar->minimum + bar->pageStep;
     const int minSliderLen = pixelMetric(PM_ScrollBarSliderMin, bar);
-
+    if (contentLen <= 0) // to avoid division by 0
+        return minSliderLen;
     const int sliderLen = qreal(bar->pageStep) / contentLen * barLen;
 
     return qMin(qMax(minSliderLen, sliderLen), barLen);

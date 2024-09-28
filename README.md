@@ -36,5 +36,5 @@ Widgets not mentioned in the docs
 - [x] LineEdits 
 
 ## TODO
-- `Style::drawComplexControl` -> CC_Slider `std::acos` is expensive so remove it - the parameters are constants from PixelMetric so it should be replaced by a precalculated value
+- `Style::drawComplexControl` -> CC_Slider `qAcos` is expensive so remove it - the parameters are constants from PixelMetric so it should be replaced by a precalculated value
 - look at `PE_IndicatorArrow*` -> there is commented out implementation that has some bugs
