@@ -260,6 +260,39 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 return;
             }
             break;
+        case CC_ToolButton:
+            /* Notes for toolbuttons:
+             * - AutoRaise means flat
+             * - if (btn->subControls & SC_ToolButtonMenu) coresponds to QToolButton::InstantPopup,
+             *   if (btn->features & QStyleOptionToolButton::HasMenu) coresponds to QToolButton::MenuButtonPopup
+             */
+            if (const auto* btn = qstyleoption_cast<const QStyleOptionToolButton*>(opt)) {
+                if (btn->subControls & SC_ToolButton) {
+                    drawPrimitive(PE_PanelButtonTool, btn, p, widget);
+                }
+
+                QRect buttonRect = subControlRect(control, btn, SC_ToolButton, widget);
+
+                QStyleOptionToolButton toolOpt = *btn;
+                toolOpt.rect = buttonRect;
+                drawControl(CE_ToolButtonLabel, &toolOpt, p, widget);
+
+                if (btn->subControls & SC_ToolButtonMenu) {
+                    const QRect menuRect = subControlRect(control, btn, SC_ToolButtonMenu, widget);
+                    toolOpt.rect = menuRect;
+                    drawPrimitive(PE_IndicatorButtonDropDown, &toolOpt, p, widget);
+                    toolOpt.rect = QRect(0, 0, Constants::smallArrowSize, Constants::smallArrowSize);
+                    toolOpt.rect.moveCenter(menuRect.center());
+                    drawPrimitive(PE_IndicatorArrowDown, &toolOpt, p, widget);
+
+                } else if (btn->features & QStyleOptionToolButton::HasMenu) {
+                    toolOpt.rect = QRect(0, 0, Constants::toolBtnMenuArrowSize, Constants::toolBtnMenuArrowSize);
+                    toolOpt.rect.moveBottomRight(buttonRect.bottomRight() - Constants::toolBtnArrowOffset);
+                    drawPrimitive(PE_IndicatorArrowDown, &toolOpt, p, widget);
+                }
+                return;
+            }
+            break;
 
         default:
             break;
@@ -518,10 +551,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
                         // label
                         if (!menu->text.isEmpty()) {
-                            int textFlags = Qt::TextShowMnemonic;
-                            if (!styleHint(SH_UnderlineShortcut, menu, widget))
-                                textFlags |= Qt::TextHideMnemonic;
-
+                            const int textFlags = getTextFlags(menu);
                             const MenuItemText text = menuItemGetText(menu);
 
                             p->save();
@@ -572,15 +602,11 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                         if (text.label.isEmpty()) {
                             lineRect = menu->rect.adjusted(Constants::menuItemVerticalExternalPadding, 0, -Constants::menuItemVerticalExternalPadding, 0);
                         } else {
-                            int textFlags = Qt::TextShowMnemonic;
-                            if (!styleHint(SH_UnderlineShortcut, menu, widget))
-                                textFlags |= Qt::TextHideMnemonic;
-
                             const QSize labelSize = menu->fontMetrics.size((Qt::TextShowMnemonic | Qt::AlignLeft | Qt::AlignVCenter), text.label);
                             const QRect labelRect(menu->rect.left() + Constants::menuItemVerticalExternalPadding, menu->rect.top(), labelSize.width(), menu->rect.height());
                             p->setPen(getPen(menu->palette, Color::menuText));
                             p->setFont(menu->font);
-                            p->drawText(labelRect, (textFlags | Qt::AlignLeft | Qt::AlignVCenter), menu->text);
+                            p->drawText(labelRect, (getTextFlags(menu) | Qt::AlignLeft | Qt::AlignVCenter), menu->text);
 
                             lineRect = QRect(QPoint(labelRect.right() + Constants::menuHorizontalSpacing, menu->rect.top()),
                                              QPoint(menu->rect.right() - Constants::menuItemVerticalExternalPadding, menu->rect.bottom()));
@@ -644,16 +670,12 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     bar->icon.paint(p, iconRect, Qt::AlignCenter, iconMode);
                 }
                 if (!bar->text.isEmpty()) {
-                    int textFlags = Qt::TextShowMnemonic;
-                    if (!styleHint(SH_UnderlineShortcut, bar, widget))
-                        textFlags |= Qt::TextHideMnemonic;
-
                     QRect labelRect(0, contentsRect.top(), 0, contentsRect.height());
                     labelRect.setLeft(
                         contentsRect.left() + Constants::menuItemVerticalInternalPadding + (iconWidth > 0 ? iconWidth + Constants::menuHorizontalSpacing : 0));
                     labelRect.setRight(
                         contentsRect.right() - Constants::menuItemVerticalInternalPadding);
-                    p->drawText(labelRect, (Qt::AlignLeft | Qt::AlignVCenter | textFlags | Qt::TextSingleLine), bar->text);
+                    p->drawText(labelRect, (Qt::AlignLeft | Qt::AlignVCenter | getTextFlags(bar) | Qt::TextSingleLine), bar->text);
                 }
                 p->restore();
                 return;
@@ -675,19 +697,82 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 }
 
                 if (!combo->currentText.isEmpty() && !combo->editable) {
-                    int textFlags = Qt::TextShowMnemonic;
-                    if (!styleHint(SH_UnderlineShortcut, combo, widget))
-                        textFlags |= Qt::TextHideMnemonic;
-
                     QRect textRect(labelRect);
                     textRect.setLeft(labelRect.left() + (hasIcon ? combo->iconSize.width() + Constants::lineEditTextVerticalPadding : 0));
 
                     p->save();
                     p->setPen(getPen(combo->palette, Orchid::comboBoxUneditableText));
                     p->setBrush(Qt::NoBrush);
-                    p->drawText(textRect, (textFlags | Qt::AlignLeft | Qt::AlignVCenter), combo->currentText);
+                    p->drawText(textRect, (getTextFlags(combo) | Qt::AlignLeft | Qt::AlignVCenter), combo->currentText);
                     p->restore();
                 }
+                return;
+            }
+            break;
+
+        case CE_ToolButtonLabel:
+            if (const auto* btn = qstyleoption_cast<const QStyleOptionToolButton*>(opt)) {
+                QRect rect = btn->rect.adjusted(Constants::toolBtnLabelVerticalPadding,
+                                                Constants::toolBtnLabelHorizontalPadding,
+                                                -Constants::toolBtnLabelVerticalPadding,
+                                                -Constants::toolBtnLabelHorizontalPadding);
+
+                QRect iconRect;
+                QRect textRect;
+                Qt::Alignment textHalign = Qt::AlignLeft;
+                switch (btn->toolButtonStyle) {
+                    case Qt::ToolButtonIconOnly:
+                        iconRect = QRect(QPoint(0, 0), btn->iconSize);
+                        iconRect.moveCenter(rect.center());
+                        break;
+                    case Qt::ToolButtonTextOnly:
+                        textRect = rect;
+                        break;
+                    case Qt::ToolButtonTextBesideIcon:
+                    case Qt::ToolButtonFollowStyle:
+                        iconRect = QRect(rect.left(), rect.top(), btn->iconSize.width(), rect.height());
+                        textRect = QRect(QPoint(iconRect.right() + Constants::toolbtnLabelSpacing, rect.top()), rect.bottomRight());
+                        break;
+                    case Qt::ToolButtonTextUnderIcon:
+                        iconRect = QRect(rect.left(), rect.top(), rect.width(), btn->iconSize.height());
+                        textRect = QRect(QPoint(rect.left(), iconRect.bottom() + Constants::toolbtnLabelSpacing), rect.bottomRight());
+                        textHalign = Qt::AlignHCenter;
+                        break;
+                }
+                p->save();
+                p->setPen(getPen(btn->palette, Color::toolBtnText, state));
+                p->setFont(btn->font);
+
+                if (iconRect.isValid()) {
+                    if (!btn->icon.isNull()) {
+                        btn->icon.paint(p, iconRect, Qt::AlignCenter, state.enabled ? QIcon::Normal : QIcon::Disabled);
+                    } else if (btn->arrowType != Qt::NoArrow) {
+                        PrimitiveElement arrow;
+                        switch (btn->arrowType) {
+                            case Qt::RightArrow:
+                                arrow = PE_IndicatorArrowRight;
+                                break;
+                            case Qt::LeftArrow:
+                                arrow = PE_IndicatorArrowLeft;
+                                break;
+                            case Qt::UpArrow:
+                                arrow = PE_IndicatorArrowUp;
+                                break;
+                            case Qt::DownArrow:
+                            case Qt::NoArrow:
+                                arrow = PE_IndicatorArrowDown;
+                                break;
+                        }
+                        QStyleOption arrowOpt(*btn);
+                        arrowOpt.rect = iconRect;
+                        drawPrimitive(arrow, &arrowOpt, p);
+                    }
+                }
+                if (textRect.isValid() && !btn->text.isEmpty()) {
+                    p->drawText(textRect, (getTextFlags(btn) | textHalign | Qt::AlignVCenter), btn->text);
+                }
+                p->restore();
+
                 return;
             }
             break;
@@ -886,6 +971,54 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->restore();
             return;
         }
+        case PE_PanelButtonTool: {
+            // this also gets called from titlebar, so i cant have everithing in QStyleOptionToolButton
+            bool justIcon = true;
+            if (const auto* btn = qstyleoption_cast<const QStyleOptionToolButton*>(opt)) {
+                justIcon = (btn->toolButtonStyle == Qt::ToolButtonIconOnly);
+            }
+
+            Color color = toolBtnBackground;
+            if ((opt->state & State_AutoRaise) && (opt->state & State_On)) {
+                color = toolBtnBackgroundAutoRiseChecked;
+            } else if (opt->state & (State_AutoRaise)) {
+                color = toolBtnBackgroundAutoRise;
+            } else if (opt->state & State_On) {
+                color = toolBtnBackgroundChecked;
+            }
+            p->save();
+            p->setRenderHints(QPainter::Antialiasing);
+            if (state.hasFocus) {
+                p->setPen(getPen(opt->palette, Color::toolBtnFocusOutline, 2));
+            } else {
+                p->setPen(Qt::NoPen);
+            }
+            p->setBrush(getBrush(opt->palette, color, state));
+            if ((opt->rect.width() == opt->rect.height()) && justIcon) {
+                p->drawEllipse(opt->rect.adjusted(1, 1, -1, -1));
+            } else {
+                const qreal cornerRadius = qMin(qreal(Constants::btnRadius), opt->rect.height() / 2.0);
+                p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), cornerRadius, cornerRadius);
+            }
+            p->restore();
+            return;
+        }
+
+        case PE_IndicatorButtonDropDown: {
+            if ((opt->state & State_AutoRaise) && ((!state.hovered && !state.pressed) || !state.enabled))
+                return;
+
+            const int padding = qMin(int(opt->rect.height() / 4.0), Constants::toolBtnMenuSeparatorHorizontalPadding);
+            p->save();
+            p->setPen(getPen(opt->palette, Color::toolBtnMenuSeparator, 1));
+            p->drawLine(opt->rect.topLeft() + QPoint(0, padding),
+                        opt->rect.bottomLeft() - QPoint(0, padding));
+            p->restore();
+            return;
+        }
+
+        case PE_FrameButtonTool:
+            return;
 
         case PE_FrameMenu:
             return;
@@ -1061,6 +1194,8 @@ int Style::styleHint(QStyle::StyleHint hint, const QStyleOption* option, const Q
             return 0;
         case SH_ScrollBar_LeftClickAbsolutePosition:
             return true;
+        case SH_ToolButtonStyle:
+            return Qt::ToolButtonTextBesideIcon;
         default:
             break;
     }
@@ -1296,6 +1431,26 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                         break;
                 }
             }
+        case CC_ToolButton:
+            if (const auto* btn = qstyleoption_cast<const QStyleOptionToolButton*>(opt)) {
+                switch (element) {
+                    case SC_ToolButton:
+                        if (btn->subControls & SC_ToolButtonMenu) {
+                            return btn->rect.adjusted(0, 0, -Constants::toolbtnArrowSectionWidth, 0);
+                        }
+                        return btn->rect;
+                    case SC_ToolButtonMenu:
+                        if (btn->subControls & SC_ToolButtonMenu) {
+                            QRect rect = btn->rect;
+                            rect.setLeft(btn->rect.right() - Constants::toolbtnArrowSectionWidth);
+                            return rect;
+                        }
+                        return btn->rect;
+                    default:
+                        break;
+                }
+            }
+            break;
         default:
             break;
     }
@@ -1311,6 +1466,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                                     original.height());
             return QSize(original.width(), heigth);
         }
+
         case CT_LineEdit: {
             const int width = (opt->fontMetrics.averageCharWidth() * Constants::lineEditMinWidthChars) +
                               this->pixelMetric(PM_LineEditIconSize, opt, widget) +
@@ -1449,6 +1605,40 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
             }
             break;
 
+        case CT_ToolButton:
+            if (const auto* btn = qstyleoption_cast<const QStyleOptionToolButton*>(opt)) {
+                QSize size(0, 0);
+                switch (btn->toolButtonStyle) {
+                    case Qt::ToolButtonIconOnly:
+                        size = btn->iconSize;
+                        break;
+                    case Qt::ToolButtonTextOnly:
+                        size = btn->fontMetrics.size(Qt::TextShowMnemonic, btn->text);
+                        break;
+                    case Qt::ToolButtonTextBesideIcon:
+                    case Qt::ToolButtonFollowStyle: {
+                        const QSize textSize = btn->fontMetrics.size(Qt::TextShowMnemonic, btn->text);
+                        size.setWidth(btn->iconSize.width() + Constants::toolbtnLabelSpacing + textSize.width());
+                        size.setHeight(qMax(btn->iconSize.height(), textSize.height()));
+                    } break;
+                    case Qt::ToolButtonTextUnderIcon: {
+                        const QSize textSize = btn->fontMetrics.size(Qt::TextShowMnemonic, btn->text);
+                        size.setWidth(qMax(btn->iconSize.width(), textSize.width()));
+                        size.setHeight(btn->iconSize.height() + Constants::toolbtnLabelSpacing + textSize.height());
+                    } break;
+                }
+                size += QSize(Constants::toolBtnLabelVerticalPadding * 2, Constants::toolBtnLabelHorizontalPadding * 2);
+
+                if (btn->subControls & SC_ToolButtonMenu)
+                    size += QSize(Constants::toolbtnArrowSectionWidth, 0);
+
+                if (size.width() < size.height())
+                    return QSize(size.height(), size.height());
+
+                return size;
+            }
+            break;
+
         case CT_SizeGrip:
             return QSize();
 
@@ -1501,6 +1691,13 @@ const int Style::scrollbarGetSliderLength(const QStyleOptionSlider* bar) const {
     const int sliderLen = qreal(bar->pageStep) / contentLen * barLen;
 
     return qMin(qMax(minSliderLen, sliderLen), barLen);
+}
+
+const int Style::getTextFlags(const QStyleOption* opt) const {
+    int textFlags = Qt::TextShowMnemonic;
+    if (!styleHint(SH_UnderlineShortcut, opt))
+        textFlags |= Qt::TextHideMnemonic;
+    return textFlags;
 }
 
 } // namespace Orchid

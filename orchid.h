@@ -18,41 +18,59 @@ enum Color {
      * D: disabled, H: hover, P: pressed, F: has focus
      */
     outline, // outline or separator line
-    button,  // DHP
+
+    button, // DHP
     toggleButtonChecked,
+
     checkBoxInside,      // D all checkbox colors are also for radiobuttons
     checkBoxCheck,       // D
     checkBoxOutline,     // D
     checkBoxHoverCircle, // HP
+
     tabCheckedOutline,
     tabCheckedFill,
     tabUncheckedHover,
     tabWidgetPageArea,
+
     scrollBarHoverBackground,
     scrollBarHoverOutline,
-    scrollBarSlider,         // HPD
+    scrollBarSlider, // HPD
+
     sliderHandle,            // D
     sliderHandleHoverCircle, // P
     sliderLineBefore,        // D
     sliderLineAfter,         // D
     sliderTickmarks,
-    lineEditBackground,          // D
-    lineEditOutline,             // DFH
+
+    lineEditBackground, // D
+    lineEditOutline,    // DFH
+
     spinBoxBackground,           // D
     spinBoxOutline,              // DFH
     spinBoxIndicator,            // DHP
     spinBoxIndicatorHoverCircle, // HP
-    comboBoxBackground,          // DHPF - pressed: menu is open
-    comboBoxOutline,             // DHPF
-    comboBoxUneditableText,      // D
-    menuText,                    // D
-    menuShortcutText,            // D
-    menuSeparator,               // D
+
+    comboBoxBackground,     // DHPF - pressed: menu is open
+    comboBoxOutline,        // DHPF
+    comboBoxUneditableText, // D
+
+    menuText,         // D
+    menuShortcutText, // D
+    menuSeparator,    // D
     menuItemHoverBackground,
     menuBackground,
     indicatorArrow,     // D
     menuBarItemHoverBg, // HP - hover: hover without open menu, pressed: menu open
     menuBarItemText,    // D
+
+    toolBtnText,                      // D
+    toolBtnBackground,                // DHP
+    toolBtnBackgroundAutoRise,        // DHP
+    toolBtnBackgroundChecked,         // DHP
+    toolBtnBackgroundAutoRiseChecked, // DHP
+    toolBtnMenuSeparator,             // D
+    toolBtnFocusOutline,
+
     focusColor
 };
 
@@ -119,6 +137,13 @@ constexpr int comboArrowWidth = 30; // the part that is clickable, the indicator
 constexpr int comboMinWidthChars = lineEditMinWidthChars;
 constexpr int comboTextLeftPadding = lineEditTextVerticalPadding; // used left of icon and left of text
 
+constexpr int toolBtnMenuArrowSize = 8;                                      // the small arrow in the bottom left corner
+constexpr QPoint toolBtnArrowOffset = QPoint(5, 5);                          // offset from bottomRight of the widget, for the small arrow in the bottom left
+constexpr int toolBtnLabelHorizontalPadding = controlsTextHorizontalPadding; // Top and bottom
+constexpr int toolBtnLabelVerticalPadding = 6;                               // left, right
+constexpr int toolbtnLabelSpacing = 4;                                       // between the icon and text
+constexpr int toolbtnArrowSectionWidth = 20;                                 // width of the separated arrow section on the right, poppupMode: MenuButtonPopup
+constexpr int toolBtnMenuSeparatorHorizontalPadding = 4;
 } // namespace Constants
 
 namespace Config {

@@ -63,6 +63,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             const auto base = pal.color(CGroup::Normal, CRole::Base);
             return isDarkMode(pal) ? base.lighter(150) : base.darker(150);
         }
+        case toolBtnBackground:
         case button: {
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Button);
@@ -75,6 +76,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return base;
         }
 
+        case toolBtnBackgroundChecked:
         case toggleButtonChecked:
             return pal.color(CGroup::Normal, CRole::Accent);
 
@@ -225,6 +227,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case menuText:
         case menuBarItemText:
         case comboBoxUneditableText:
+        case toolBtnText:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Text);
             return pal.color(CGroup::Normal, CRole::Text);
@@ -242,9 +245,40 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 
         case menuItemHoverBackground:
         case menuBarItemHoverBg:
-            if (isDarkMode(pal))
-                return QColor(255, 255, 255, 26);
-            return QColor(0, 0, 0, 26);
+            return isDarkMode(pal) ? QColor(255, 255, 255, 26) : QColor(0, 0, 0, 26);
+
+        case toolBtnBackgroundAutoRise:
+            if (!state.enabled)
+                return QColor(Qt::transparent);
+
+            if (state.pressed)
+                return isDarkMode(pal) ? QColor(255, 255, 255, 40) : QColor(0, 0, 0, 40);
+            if (state.hovered)
+                return isDarkMode(pal) ? QColor(255, 255, 255, 30) : QColor(0, 0, 0, 30);
+            return QColor(Qt::transparent);
+
+        case toolBtnBackgroundAutoRiseChecked: {
+            if (!state.enabled) {
+                QColor base = pal.color(CGroup::Normal, CRole::Button);
+                base.setAlpha(120);
+                return base;
+            }
+            if (state.pressed)
+                return isDarkMode(pal) ? QColor(255, 255, 255, 45) : QColor(0, 0, 0, 45);
+            if (state.hovered)
+                return isDarkMode(pal) ? QColor(255, 255, 255, 38) : QColor(0, 0, 0, 38);
+            return isDarkMode(pal) ? QColor(255, 255, 255, 26) : QColor(0, 0, 0, 26);
+        }
+
+        case toolBtnMenuSeparator:
+            if (!state.enabled)
+                return isDarkMode(pal) ? pal.color(CGroup::Disabled, CRole::Button).lighter(130) :
+                                         pal.color(CGroup::Disabled, CRole::Button).darker(130);
+            return isDarkMode(pal) ? pal.color(CGroup::Normal, CRole::Button).lighter(200) :
+                                     pal.color(CGroup::Normal, CRole::Button).darker(200);
+
+        case toolBtnFocusOutline:
+            return pal.color(CGroup::Normal, CRole::Accent);
 
         case indicatorArrow:
             return pal.color(state.enabled ? CGroup::Normal : CGroup::Disabled, CRole::Text);
