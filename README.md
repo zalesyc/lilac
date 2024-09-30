@@ -20,7 +20,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [ ] Group Boxes
 - [ ] Splitters
 - [ ] Progress Bar
-- [ ] Tool Buttons
+- [x] Tool Buttons
 - [ ] Toolbars
 - [x] Menus
 - [x] Menu Bar
