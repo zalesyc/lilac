@@ -71,6 +71,10 @@ enum Color {
     toolBtnMenuSeparator,             // D
     toolBtnFocusOutline,
 
+    toolBarBackground, // D
+    toolBarHandle,     // D
+    toolBarSeparator,  // D
+
     focusColor
 };
 
@@ -144,6 +148,12 @@ constexpr int toolBtnLabelVerticalPadding = 6;                               // 
 constexpr int toolbtnLabelSpacing = 4;                                       // between the icon and text
 constexpr int toolbtnArrowSectionWidth = 20;                                 // width of the separated arrow section on the right, poppupMode: MenuButtonPopup
 constexpr int toolBtnMenuSeparatorHorizontalPadding = 4;
+
+constexpr int toolBarHandleHorizontalPadding = 6;    // for the longer side (top and bottom, when toolbar is horizontal)
+constexpr int toolBarSeparatorHorizontalPadding = 3; // for the longer side (top and bottom, when toolbar is horizontal)
+constexpr int toolBarHandleVerticalPadding = 2;      // left and right, when toolbar is horizontal
+constexpr int toolBarHandleLineSpacing = 2;
+
 } // namespace Constants
 
 namespace Config {

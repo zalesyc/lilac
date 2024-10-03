@@ -61,7 +61,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case menuSeparator:
         case outline: {
             const auto base = pal.color(CGroup::Normal, CRole::Base);
-            return isDarkMode(pal) ? base.lighter(150) : base.darker(150);
+            return isDarkMode(pal) ? base.lighter(180) : base.darker(180);
         }
         case toolBtnBackground:
         case button: {
@@ -246,6 +246,17 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case menuItemHoverBackground:
         case menuBarItemHoverBg:
             return isDarkMode(pal) ? QColor(255, 255, 255, 26) : QColor(0, 0, 0, 26);
+
+        case toolBarBackground:
+            if (!state.enabled)
+                return pal.color(CGroup::Disabled, CRole::Base);
+            return pal.color(CGroup::Normal, CRole::Base);
+
+        case toolBarHandle:
+        case toolBarSeparator: {
+            const QColor base = getColor(pal, Color::outline, state);
+            return isDarkMode(pal) ? base.lighter(140) : base.darker(140);
+        }
 
         case toolBtnBackgroundAutoRise:
             if (!state.enabled)

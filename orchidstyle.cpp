@@ -776,6 +776,32 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 return;
             }
             break;
+        case CE_ToolBar:
+            if (const auto* bar = qstyleoption_cast<const QStyleOptionToolBar*>(opt)) {
+                QLine separatorLine;
+                if (bar->toolBarArea & Qt::TopToolBarArea) {
+                    separatorLine.setP1(bar->rect.bottomLeft());
+                    separatorLine.setP2(bar->rect.bottomRight());
+                } else if (bar->toolBarArea & Qt::BottomToolBarArea) {
+                    separatorLine.setP1(bar->rect.topLeft());
+                    separatorLine.setP2(bar->rect.topRight());
+                } else if (bar->toolBarArea & Qt::LeftToolBarArea) {
+                    separatorLine.setP1(bar->rect.topRight());
+                    separatorLine.setP2(bar->rect.bottomRight());
+                } else if (bar->toolBarArea & Qt::RightToolBarArea) {
+                    separatorLine.setP1(bar->rect.topLeft());
+                    separatorLine.setP2(bar->rect.bottomLeft());
+                }
+
+                p->save();
+                p->setBrush(Qt::NoBrush);
+                p->fillRect(bar->rect, getColor(bar->palette, Color::toolBarBackground, state));
+                p->setPen(getPen(bar->palette, Color::outline, state, 1));
+                p->drawLine(separatorLine);
+                p->restore();
+                return;
+            }
+            break;
 
         case CE_MenuBarEmptyArea:
             return;
@@ -1017,6 +1043,55 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             return;
         }
 
+        case PE_IndicatorToolBarHandle:
+            if (const auto* bar = qstyleoption_cast<const QStyleOptionToolBar*>(opt)) {
+                if (!(bar->features & QStyleOptionToolBar::Movable)) {
+                    return;
+                }
+
+                p->save();
+                p->setPen(getPen(bar->palette, Color::toolBarHandle, 1));
+                if (bar->state & State_Horizontal) {
+                    // 2 is 2*1 for the line widths
+                    QRect linesRect = QRect(0, 0,
+                                            qMin(bar->rect.width(), 2 + Constants::toolBarHandleLineSpacing),
+                                            bar->rect.height() - qMin(Constants::toolBarHandleHorizontalPadding * 2, bar->rect.height() / 2));
+                    linesRect.moveCenter(bar->rect.center());
+                    p->drawLine(linesRect.topLeft(), linesRect.bottomLeft());
+                    p->drawLine(linesRect.topRight(), linesRect.bottomRight());
+                } else {
+                    // 2 is 2*1 for the line widths
+                    QRect linesRect = QRect(0, 0,
+                                            bar->rect.width() - qMin(Constants::toolBarHandleHorizontalPadding * 2, bar->rect.width() / 2),
+                                            qMin(bar->rect.height(), 2 + Constants::toolBarHandleLineSpacing));
+                    linesRect.moveCenter(bar->rect.center());
+                    p->drawLine(linesRect.topLeft(), linesRect.topRight());
+                    p->drawLine(linesRect.bottomLeft(), linesRect.bottomRight());
+                }
+                p->restore();
+                return;
+            }
+            break;
+        case PE_IndicatorToolBarSeparator: {
+            p->save();
+            p->setPen(getPen(opt->palette, Color::toolBarSeparator, 1));
+            if (opt->state & State_Horizontal) {
+                // padding for the longer side (top and bottom, when toolbar is horizontal)
+                const int padding = qMin(Constants::toolBarSeparatorHorizontalPadding * 2, opt->rect.height() / 2);
+                p->drawLine(opt->rect.center().x(),
+                            opt->rect.top() + padding,
+                            opt->rect.center().x(),
+                            opt->rect.bottom() - padding);
+            } else {
+                const int padding = qMin(Constants::toolBarSeparatorHorizontalPadding * 2, opt->rect.width() / 2);
+                p->drawLine(opt->rect.left() + padding,
+                            opt->rect.center().y(),
+                            opt->rect.right() - padding,
+                            opt->rect.center().y());
+            }
+            p->restore();
+        }
+
         case PE_FrameButtonTool:
             return;
 
@@ -1164,6 +1239,15 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
             return 0;
         case PM_ScrollView_ScrollBarOverlap:
             return Constants::scrollBarThickness;
+        case PM_ToolBarFrameWidth:
+            return 0;
+        case PM_ToolBarItemMargin:
+        case PM_ToolBarItemSpacing:
+            return 3;
+        case PM_ToolBarSeparatorExtent:
+            return 3;
+        case PM_ToolBarHandleExtent:
+            return (Constants::toolBarHandleVerticalPadding * 2) + 2 + Constants::toolBarHandleLineSpacing; // 2 is for the line thickness
         default:
             break;
     }
@@ -1225,6 +1309,25 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                                            -edit->lineWidth);
             }
             break;
+        case SE_ToolBarHandle:
+            if (const auto* bar = qstyleoption_cast<const QStyleOptionToolBar*>(opt)) {
+                if (!(bar->features & QStyleOptionToolBar::Movable)) {
+                    return QRect();
+                }
+                const int thickness = pixelMetric(PM_ToolBarHandleExtent);
+                if (opt->state & State_Horizontal) {
+                    return QRect(opt->rect.left(),
+                                 opt->rect.top(),
+                                 qMin(opt->rect.width(), thickness),
+                                 opt->rect.height());
+                }
+                return QRect(opt->rect.left(),
+                             opt->rect.top(),
+                             opt->rect.width(),
+                             qMin(opt->rect.height(), thickness));
+            }
+            break;
+
         default:
             break;
     }

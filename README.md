@@ -21,7 +21,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [ ] Splitters
 - [ ] Progress Bar
 - [x] Tool Buttons
-- [ ] Toolbars
+- [x] Toolbars
 - [x] Menus
 - [x] Menu Bar
 - [ ] Item View Headers
