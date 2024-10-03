@@ -62,6 +62,7 @@ enum Color {
     indicatorArrow,     // D
     menuBarItemHoverBg, // HP - hover: hover without open menu, pressed: menu open
     menuBarItemText,    // D
+    menuBarBackground,  // D
 
     toolBtnText,                      // D
     toolBtnBackground,                // DHP

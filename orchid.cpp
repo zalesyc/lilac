@@ -248,6 +248,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return isDarkMode(pal) ? QColor(255, 255, 255, 26) : QColor(0, 0, 0, 26);
 
         case toolBarBackground:
+        case menuBarBackground:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Base);
             return pal.color(CGroup::Normal, CRole::Base);

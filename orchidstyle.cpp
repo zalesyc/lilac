@@ -645,6 +645,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 p->save();
                 p->setRenderHints(QPainter::Antialiasing);
 
+                p->fillRect(bar->rect, getColor(opt->palette, Color::menuBarBackground, state));
+
                 if (state.hovered || state.pressed) {
                     p->setPen(Qt::NoPen);
                     p->setBrush(getBrush(bar->palette, Color::menuBarItemHoverBg, state));
@@ -681,6 +683,14 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 return;
             }
             break;
+        case CE_MenuBarEmptyArea: {
+            p->save();
+            p->fillRect(opt->rect, getColor(opt->palette, Color::menuBarBackground, state));
+            p->setPen(getPen(opt->palette, Color::outline, state, 1));
+            p->drawLine(opt->rect.bottomLeft(), opt->rect.bottomRight());
+            p->restore();
+            return;
+        }
 
         case CE_ComboBoxLabel:
             if (const auto* combo = qstyleoption_cast<const QStyleOptionComboBox*>(opt)) {
@@ -802,9 +812,6 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 return;
             }
             break;
-
-        case CE_MenuBarEmptyArea:
-            return;
 
         case CE_SizeGrip:
             return;
@@ -1234,7 +1241,7 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_MenuBarHMargin:
             return 2;
         case PM_MenuBarVMargin:
-            return 0;
+            return 2;
         case PM_MenuBarPanelWidth:
             return 0;
         case PM_ScrollView_ScrollBarOverlap:
