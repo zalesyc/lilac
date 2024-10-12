@@ -76,6 +76,10 @@ enum Color {
     toolBarHandle,     // D
     toolBarSeparator,  // D
 
+    progressBarIndicatorBackground, // D
+    progressBarIndicator,           // D
+    progressBarText,                // D
+
     focusColor
 };
 
@@ -154,6 +158,9 @@ constexpr int toolBarHandleHorizontalPadding = 6;    // for the longer side (top
 constexpr int toolBarSeparatorHorizontalPadding = 3; // for the longer side (top and bottom, when toolbar is horizontal)
 constexpr int toolBarHandleVerticalPadding = 2;      // left and right, when toolbar is horizontal
 constexpr int toolBarHandleLineSpacing = 2;
+
+constexpr int progressBarLabelVerticalPadding = 3; // around the label, left and right when the progressbar is horizontal
+constexpr int progressBarThickness = 6;
 
 } // namespace Constants
 

@@ -228,6 +228,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case menuBarItemText:
         case comboBoxUneditableText:
         case toolBtnText:
+        case progressBarText:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Text);
             return pal.color(CGroup::Normal, CRole::Text);
@@ -295,8 +296,15 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case indicatorArrow:
             return pal.color(state.enabled ? CGroup::Normal : CGroup::Disabled, CRole::Text);
 
+        case progressBarIndicator:
+            return pal.color(state.enabled ? CGroup::Normal : CGroup::Disabled, CRole::Accent);
+
+        case progressBarIndicatorBackground:
+            return pal.color(state.enabled ? CGroup::Normal : CGroup::Disabled, CRole::Button);
+
         case focusColor:
             return pal.color(CGroup::Normal, CRole::Highlight);
+
         default:
             break;
     }

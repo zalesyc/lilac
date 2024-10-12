@@ -813,6 +813,120 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             }
             break;
 
+        case CE_ProgressBar:
+            if (const auto* bar = qstyleoption_cast<const QStyleOptionProgressBar*>(opt)) {
+                QStyleOptionProgressBar barOpt = *bar;
+
+                barOpt.rect = subElementRect(SE_ProgressBarContents, bar, widget);
+                drawControl(CE_ProgressBarContents, &barOpt, p, widget);
+
+                if (bar->textVisible) {
+                    barOpt.rect = subElementRect(SE_ProgressBarLabel, bar, widget);
+                    drawControl(CE_ProgressBarLabel, &barOpt, p, widget);
+                }
+                return;
+            }
+            break;
+        case CE_ProgressBarLabel:
+            if (const auto* bar = qstyleoption_cast<const QStyleOptionProgressBar*>(opt)) {
+                const bool horizontal = bar->state & State_Horizontal;
+
+                p->save();
+                p->setRenderHints(QPainter::Antialiasing);
+                p->setPen(getPen(bar->palette, Color::progressBarText, state));
+                QRect textRect;
+                if (horizontal) {
+                    textRect = bar->rect;
+                } else {
+                    p->translate(bar->rect.topLeft());
+                    p->rotate(bar->bottomToTop ? -90 : 90);
+
+                    textRect = QRect(QPoint(bar->bottomToTop ? -bar->rect.height() : 0,
+                                            bar->bottomToTop ? 0 : -bar->rect.width()),
+                                     bar->rect.size().transposed());
+                }
+                p->drawText(textRect, (getTextFlags(bar) | Qt::AlignCenter), bar->text);
+                p->restore();
+                return;
+            }
+            break;
+
+        case CE_ProgressBarContents:
+            // TODO: make the busy indicator animated
+            if (const auto* bar = qstyleoption_cast<const QStyleOptionProgressBar*>(opt)) {
+                const bool horizontal = bar->state & State_Horizontal;
+                p->save();
+                p->setRenderHints(QPainter::Antialiasing);
+                p->setPen(Qt::NoPen);
+
+                // groove
+                p->setBrush(getBrush(bar->palette, Color::progressBarIndicatorBackground, state));
+                if (horizontal) {
+                    p->drawRoundedRect(bar->rect, bar->rect.height() / 2, bar->rect.height() / 2);
+                } else {
+                    p->drawRoundedRect(bar->rect, bar->rect.width() / 2, bar->rect.width() / 2);
+                }
+                if (bar->progress <= 0 && bar->maximum > 0) {
+                    p->restore();
+                    return;
+                }
+
+                // busy indicator
+                if (bar->maximum == 0 && bar->minimum == 0) {
+                    p->setBrush(getBrush(bar->palette, Color::progressBarIndicator, state));
+                    const int dashLen = (horizontal ? bar->rect.height() : bar->rect.width()) * 2;
+
+                    if (horizontal) {
+                        for (int position = bar->rect.left(); position <= (bar->rect.right() - dashLen); position += (dashLen * 2)) {
+                            p->drawRoundedRect(position, bar->rect.top(), dashLen, bar->rect.height(),
+                                               bar->rect.height() / 2.0, bar->rect.height() / 2.0);
+                        }
+                    } else {
+                        for (int position = bar->rect.top(); position <= (bar->rect.bottom() - dashLen); position += (dashLen * 2)) {
+                            p->drawRoundedRect(bar->rect.left(), position, bar->rect.width(), dashLen,
+                                               bar->rect.width() / 2.0, bar->rect.width() / 2.0);
+                        }
+                    }
+
+                    p->restore();
+                    return;
+                }
+
+                // progress indicator
+                const int progressLen = sliderPositionFromValue(bar->minimum,
+                                                                bar->maximum,
+                                                                bar->progress,
+                                                                horizontal ? bar->rect.width() : bar->rect.height(),
+                                                                bar->invertedAppearance);
+
+                QRect progressRect;
+                if (horizontal) {
+                    if (bar->invertedAppearance) {
+                        progressRect = QRect(0, bar->rect.top(), bar->rect.width() - progressLen, bar->rect.height());
+                        progressRect.moveRight(bar->rect.right());
+                    } else {
+                        progressRect = QRect(bar->rect.left(), bar->rect.top(), progressLen, bar->rect.height());
+                    }
+                } else {
+                    if (bar->invertedAppearance) {
+                        progressRect = QRect(bar->rect.left(), 0, bar->rect.width(), bar->rect.height() - progressLen);
+                        progressRect.moveBottom(bar->rect.bottom());
+                    } else {
+                        progressRect = QRect(bar->rect.left(), bar->rect.top(), bar->rect.width(), progressLen);
+                    }
+                }
+
+                p->setBrush(getBrush(bar->palette, Color::progressBarIndicator, state));
+                if (horizontal) {
+                    p->drawRoundedRect(progressRect, bar->rect.height() / 2, bar->rect.height() / 2);
+                } else {
+                    p->drawRoundedRect(progressRect, bar->rect.width() / 2, bar->rect.width() / 2);
+                }
+                p->restore();
+                return;
+            }
+            break;
+
         case CE_SizeGrip:
             return;
 
@@ -1255,6 +1369,8 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
             return 3;
         case PM_ToolBarHandleExtent:
             return (Constants::toolBarHandleVerticalPadding * 2) + 2 + Constants::toolBarHandleLineSpacing; // 2 is for the line thickness
+        case PM_ProgressBarChunkWidth:
+            return 2;
         default:
             break;
     }
@@ -1332,6 +1448,60 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                              opt->rect.top(),
                              opt->rect.width(),
                              qMin(opt->rect.height(), thickness));
+            }
+            break;
+        case SE_ProgressBarContents:
+        case SE_ProgressBarGroove:
+            if (const auto* bar = qstyleoption_cast<const QStyleOptionProgressBar*>(opt)) {
+                const bool horizontal = bar->state & State_Horizontal;
+                if (!bar->textVisible) {
+                    QRect contentsRect;
+                    if (horizontal) {
+                        contentsRect = QRect(0, 0, bar->rect.width(), Constants::progressBarThickness);
+                    } else {
+                        contentsRect = QRect(0, 0, Constants::progressBarThickness, bar->rect.height());
+                    }
+                    contentsRect.moveCenter(bar->rect.center());
+                    return contentsRect;
+                }
+                if (horizontal) {
+                    const int labelRectWidth = this->subElementRect(SE_ProgressBarLabel, bar, widget).width();
+                    return QRect(bar->rect.left(),
+                                 (bar->rect.top() + bar->rect.height() / 2) - Constants::progressBarThickness / 2,
+                                 bar->rect.width() - labelRectWidth,
+                                 Constants::progressBarThickness);
+                }
+                const int labelRectHeight = this->subElementRect(SE_ProgressBarLabel, bar, widget).height();
+                return QRect((bar->rect.left() + bar->rect.width() / 2) - Constants::progressBarThickness / 2,
+                             bar->rect.top(),
+                             Constants::progressBarThickness,
+                             bar->rect.height() - labelRectHeight);
+            }
+            break;
+        case SE_ProgressBarLabel:
+            if (const auto* bar = qstyleoption_cast<const QStyleOptionProgressBar*>(opt)) {
+                const bool horizontal = bar->state & State_Horizontal;
+
+                if (!bar->textVisible || bar->minimum == bar->maximum) {
+                    return QRect();
+                }
+
+                QSize textSizeActual = bar->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), bar->text);
+                QSize textSizeDefault = bar->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), "100%");
+                QSize& textSize = textSizeDefault.width() > textSizeActual.width() ? textSizeDefault : textSizeActual;
+
+                if (!horizontal) {
+                    textSize.transpose();
+                }
+                QRect rect;
+                if (horizontal) {
+                    rect = QRect(0, bar->rect.top(), qMin(textSize.width() + Constants::progressBarLabelVerticalPadding * 2, bar->rect.width()), bar->rect.height());
+                    rect.moveRight(bar->rect.right());
+                } else {
+                    rect = QRect(bar->rect.left(), 0, bar->rect.width(), qMin(textSize.height() + Constants::progressBarLabelVerticalPadding * 2, bar->rect.height()));
+                    rect.moveBottom(bar->rect.bottom());
+                }
+                return rect;
             }
             break;
 
@@ -1748,6 +1918,30 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                 return size;
             }
             break;
+        case CT_ProgressBar:
+            if (const auto* bar = qstyleoption_cast<const QStyleOptionProgressBar*>(opt)) {
+                const bool horizontal = bar->state & State_Horizontal;
+
+                if (!bar->textVisible) {
+                    if (horizontal) {
+                        return QSize(Constants::progressBarThickness * 4,
+                                     Constants::progressBarThickness);
+                    }
+                    return QSize(Constants::progressBarThickness,
+                                 Constants::progressBarThickness * 4);
+                }
+
+                const QSize textSizeDefault = bar->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), "100%");
+                const QSize textSizeActual = bar->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), bar->text);
+                const QSize& textSize = textSizeDefault.width() > textSizeActual.width() ? textSizeDefault : textSizeActual;
+
+                const QSize size(Constants::progressBarThickness * 4 + Constants::progressBarLabelVerticalPadding * 2 + textSize.width(),
+                                 qMax(Constants::progressBarThickness, textSize.height()));
+                if (horizontal) {
+                    return size;
+                }
+                return size.transposed();
+            }
 
         case CT_SizeGrip:
             return QSize();
