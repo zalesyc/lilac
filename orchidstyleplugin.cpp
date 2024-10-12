@@ -1,7 +1,5 @@
 #include "orchidstyleplugin.h"
 #include "orchidstyle.h"
-#include <QApplication>
-#include <QObject>
 #include <QStringList>
 #include <QStringLiteral>
 
@@ -13,7 +11,6 @@ QStyle* StylePlugin::create(const QString& key) {
     return nullptr;
 }
 
-//_________________________________________________
 QStringList StylePlugin::keys() const {
     return QStringList(QStringLiteral("Orchid"));
 }

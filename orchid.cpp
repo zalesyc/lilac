@@ -1,5 +1,4 @@
 #include "orchid.h"
-#include <QFont>
 
 namespace Orchid {
 
@@ -23,38 +22,6 @@ const QPen getPen(const QPalette& pal, const Color color, const State& state, co
 const QPen getPen(const QPalette& pal, const Color color, const qreal penWidth) {
     return QPen(QBrush(getColor(pal, color)), penWidth);
 }
-
-// static QColor getColorHardcoded(const QPalette& pal, const Color color, const State& state) {
-//     switch (color) {
-//         case outline:
-//             return QColor(58, 58, 58);
-//         case button: {
-//             if (!state.enabled)
-//                 return QColor(143, 143, 143);
-//             if (state.pressed)
-//                 return QColor(84, 84, 84);
-//             if (state.hovered)
-//                 return QColor(60, 60, 60);
-//             return QColor(42, 42, 42);
-//         }
-//         case toggleButtonChecked:
-//             return pal.color(CGroup::Normal, CRole::Accent);
-
-//         case checkBoxCheck:
-//             return pal.color(CGroup::Normal, CRole::Window);
-
-//         case checkBoxOutline: {
-//             return QColor(188, 188, 188);
-//         }
-
-//         case checkBoxInside:
-//             return QColor(129, 201, 149);
-
-//         default:
-//             break;
-//     }
-//     return getColorFromPallete(pal, color, state); // TODO: remove this fallback and make This function the fallback
-// }
 
 static QColor getColorFromPallete(const QPalette& pal, const Color color, const State& state) {
     switch (color) {

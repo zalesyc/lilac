@@ -1952,15 +1952,6 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
     return SuperStyle::sizeFromContents(ct, opt, contentsSize, widget);
 }
 
-const QString Style::getStyle() { // this is not ideal, but shold work - todo: make this configurable in settings
-    const QStringList availibleStyles = QStyleFactory::keys();
-    if (availibleStyles.contains("", Qt::CaseInsensitive)) {
-        return QString("Breeze");
-    }
-
-    return QString("Fusion");
-}
-
 const void Style::sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptionSlider* slider, const QRect& tickmarksRect, const int sliderLen, const int interval) {
     for (int val = slider->minimum; val < slider->maximum; val += interval) {
         if (slider->orientation == Qt::Horizontal) {

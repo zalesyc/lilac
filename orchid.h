@@ -164,8 +164,4 @@ constexpr int progressBarThickness = 6;
 
 } // namespace Constants
 
-namespace Config {
-constexpr bool menuTransparent = true;
-}
-
 } // namespace Orchid

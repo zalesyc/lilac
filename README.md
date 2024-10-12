@@ -16,7 +16,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [x] Sliders
 - [x] Spin Boxes
 - [ ] Title Bar
-- [ ] Combo Box - **Partially:** without the popup menu
+- [x] Combo Box - **Partially:** without the popup menu
 - [ ] Group Boxes
 - [ ] Splitters
 - [x] Progress Bar
@@ -37,5 +37,5 @@ Widgets not mentioned in the docs
 
 ## TODO
 - `Style::drawComplexControl` -> CC_Slider `qAcos` is expensive so remove it - the parameters are constants from PixelMetric so it should be replaced by a precalculated value
-- look at `PE_IndicatorArrow*` -> there is commented out implementation that has some bugs
+- look at `PE_IndicatorArrow*` -> there is commented out implementation that has some problems
 - `CE_ProgressBarContents` -> make the busy indicator animated
