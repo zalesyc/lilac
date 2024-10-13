@@ -25,7 +25,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [x] Menus
 - [x] Menu Bar
 - [ ] Item View Headers
-- [ ] Tree Branch Indicators
+- [x] Tree Branch Indicators
 - [ ] Tool Boxes
 - [x] Size Grip
 - [ ] Rubber Band

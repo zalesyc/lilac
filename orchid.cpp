@@ -269,6 +269,9 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case progressBarIndicatorBackground:
             return pal.color(state.enabled ? CGroup::Normal : CGroup::Disabled, CRole::Button);
 
+        case branchIndicator:
+            return isDarkMode(pal) ? pal.color(CGroup::Normal, CRole::Text).darker(190) : pal.color(CGroup::Normal, CRole::Text).lighter(190);
+
         case focusColor:
             return pal.color(CGroup::Normal, CRole::Highlight);
 

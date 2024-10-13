@@ -80,6 +80,8 @@ enum Color {
     progressBarIndicator,           // D
     progressBarText,                // D
 
+    branchIndicator,
+
     focusColor
 };
 
@@ -162,6 +164,9 @@ constexpr int toolBarHandleLineSpacing = 2;
 constexpr int progressBarLabelVerticalPadding = 3; // around the label, left and right when the progressbar is horizontal
 constexpr int progressBarThickness = 6;
 
+constexpr int treeIndicatorArrowSize = 10;
+constexpr int treeIndicatorArrowLinePadding = 4; // the distance between the arrow and start of the line
+constexpr int treeIndicatorLastCornerRadius = 5; // the radius of the curve on the last indicator
 } // namespace Constants
 
 } // namespace Orchid

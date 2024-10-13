@@ -1213,6 +1213,60 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->restore();
         }
 
+        case PE_IndicatorBranch: {
+            p->save();
+            p->setPen(getPen(opt->palette, Color::branchIndicator, state, 1));
+
+            if (opt->state & State_Children) {
+                const int arrowSize = qMin(Constants::treeIndicatorArrowSize, qMin(opt->rect.width(), opt->rect.height()));
+                QStyleOption arrowOpt = *opt;
+                arrowOpt.rect = QRect(0, 0, arrowSize, arrowSize);
+                arrowOpt.rect.moveCenter(opt->rect.center());
+                arrowOpt.state.setFlag(State_Enabled, true);
+
+                if (arrowOpt.rect.top() - Constants::treeIndicatorArrowLinePadding > opt->rect.top()) {
+                    p->drawLine(opt->rect.center().x(), opt->rect.top(), opt->rect.center().x(), arrowOpt.rect.top() - Constants::treeIndicatorArrowLinePadding);
+                }
+                if ((opt->state & State_Sibling) && (arrowOpt.rect.bottom() + Constants::treeIndicatorArrowLinePadding < opt->rect.bottom())) {
+                    p->drawLine(opt->rect.center().x(), arrowOpt.rect.bottom() + Constants::treeIndicatorArrowLinePadding, opt->rect.center().x(), opt->rect.bottom());
+                }
+
+                if (opt->state & State_Open) {
+                    this->drawPrimitive(PE_IndicatorArrowDown, &arrowOpt, p, widget);
+                } else {
+                    this->drawPrimitive(PE_IndicatorArrowRight, &arrowOpt, p, widget);
+                }
+                p->restore();
+                return;
+            }
+
+            if (opt->state & State_Sibling) {
+                p->drawLine(opt->rect.center().x(), opt->rect.top(), opt->rect.center().x(), opt->rect.bottom());
+                if (opt->state & State_Item) {
+                    p->drawLine(opt->rect.center(), QPoint(opt->rect.right(), opt->rect.center().y()));
+                }
+                p->restore();
+                return;
+            }
+
+            if (opt->state & State_Item) {
+                const int curveSize = qMin(Constants::treeIndicatorLastCornerRadius * 2, int(qMin(opt->rect.width(), opt->rect.height())));
+                QRect curveRect(0, 0, curveSize, curveSize);
+                curveRect.moveBottomLeft(opt->rect.center());
+
+                p->drawLine(opt->rect.center().x(), opt->rect.top(), curveRect.left(), curveRect.center().y());
+                p->drawLine(curveRect.center().x(), curveRect.top() + curveRect.height(), opt->rect.right(), curveRect.top() + curveRect.height());
+                p->setRenderHints(QPainter::Antialiasing);
+                p->drawArc(curveRect, 180 * 16, 90 * 16);
+
+                p->restore();
+                return;
+            }
+
+            p->restore();
+            return;
+        }
+
         case PE_FrameButtonTool:
             return;
 
