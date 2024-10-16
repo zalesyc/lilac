@@ -82,6 +82,9 @@ enum Color {
 
     branchIndicator,
 
+    groupBoxLine, // D
+    groupBoxText, // D
+
     focusColor
 };
 
@@ -167,6 +170,11 @@ constexpr int progressBarThickness = 6;
 constexpr int treeIndicatorArrowSize = 10;
 constexpr int treeIndicatorArrowLinePadding = 4; // the distance between the arrow and start of the line
 constexpr int treeIndicatorLastCornerRadius = 5; // the radius of the curve on the last indicator
+
+constexpr int groupBoxCheckSize = checkBoxSize;
+constexpr int groupBoxTextCheckSpacing = 8;                             // spacing between the label and the checkbox
+constexpr int groupBoxHeaderVerticalPadding = 5;                        // space between the end of the line and the label/check
+constexpr int groupBoxLabelOffset = groupBoxHeaderVerticalPadding + 10; // length between the side of the groupbox and the label/check
 } // namespace Constants
 
 } // namespace Orchid

@@ -293,7 +293,61 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 return;
             }
             break;
+        case CC_GroupBox:
+            if (const auto* box = qstyleoption_cast<const QStyleOptionGroupBox*>(opt)) {
+                const bool hasCheck = box->subControls & SC_GroupBoxCheckBox;
+                const bool hasLabel = box->subControls & SC_GroupBoxLabel;
 
+                QRect checkRect;
+                QRect labelRect;
+                const QRect frameRect = subControlRect(CC_GroupBox, box, SC_GroupBoxFrame, widget);
+
+                if (hasCheck) {
+                    checkRect = subControlRect(CC_GroupBox, box, SC_GroupBoxCheckBox, widget);
+                    QStyleOption checkOpt = *box;
+                    checkOpt.rect = checkRect;
+                    drawPrimitive(PE_IndicatorCheckBox, &checkOpt, p, widget);
+                }
+                if (hasLabel) {
+                    labelRect = subControlRect(CC_GroupBox, box, SC_GroupBoxLabel, widget);
+                    p->save();
+                    p->setPen(getPen(box->palette, Color::groupBoxText, state));
+                    p->drawText(labelRect, (getTextFlags(box) | Qt::AlignCenter), box->text);
+                    p->restore();
+                }
+
+                if (box->subControls & SC_GroupBoxFrame) {
+                    QRect clipRect;
+                    if (hasCheck) {
+                        clipRect.setTopLeft(checkRect.topLeft() - QPoint(Constants::groupBoxHeaderVerticalPadding, 0));
+                    } else if (hasLabel) {
+                        clipRect.setTopLeft(labelRect.topLeft() - QPoint(Constants::groupBoxHeaderVerticalPadding, 0));
+                    }
+                    if (hasLabel) {
+                        clipRect.setBottomRight(labelRect.bottomRight() + QPoint(Constants::groupBoxHeaderVerticalPadding, 0));
+                    } else if (hasCheck) {
+                        clipRect.setBottomRight(checkRect.bottomRight() + QPoint(Constants::groupBoxHeaderVerticalPadding, 0));
+                    }
+
+                    QStyleOptionFrame frameOpt;
+                    frameOpt.palette = box->palette;
+                    frameOpt.features = box->features;
+                    frameOpt.state = box->state;
+                    frameOpt.rect = frameRect;
+                    frameOpt.lineWidth = 1;
+
+                    p->save();
+                    if (clipRect.isValid()) {
+                        QRegion frameRegion(frameRect);
+                        frameRegion -= clipRect;
+                        p->setClipRegion(frameRegion);
+                    }
+                    drawPrimitive(PE_FrameGroupBox, &frameOpt, p, widget);
+                    p->restore();
+                }
+                return;
+            }
+            break;
         default:
             break;
     }
@@ -1267,6 +1321,24 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             return;
         }
 
+        case PE_FrameGroupBox:
+            if (const auto* frame = qstyleoption_cast<const QStyleOptionFrame*>(opt)) {
+                p->save();
+                p->setRenderHints(QPainter::Antialiasing);
+                p->setBrush(Qt::NoBrush);
+                p->setPen(getPen(frame->palette, Color::groupBoxLine, state, frame->lineWidth));
+
+                if (frame->features & QStyleOptionFrame::Flat) {
+                    p->drawLine(frame->rect.toRectF().topLeft() + QPointF(.5, .5),
+                                frame->rect.toRectF().topRight() + QPointF(-.5, .5));
+                } else {
+                    p->drawRoundedRect(frame->rect.toRectF().adjusted(.5, .5, -.5, -.5), Constants::btnRadius, Constants::btnRadius);
+                }
+                p->restore();
+                return;
+            }
+            break;
+
         case PE_FrameButtonTool:
             return;
 
@@ -1785,6 +1857,89 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                 }
             }
             break;
+        case CC_GroupBox:
+            if (const auto* box = qstyleoption_cast<const QStyleOptionGroupBox*>(opt)) {
+                switch (element) {
+                    case SC_GroupBoxCheckBox: {
+                        if (!box->subControls & SC_GroupBoxCheckBox)
+                            return QRect();
+
+                        const QSize textSize = box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text);
+
+                        QRect rect(0, box->rect.top(), Constants::groupBoxCheckSize, qMax(Constants::groupBoxCheckSize, textSize.height()));
+
+                        if (box->textAlignment & Qt::AlignRight) {
+                            if (textSize.width() > 0) {
+                                rect.moveRight(box->rect.right() - Constants::groupBoxLabelOffset - textSize.width() - Constants::groupBoxTextCheckSpacing);
+                            } else {
+                                rect.moveRight(box->rect.right() - Constants::groupBoxLabelOffset);
+                            }
+
+                        } else if (box->textAlignment & Qt::AlignHCenter) {
+                            if (textSize.width() > 0) {
+                                rect.moveLeft(box->rect.toRectF().center().x() - ((rect.width() + Constants::groupBoxTextCheckSpacing + textSize.width()) / 2.0));
+                            } else {
+                                rect.moveLeft(box->rect.toRectF().center().x() - (rect.width() / 2.0));
+                            }
+
+                        } else {
+                            rect.moveLeft(box->rect.left() + Constants::groupBoxLabelOffset);
+                        }
+                        return rect;
+                    }
+                    case SC_GroupBoxLabel: {
+                        if (!box->subControls & SC_GroupBoxLabel)
+                            return QRect();
+
+                        const bool hasCheck = box->subControls & SC_GroupBoxCheckBox;
+                        const QSize textSize = box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text);
+
+                        QRect rect(0, box->rect.top(), textSize.width(), hasCheck ? qMax(Constants::groupBoxCheckSize, textSize.height()) : textSize.height());
+
+                        if (box->textAlignment & Qt::AlignRight) {
+                            rect.moveRight(box->rect.right() - Constants::groupBoxLabelOffset);
+
+                        } else if (box->textAlignment & Qt::AlignHCenter) {
+                            const int textWidth = box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text).width();
+                            if (textWidth > 0) {
+                                rect.moveRight(box->rect.toRectF().center().x() + ((rect.width() + Constants::groupBoxTextCheckSpacing + Constants::groupBoxCheckSize) / 2.0));
+                            } else {
+                                rect.moveRight(box->rect.toRectF().center().x() + (rect.width() / 2.0));
+                            }
+
+                        } else {
+                            if (hasCheck) {
+                                rect.moveLeft(box->rect.left() + Constants::groupBoxLabelOffset + Constants::groupBoxCheckSize + Constants::groupBoxTextCheckSpacing);
+                            } else {
+                                rect.moveLeft(box->rect.right() - Constants::groupBoxLabelOffset);
+                            }
+                        }
+                        return rect;
+                    }
+                    case SC_GroupBoxFrame: {
+                        const int labelHeight = (box->subControls & SC_GroupBoxLabel) ?
+                                                    box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text).height() :
+                                                    0;
+                        const int checkHeight = (box->subControls & SC_GroupBoxCheckBox) ? Constants::groupBoxCheckSize : 0;
+                        const int headerHeight = qMax(checkHeight, labelHeight); // height of the label area
+
+                        return QRect(QPoint(box->rect.left(), box->rect.top() + headerHeight / 2), box->rect.bottomRight());
+                    }
+                    case SC_GroupBoxContents: {
+                        const int labelHeight = (box->subControls & SC_GroupBoxLabel) ?
+                                                    box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text).height() :
+                                                    0;
+                        const int checkHeight = (box->subControls & SC_GroupBoxCheckBox) ? Constants::groupBoxCheckSize : 0;
+                        const int headerHeight = qMax(checkHeight, labelHeight); // height of the label area
+
+                        return QRect(QPoint(box->rect.left() + box->lineWidth + 1, box->rect.top() + headerHeight),
+                                     box->rect.bottomRight() - QPoint(box->lineWidth + 1, box->lineWidth + 1));
+                    }
+                    default:
+                        break;
+                }
+            }
+            break;
         default:
             break;
     }
@@ -1995,6 +2150,21 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                     return size;
                 }
                 return size.transposed();
+            }
+
+        case CT_GroupBox:
+            if (const auto* box = qstyleoption_cast<const QStyleOptionGroupBox*>(opt)) {
+                const QSize labelSize = (box->subControls & SC_GroupBoxLabel) ?
+                                            box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text) :
+                                            QSize(0, 0);
+                const int checkSize = (box->subControls & SC_GroupBoxCheckBox) ? Constants::groupBoxCheckSize : 0;
+                const int headerHeight = qMax(checkSize, labelSize.height()); // height of the label area
+
+                const int minHeaderWidth = labelSize.width() + checkSize + ((labelSize.isValid() && checkSize > 0) ? Constants::groupBoxTextCheckSpacing : 0);
+
+                const int lineThickness = (box->features & QStyleOptionFrame::Flat) ? 0 : box->lineWidth + 1;
+
+                return QSize(qMax(contentsSize.width(), minHeaderWidth) + lineThickness * 2, contentsSize.height() + headerHeight + lineThickness);
             }
 
         case CT_SizeGrip:

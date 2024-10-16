@@ -25,6 +25,7 @@ const QPen getPen(const QPalette& pal, const Color color, const qreal penWidth) 
 
 static QColor getColorFromPallete(const QPalette& pal, const Color color, const State& state) {
     switch (color) {
+        case groupBoxLine:
         case menuSeparator:
         case outline: {
             const auto base = pal.color(CGroup::Normal, CRole::Base);
@@ -196,6 +197,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case comboBoxUneditableText:
         case toolBtnText:
         case progressBarText:
+        case groupBoxText:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Text);
             return pal.color(CGroup::Normal, CRole::Text);
