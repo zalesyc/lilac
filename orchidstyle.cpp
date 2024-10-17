@@ -1911,7 +1911,7 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                             if (hasCheck) {
                                 rect.moveLeft(box->rect.left() + Constants::groupBoxLabelOffset + Constants::groupBoxCheckSize + Constants::groupBoxTextCheckSpacing);
                             } else {
-                                rect.moveLeft(box->rect.right() - Constants::groupBoxLabelOffset);
+                                rect.moveLeft(box->rect.left() + Constants::groupBoxLabelOffset);
                             }
                         }
                         return rect;
