@@ -27,12 +27,16 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
     switch (color) {
         case groupBoxLine:
         case menuSeparator:
-        case outline: {
+        case line: {
             const auto base = pal.color(CGroup::Normal, CRole::Base);
             return isDarkMode(pal) ? base.lighter(180) : base.darker(180);
         }
-        case toolBtnBackground:
-        case button: {
+
+        case focusRect:
+            return pal.color(CGroup::Normal, CRole::Highlight);
+
+        case toolBtnBg:
+        case buttonBg: {
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Button);
 
@@ -44,7 +48,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return base;
         }
 
-        case toolBtnBackgroundChecked:
+        case toolBtnBgChecked:
         case toggleButtonChecked:
             return pal.color(CGroup::Normal, CRole::Accent);
 
@@ -78,7 +82,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return getColor(pal, Color::tabWidgetPageArea);
 
         case tabCheckedOutline:
-            return getColor(pal, Color::outline);
+            return getColor(pal, Color::line);
 
         case tabUncheckedHover:
             return getColor(pal, Color::tabCheckedFill);
@@ -86,16 +90,16 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case tabWidgetPageArea:
             return pal.color(CGroup::Normal, CRole::Base);
 
-        case scrollBarHoverBackground: {
+        case scrollBarHoverBg: {
             const auto base = pal.color(CGroup::Normal, CRole::Base);
             return isDarkMode(pal) ? base.lighter(120) : base.darker(120);
         }
 
         case scrollBarHoverOutline:
-            return getColor(pal, Color::outline);
+            return getColor(pal, Color::line);
 
         case scrollBarSlider: {
-            const auto base = getColor(pal, Color::scrollBarHoverBackground);
+            const auto base = getColor(pal, Color::scrollBarHoverBg);
             if (!state.enabled)
                 return base;
             if (state.pressed)
@@ -134,9 +138,9 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case sliderTickmarks:
             return getColor(pal, sliderLineAfter);
 
-        case lineEditBackground:
-        case spinBoxBackground:
-        case comboBoxBackground:
+        case lineEditBg:
+        case spinBoxBg:
+        case comboBoxBg:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Button);
             return pal.color(CGroup::Normal, CRole::Button);
@@ -144,10 +148,10 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case lineEditOutline:
         case spinBoxOutline: {
             if (!state.enabled)
-                return getColor(pal, lineEditBackground, state);
+                return getColor(pal, lineEditBg, state);
             if (state.hasFocus)
                 return pal.color(CGroup::Normal, CRole::Accent);
-            const QColor base = getColor(pal, lineEditBackground, state);
+            const QColor base = getColor(pal, lineEditBg, state);
 
             if (state.hovered)
                 return isDarkMode(pal) ? base.lighter(140) : base.darker(140);
@@ -180,11 +184,11 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 
         case comboBoxOutline: {
             if (!state.enabled)
-                return getColor(pal, lineEditBackground, state);
+                return getColor(pal, lineEditBg, state);
             if (state.pressed || state.hasFocus)
                 return pal.color(CGroup::Normal, CRole::Accent);
 
-            const QColor base = getColor(pal, lineEditBackground, state);
+            const QColor base = getColor(pal, lineEditBg, state);
 
             if (state.hovered)
                 return isDarkMode(pal) ? base.lighter(140) : base.darker(140);
@@ -207,30 +211,30 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
                 return getColor(pal, Color::menuText, state).darker(130);
             return getColor(pal, Color::menuText, state).lighter(130);
 
-        case menuBackground: {
+        case menuBg: {
             QColor base = pal.color(CGroup::Normal, CRole::AlternateBase);
             base.setAlpha(Constants::menuTransparency);
             return base;
         }
 
-        case menuItemHoverBackground:
+        case menuItemHoverBg:
         case menuBarItemHoverBg:
             return isDarkMode(pal) ? QColor(255, 255, 255, 26) : QColor(0, 0, 0, 26);
 
-        case toolBarBackground:
+        case toolBarBg:
         case viewHeaderEmptyAreaBg:
-        case menuBarBackground:
+        case menuBarBg:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Base);
             return pal.color(CGroup::Normal, CRole::Base);
 
         case toolBarHandle:
         case toolBarSeparator: {
-            const QColor base = getColor(pal, Color::outline, state);
+            const QColor base = getColor(pal, Color::line, state);
             return isDarkMode(pal) ? base.lighter(140) : base.darker(140);
         }
 
-        case toolBtnBackgroundAutoRise:
+        case toolBtnBgAutoRise:
             if (!state.enabled)
                 return QColor(Qt::transparent);
 
@@ -240,7 +244,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
                 return isDarkMode(pal) ? QColor(255, 255, 255, 30) : QColor(0, 0, 0, 30);
             return QColor(Qt::transparent);
 
-        case toolBtnBackgroundAutoRiseChecked: {
+        case toolBtnBgAutoRiseChecked: {
             if (!state.enabled) {
                 QColor base = pal.color(CGroup::Normal, CRole::Button);
                 base.setAlpha(120);
@@ -269,7 +273,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case progressBarIndicator:
             return pal.color(state.enabled ? CGroup::Normal : CGroup::Disabled, CRole::Accent);
 
-        case progressBarIndicatorBackground:
+        case progressBarIndicatorBg:
             return pal.color(state.enabled ? CGroup::Normal : CGroup::Disabled, CRole::Button);
 
         case branchIndicator:
@@ -277,11 +281,8 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 
         case viewHeaderBg:
             if ((state.pressed || state.hovered) && state.enabled)
-                return getColor(pal, Color::button, state);
+                return getColor(pal, Color::buttonBg, state);
             return getColor(pal, Color::viewHeaderEmptyAreaBg, state);
-
-        case focusColor:
-            return pal.color(CGroup::Normal, CRole::Highlight);
 
         default:
             break;

@@ -16,10 +16,16 @@ enum Color {
     /*
      * letters after elements are for their possible states, that should be handled
      * D: disabled, H: hover, P: pressed, F: has focus
+     *
+     * shortcuts:
+     * Bg - background
+     * Btn - button
      */
-    outline, // outline or separator line
+    line, // outline or separator line
 
-    button, // DHP
+    focusRect,
+
+    buttonBg, // DHP
     toggleButtonChecked,
 
     checkBoxInside,      // D all checkbox colors are also for radiobuttons
@@ -32,7 +38,7 @@ enum Color {
     tabUncheckedHover,
     tabWidgetPageArea,
 
-    scrollBarHoverBackground,
+    scrollBarHoverBg,
     scrollBarHoverOutline,
     scrollBarSlider, // HPD
 
@@ -42,43 +48,43 @@ enum Color {
     sliderLineAfter,         // D
     sliderTickmarks,
 
-    lineEditBackground, // D
-    lineEditOutline,    // DFH
+    lineEditBg,      // D
+    lineEditOutline, // DFH
 
-    spinBoxBackground,           // D
+    spinBoxBg,                   // D
     spinBoxOutline,              // DFH
     spinBoxIndicator,            // DHP
     spinBoxIndicatorHoverCircle, // HP
 
-    comboBoxBackground,     // DHPF - pressed: menu is open
+    comboBoxBg,             // DHPF - pressed: menu is open
     comboBoxOutline,        // DHPF
     comboBoxUneditableText, // D
 
     menuText,         // D
     menuShortcutText, // D
     menuSeparator,    // D
-    menuItemHoverBackground,
-    menuBackground,
+    menuItemHoverBg,
+    menuBg,
     indicatorArrow,     // D
     menuBarItemHoverBg, // HP - hover: hover without open menu, pressed: menu open
     menuBarItemText,    // D
-    menuBarBackground,  // D
+    menuBarBg,          // D
 
-    toolBtnText,                      // D
-    toolBtnBackground,                // DHP
-    toolBtnBackgroundAutoRise,        // DHP
-    toolBtnBackgroundChecked,         // DHP
-    toolBtnBackgroundAutoRiseChecked, // DHP
-    toolBtnMenuSeparator,             // D
+    toolBtnText,              // D
+    toolBtnBg,                // DHP
+    toolBtnBgAutoRise,        // DHP
+    toolBtnBgChecked,         // DHP
+    toolBtnBgAutoRiseChecked, // DHP
+    toolBtnMenuSeparator,     // D
     toolBtnFocusOutline,
 
-    toolBarBackground, // D
-    toolBarHandle,     // D
-    toolBarSeparator,  // D
+    toolBarBg,        // D
+    toolBarHandle,    // D
+    toolBarSeparator, // D
 
-    progressBarIndicatorBackground, // D
-    progressBarIndicator,           // D
-    progressBarText,                // D
+    progressBarIndicatorBg, // D
+    progressBarIndicator,   // D
+    progressBarText,        // D
 
     branchIndicator,
 
@@ -87,8 +93,6 @@ enum Color {
 
     viewHeaderBg,          // DHP - when with table: pressed - the row/collumn is selected
     viewHeaderEmptyAreaBg, // D
-
-    focusColor
 };
 
 struct State {
@@ -109,7 +113,7 @@ const QPen getPen(const QPalette& pal, const Color color, const qreal penWidth =
 bool isDarkMode(const QPalette& pal);
 
 namespace Constants {
-constexpr int btnRadius = 12;
+constexpr int cornerRadius = 12;
 constexpr int smallArrowSize = 10;
 
 constexpr int controlsTextHorizontalPadding = 10; // Top and bottom; buttons, lineEdits, spinBoxes, comboboxes

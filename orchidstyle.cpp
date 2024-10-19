@@ -19,7 +19,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                     p->save();
                     p->setPen(getPen(opt->palette, Color::scrollBarHoverOutline, 1));
                     p->setBrush(Qt::NoBrush);
-                    p->fillRect(bar->rect, getBrush(opt->palette, Color::scrollBarHoverBackground));
+                    p->fillRect(bar->rect, getBrush(opt->palette, Color::scrollBarHoverBg));
                     if (opt->state & QStyle::State_Horizontal) {
                         p->drawLine(bar->rect.topLeft(), bar->rect.topRight());
                         p->drawLine(bar->rect.bottomLeft(), bar->rect.bottomRight());
@@ -198,8 +198,8 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                     p->save();
                     p->setRenderHint(QPainter::Antialiasing);
                     p->setPen(getPen(spin->palette, Color::spinBoxOutline, state, 2));
-                    p->setBrush(getBrush(spin->palette, Color::spinBoxBackground, state));
-                    p->drawRoundedRect(spin->rect.adjusted(1, 1, -1, -1), Constants::btnRadius, Constants::btnRadius);
+                    p->setBrush(getBrush(spin->palette, Color::spinBoxBg, state));
+                    p->drawRoundedRect(spin->rect.adjusted(1, 1, -1, -1), Constants::cornerRadius, Constants::cornerRadius);
                     p->restore();
                 }
 
@@ -245,8 +245,8 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 p->save();
                 p->setRenderHint(QPainter::Antialiasing);
                 p->setPen(getPen(combo->palette, Color::comboBoxOutline, state, 2));
-                p->setBrush(getBrush(combo->palette, Color::comboBoxBackground, state));
-                p->drawRoundedRect(combo->rect.adjusted(1, 1, -1, -1), Constants::btnRadius, Constants::btnRadius);
+                p->setBrush(getBrush(combo->palette, Color::comboBoxBg, state));
+                p->drawRoundedRect(combo->rect.adjusted(1, 1, -1, -1), Constants::cornerRadius, Constants::cornerRadius);
                 p->restore();
 
                 // arrow
@@ -405,7 +405,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QTabBar::TriangularNorth:
                     case QTabBar::RoundedSouth:
                     case QTabBar::TriangularSouth:
-                        cornerRectSize = qMin(Constants::btnRadius * 2, // the corner radius is still btnRadius,
+                        cornerRectSize = qMin(Constants::cornerRadius * 2, // the corner radius is still btnRadius,
                                               qMin(rect.width(),        // it has to be *2 due to implementation
                                                    rect.height() * 2));
 
@@ -415,7 +415,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QTabBar::TriangularEast:
                     case QTabBar::RoundedWest:
                     case QTabBar::TriangularWest:
-                        cornerRectSize = qMin(Constants::btnRadius * 2,
+                        cornerRectSize = qMin(Constants::cornerRadius * 2,
                                               qMin(rect.height(),
                                                    rect.width() * 2));
                         break;
@@ -426,13 +426,13 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QTabBar::RoundedNorth:
                     case QTabBar::TriangularNorth:
                         path.moveTo(rect.bottomLeft());
-                        path.lineTo(rect.left(), rect.top() + Constants::btnRadius);
+                        path.lineTo(rect.left(), rect.top() + Constants::cornerRadius);
                         path.arcTo(QRectF(
                                        rect.topLeft(),
                                        QPointF(rect.left() + cornerRectSize, rect.top() + cornerRectSize)),
                                    180,
                                    -90);
-                        path.lineTo(rect.right() - Constants::btnRadius, rect.top());
+                        path.lineTo(rect.right() - Constants::cornerRadius, rect.top());
                         path.arcTo(QRectF(
                                        rect.topRight(),
                                        QPointF(rect.right() - cornerRectSize, rect.top() + cornerRectSize)),
@@ -444,13 +444,13 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QTabBar::RoundedSouth:
                     case QTabBar::TriangularSouth:
                         path.moveTo(rect.topLeft());
-                        path.lineTo(rect.left(), rect.bottom() - Constants::btnRadius);
+                        path.lineTo(rect.left(), rect.bottom() - Constants::cornerRadius);
                         path.arcTo(QRectF(
                                        rect.bottomLeft(),
                                        QPointF(rect.left() + cornerRectSize, rect.bottom() - cornerRectSize)),
                                    180,
                                    -90);
-                        path.lineTo(rect.right() - Constants::btnRadius, rect.bottom());
+                        path.lineTo(rect.right() - Constants::cornerRadius, rect.bottom());
                         path.arcTo(QRectF(
                                        rect.bottomRight(),
                                        QPointF(rect.right() - cornerRectSize, rect.bottom() - cornerRectSize)),
@@ -462,13 +462,13 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QTabBar::RoundedEast:
                     case QTabBar::TriangularEast:
                         path.moveTo(rect.topLeft());
-                        path.lineTo(rect.right() - Constants::btnRadius, rect.top());
+                        path.lineTo(rect.right() - Constants::cornerRadius, rect.top());
                         path.arcTo(QRectF(
                                        rect.topRight(),
                                        QPointF(rect.right() - cornerRectSize, rect.top() + cornerRectSize)),
                                    90,
                                    90);
-                        path.lineTo(rect.right(), rect.bottom() - Constants::btnRadius);
+                        path.lineTo(rect.right(), rect.bottom() - Constants::cornerRadius);
                         path.arcTo(QRectF(
                                        rect.bottomRight(),
                                        QPointF(rect.right() - cornerRectSize, rect.bottom() - cornerRectSize)),
@@ -480,13 +480,13 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QTabBar::RoundedWest:
                     case QTabBar::TriangularWest:
                         path.moveTo(rect.topRight());
-                        path.lineTo(rect.left() + Constants::btnRadius, rect.top());
+                        path.lineTo(rect.left() + Constants::cornerRadius, rect.top());
                         path.arcTo(QRectF(
                                        rect.topLeft(),
                                        QPointF(rect.left() + cornerRectSize, rect.top() + cornerRectSize)),
                                    90,
                                    90);
-                        path.lineTo(rect.left(), rect.bottom() - Constants::btnRadius);
+                        path.lineTo(rect.left(), rect.bottom() - Constants::cornerRadius);
                         path.arcTo(QRectF(
                                        rect.bottomLeft(),
                                        QPointF(rect.left() + cornerRectSize, rect.bottom() - cornerRectSize)),
@@ -561,7 +561,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                             p->save();
                             p->setRenderHints(QPainter::Antialiasing);
                             p->setPen(Qt::NoPen);
-                            p->setBrush(getBrush(menu->palette, Color::menuItemHoverBackground, state));
+                            p->setBrush(getBrush(menu->palette, Color::menuItemHoverBg, state));
                             p->drawRoundedRect(hoverRect, Constants::menuItemBorderRadius, Constants::menuItemBorderRadius);
                             p->restore();
                         }
@@ -699,7 +699,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 p->save();
                 p->setRenderHints(QPainter::Antialiasing);
 
-                p->fillRect(bar->rect, getColor(opt->palette, Color::menuBarBackground, state));
+                p->fillRect(bar->rect, getColor(opt->palette, Color::menuBarBg, state));
 
                 if (state.hovered || state.pressed) {
                     p->setPen(Qt::NoPen);
@@ -739,8 +739,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             break;
         case CE_MenuBarEmptyArea: {
             p->save();
-            p->fillRect(opt->rect, getColor(opt->palette, Color::menuBarBackground, state));
-            p->setPen(getPen(opt->palette, Color::outline, state, 1));
+            p->fillRect(opt->rect, getColor(opt->palette, Color::menuBarBg, state));
+            p->setPen(getPen(opt->palette, Color::line, state, 1));
             p->drawLine(opt->rect.bottomLeft(), opt->rect.bottomRight());
             p->restore();
             return;
@@ -859,8 +859,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
                 p->save();
                 p->setBrush(Qt::NoBrush);
-                p->fillRect(bar->rect, getColor(bar->palette, Color::toolBarBackground, state));
-                p->setPen(getPen(bar->palette, Color::outline, state, 1));
+                p->fillRect(bar->rect, getColor(bar->palette, Color::toolBarBg, state));
+                p->setPen(getPen(bar->palette, Color::line, state, 1));
                 p->drawLine(separatorLine);
                 p->restore();
                 return;
@@ -914,7 +914,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 p->setPen(Qt::NoPen);
 
                 // groove
-                p->setBrush(getBrush(bar->palette, Color::progressBarIndicatorBackground, state));
+                p->setBrush(getBrush(bar->palette, Color::progressBarIndicatorBg, state));
                 if (horizontal) {
                     p->drawRoundedRect(bar->rect, bar->rect.height() / 2, bar->rect.height() / 2);
                 } else {
@@ -986,7 +986,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 p->save();
                 p->fillRect(header->rect, getColor(header->palette, Color::viewHeaderBg, state));
 
-                p->setPen(getPen(header->palette, Color::outline, 1));
+                p->setPen(getPen(header->palette, Color::line, 1));
                 if (header->orientation == Qt::Horizontal) {
                     if (header->position != QStyleOptionHeader::OnlyOneSection && header->position != QStyleOptionHeader::End) {
                         p->drawLine(header->rect.topRight(), header->rect.bottomRight());
@@ -1006,7 +1006,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
         case CE_HeaderEmptyArea: {
             p->save();
             p->fillRect(opt->rect, getColor(opt->palette, Color::viewHeaderEmptyAreaBg, state));
-            p->setPen(getPen(opt->palette, Color::outline, state, 1));
+            p->setPen(getPen(opt->palette, Color::line, state, 1));
             if (opt->state & State_Horizontal) {
                 p->drawLine(opt->rect.bottomLeft(), opt->rect.bottomRight());
             } else {
@@ -1038,10 +1038,10 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                 } else if (btn->features & QStyleOptionButton::Flat && !state.hovered && !state.hovered) {
                     p->setBrush(Qt::NoBrush);
                 } else {
-                    p->setBrush(getBrush(btn->palette, Color::button, state));
+                    p->setBrush(getBrush(btn->palette, Color::buttonBg, state));
                 }
 
-                p->drawRoundedRect(btn->rect, Constants::btnRadius, Constants::btnRadius);
+                p->drawRoundedRect(btn->rect, Constants::cornerRadius, Constants::cornerRadius);
                 p->restore();
                 return;
             }
@@ -1051,8 +1051,8 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
             p->setBrush(Qt::NoBrush);
-            p->setPen(getPen(opt->palette, Color::focusColor, 2));
-            p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), Constants::btnRadius, Constants::btnRadius);
+            p->setPen(getPen(opt->palette, Color::focusRect, 2));
+            p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), Constants::cornerRadius, Constants::cornerRadius);
             p->restore();
             return;
 
@@ -1142,8 +1142,8 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                     p->save();
                     p->setRenderHints(QPainter::Antialiasing);
                     p->setPen(Qt::NoPen);
-                    p->setBrush(getBrush(edit->palette, Color::lineEditBackground, state));
-                    p->drawRoundedRect(opt->rect, Constants::btnRadius, Constants::btnRadius);
+                    p->setBrush(getBrush(edit->palette, Color::lineEditBg, state));
+                    p->drawRoundedRect(opt->rect, Constants::cornerRadius, Constants::cornerRadius);
                     p->restore();
                     this->drawPrimitive(PE_FrameLineEdit, edit, p, widget);
                 }
@@ -1156,7 +1156,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->setRenderHints(QPainter::Antialiasing);
             p->setPen(getPen(opt->palette, Color::lineEditOutline, state, 2));
             p->setBrush(Qt::NoBrush);
-            p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), Constants::btnRadius, Constants::btnRadius);
+            p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), Constants::cornerRadius, Constants::cornerRadius);
             p->restore();
             return;
 
@@ -1197,7 +1197,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
             p->setPen(Qt::NoPen);
-            p->setBrush(getBrush(opt->palette, Color::menuBackground, state));
+            p->setBrush(getBrush(opt->palette, Color::menuBg, state));
             p->drawRoundedRect(opt->rect.adjusted(Constants::menuTransparentPadding,
                                                   Constants::menuTransparentPadding,
                                                   -Constants::menuTransparentPadding,
@@ -1214,13 +1214,13 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                 justIcon = (btn->toolButtonStyle == Qt::ToolButtonIconOnly);
             }
 
-            Color color = toolBtnBackground;
+            Color color = toolBtnBg;
             if ((opt->state & State_AutoRaise) && (opt->state & State_On)) {
-                color = toolBtnBackgroundAutoRiseChecked;
+                color = toolBtnBgAutoRiseChecked;
             } else if (opt->state & (State_AutoRaise)) {
-                color = toolBtnBackgroundAutoRise;
+                color = toolBtnBgAutoRise;
             } else if (opt->state & State_On) {
-                color = toolBtnBackgroundChecked;
+                color = toolBtnBgChecked;
             }
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
@@ -1233,7 +1233,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             if ((opt->rect.width() == opt->rect.height()) && justIcon) {
                 p->drawEllipse(opt->rect.adjusted(1, 1, -1, -1));
             } else {
-                const qreal cornerRadius = qMin(qreal(Constants::btnRadius), opt->rect.height() / 2.0);
+                const qreal cornerRadius = qMin(qreal(Constants::cornerRadius), opt->rect.height() / 2.0);
                 p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), cornerRadius, cornerRadius);
             }
             p->restore();
@@ -1367,7 +1367,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                     p->drawLine(frame->rect.toRectF().topLeft() + QPointF(.5, .5),
                                 frame->rect.toRectF().topRight() + QPointF(-.5, .5));
                 } else {
-                    p->drawRoundedRect(frame->rect.toRectF().adjusted(.5, .5, -.5, -.5), Constants::btnRadius, Constants::btnRadius);
+                    p->drawRoundedRect(frame->rect.toRectF().adjusted(.5, .5, -.5, -.5), Constants::cornerRadius, Constants::cornerRadius);
                 }
                 p->restore();
                 return;
