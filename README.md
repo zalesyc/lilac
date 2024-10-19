@@ -24,7 +24,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [x] Toolbars
 - [x] Menus
 - [x] Menu Bar
-- [ ] Item View Headers
+- [x] Item View Headers
 - [x] Tree Branch Indicators
 - [ ] Tool Boxes
 - [x] Size Grip

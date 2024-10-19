@@ -218,6 +218,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return isDarkMode(pal) ? QColor(255, 255, 255, 26) : QColor(0, 0, 0, 26);
 
         case toolBarBackground:
+        case viewHeaderEmptyAreaBg:
         case menuBarBackground:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Base);
@@ -273,6 +274,11 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 
         case branchIndicator:
             return isDarkMode(pal) ? pal.color(CGroup::Normal, CRole::Text).darker(190) : pal.color(CGroup::Normal, CRole::Text).lighter(190);
+
+        case viewHeaderBg:
+            if ((state.pressed || state.hovered) && state.enabled)
+                return getColor(pal, Color::button, state);
+            return getColor(pal, Color::viewHeaderEmptyAreaBg, state);
 
         case focusColor:
             return pal.color(CGroup::Normal, CRole::Highlight);

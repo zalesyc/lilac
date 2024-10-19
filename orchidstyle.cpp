@@ -981,6 +981,41 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             }
             break;
 
+        case CE_HeaderSection:
+            if (const auto* header = qstyleoption_cast<const QStyleOptionHeader*>(opt)) {
+                p->save();
+                p->fillRect(header->rect, getColor(header->palette, Color::viewHeaderBg, state));
+
+                p->setPen(getPen(header->palette, Color::outline, 1));
+                if (header->orientation == Qt::Horizontal) {
+                    if (header->position != QStyleOptionHeader::OnlyOneSection && header->position != QStyleOptionHeader::End) {
+                        p->drawLine(header->rect.topRight(), header->rect.bottomRight());
+                    }
+                    p->drawLine(header->rect.bottomLeft(), header->rect.bottomRight());
+                } else {
+                    if (header->position != QStyleOptionHeader::OnlyOneSection && header->position != QStyleOptionHeader::End) {
+                        p->drawLine(header->rect.bottomLeft(), header->rect.bottomRight());
+                    }
+                    p->drawLine(header->rect.topRight(), header->rect.bottomRight());
+                }
+                p->restore();
+                return;
+            }
+            break;
+
+        case CE_HeaderEmptyArea: {
+            p->save();
+            p->fillRect(opt->rect, getColor(opt->palette, Color::viewHeaderEmptyAreaBg, state));
+            p->setPen(getPen(opt->palette, Color::outline, state, 1));
+            if (opt->state & State_Horizontal) {
+                p->drawLine(opt->rect.bottomLeft(), opt->rect.bottomRight());
+            } else {
+                p->drawLine(opt->rect.topRight(), opt->rect.bottomRight());
+            }
+            p->restore();
+            return;
+        }
+
         case CE_SizeGrip:
             return;
 
@@ -1336,6 +1371,21 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                 }
                 p->restore();
                 return;
+            }
+            break;
+
+        case PE_IndicatorHeaderArrow:
+            if (const auto* header = qstyleoption_cast<const QStyleOptionHeader*>(opt)) {
+                switch (header->sortIndicator) {
+                    case QStyleOptionHeader::SortUp:
+                        drawPrimitive(PE_IndicatorArrowUp, header, p, widget);
+                        return;
+                    case QStyleOptionHeader::SortDown:
+                        drawPrimitive(PE_IndicatorArrowDown, header, p, widget);
+                        return;
+                    case QStyleOptionHeader::None:
+                        return;
+                }
             }
             break;
 
