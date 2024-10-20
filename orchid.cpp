@@ -268,7 +268,9 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return pal.color(CGroup::Normal, CRole::Accent);
 
         case indicatorArrow:
-            return pal.color(state.enabled ? CGroup::Normal : CGroup::Disabled, CRole::Text);
+            if (!state.enabled)
+                return pal.color(CGroup::Disabled, CRole::Text);
+            return isDarkMode(pal) ? pal.color(CGroup::Normal, CRole::Text).darker(140) : pal.color(CGroup::Normal, CRole::Text).lighter(140);
 
         case progressBarIndicator:
             return pal.color(state.enabled ? CGroup::Normal : CGroup::Disabled, CRole::Accent);

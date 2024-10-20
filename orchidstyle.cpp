@@ -406,7 +406,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QTabBar::RoundedSouth:
                     case QTabBar::TriangularSouth:
                         cornerRectSize = qMin(Constants::cornerRadius * 2, // the corner radius is still btnRadius,
-                                              qMin(rect.width(),        // it has to be *2 due to implementation
+                                              qMin(rect.width(),           // it has to be *2 due to implementation
                                                    rect.height() * 2));
 
                         break;
@@ -1395,53 +1395,69 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
         case PE_FrameMenu:
             return;
 
-            // case PE_IndicatorArrowUp:    // ---> this works ok but there are some issues,
-            // case PE_IndicatorArrowDown: // QCommonstyle implementation is good except for disabled colors
-            // case PE_IndicatorArrowLeft:
-            // case PE_IndicatorArrowRight: {
-            //     const int size = qMin(opt->rect.width(), opt->rect.height());
-            //     QRect rect;
-            //     if (element == PE_IndicatorArrowUp || element == PE_IndicatorArrowDown) {
-            //         rect.setWidth(size);
-            //         rect.setHeight(size / 2);
-            //     } else {
-            //         rect.setHeight(size);
-            //         rect.setWidth(size / 2);
-            //     }
-            //     rect.moveCenter(opt->rect.center());
-            //     QPoint points[3];
-            //     switch (element) {
-            //         case PE_IndicatorArrowUp:
-            //             points[0] = rect.bottomLeft();
-            //             points[1] = QPoint(rect.center().x(), rect.top());
-            //             points[2] = rect.bottomRight();
-            //             break;
-            //         case PE_IndicatorArrowDown:
-            //             points[0] = rect.topLeft();
-            //             points[1] = QPoint(rect.center().x(), rect.bottom());
-            //             points[2] = rect.topRight();
-            //             break;
-            //         case PE_IndicatorArrowRight:
-            //             points[0] = rect.topLeft();
-            //             points[1] = QPoint(rect.right(), rect.center().y() + 1);
-            //             points[2] = rect.bottomLeft();
-            //             break;
-            //         case PE_IndicatorArrowLeft:
-            //             points[0] = rect.topRight();
-            //             points[1] = QPoint(rect.left(), rect.center().y());
-            //             points[2] = rect.bottomRight();
-            //             break;
-            //         default:
-            //             break;
-            //     }
-            //     p->save();
-            //     // p->setRenderHints(QPainter::Antialiasing);
-            //     p->setPen(Qt::NoPen);
-            //     p->setBrush(getBrush(opt->palette, Color::indicatorArrow, state));
-            //     p->drawPolygon(points, 3);
-            //     p->restore();
-            //     return;
-            // }
+        case PE_IndicatorArrowUp:
+        case PE_IndicatorArrowDown:
+        case PE_IndicatorArrowLeft:
+        case PE_IndicatorArrowRight: {
+            const int size = qMin(opt->rect.width(), opt->rect.height());
+            const int tipOffset = size % 2;
+            /* tipOffset: is so for odd size rect the arrow is is still symetrical
+             * e.g for the down arrow:
+             * if the width of the rect is odd the tip's x would not be a whole number,
+             * so instead of a recangle I draw a trapezoid with the tip being 2px long
+             * because trapezoid has 4 sides, in p->drawPolygon I do 4 if trapezoid and 3
+             * if triangle.
+             */
+
+            int width = 0;
+            int height = 0;
+            if (element == PE_IndicatorArrowUp || element == PE_IndicatorArrowDown) {
+                width = size;
+                height = size / 2;
+            } else {
+                height = size;
+                width = size / 2;
+            }
+
+            QPoint points[4];
+            switch (element) {
+                case PE_IndicatorArrowUp:
+                    points[0] = QPoint(0, height);
+                    points[1] = QPoint(width, height);
+                    points[2] = QPoint(width / 2, 0);
+                    points[3] = QPoint(width / 2 + tipOffset, 0);
+                    break;
+                case PE_IndicatorArrowDown:
+                    points[0] = QPoint(0, 0);
+                    points[1] = QPoint(width, 0);
+                    points[2] = QPoint(width / 2, height);
+                    points[3] = QPoint(width / 2 + tipOffset, height);
+                    break;
+                case PE_IndicatorArrowRight:
+                    points[0] = QPoint(0, 0);
+                    points[1] = QPoint(0, height);
+                    points[2] = QPoint(width, height / 2);
+                    points[3] = QPoint(width, height / 2 + tipOffset);
+                    break;
+                case PE_IndicatorArrowLeft:
+                    points[0] = QPoint(width, 0);
+                    points[1] = QPoint(width, height);
+                    points[2] = QPoint(0, height / 2);
+                    points[3] = QPoint(0, height / 2 + tipOffset);
+                    break;
+                default:
+                    break;
+            }
+            p->save();
+            p->setRenderHints(QPainter::Antialiasing);
+            p->setPen(Qt::NoPen);
+            p->setBrush(getBrush(opt->palette, Color::indicatorArrow, state));
+            p->translate(opt->rect.left() + (opt->rect.width() - width) / 2,
+                         opt->rect.top() + (opt->rect.height() - height) / 2);
+            p->drawPolygon(points, 3 + tipOffset);
+            p->restore();
+            return;
+        }
 
         default:
             break;
