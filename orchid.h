@@ -125,6 +125,8 @@ constexpr int smallArrowSize = 10;
 
 constexpr int controlsTextHorizontalPadding = 10; // Top and bottom; buttons, lineEdits, spinBoxes, comboboxes
 
+constexpr int pushButtonMenuArrowPadding = 6; // length between the menu arrow and the right side
+
 constexpr int checkBoxSize = 20;
 constexpr int checkBoxHoverCircleSize = 34;
 

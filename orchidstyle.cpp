@@ -417,24 +417,15 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
     switch (element) {
         case CE_PushButtonBevel:
             if (const auto* btn = qstyleoption_cast<const QStyleOptionButton*>(opt)) {
-                QRect br = btn->rect;
-                int dbi = proxy()->pixelMetric(PM_ButtonDefaultIndicator, btn, widget);
-                if (btn->features & QStyleOptionButton::DefaultButton)
-                    proxy()->drawPrimitive(PE_FrameDefaultButton, opt, p, widget);
-                if (btn->features & QStyleOptionButton::AutoDefaultButton)
-                    br.setCoords(br.left() + dbi, br.top() + dbi, br.right() - dbi, br.bottom() - dbi);
-
-                QStyleOptionButton tmpBtn = *btn;
-                tmpBtn.rect = br;
-                proxy()->drawPrimitive(PE_PanelButtonCommand, btn, p, widget);
+                drawPrimitive(PE_PanelButtonCommand, btn, p, widget);
 
                 if (btn->features & QStyleOptionButton::HasMenu) {
-                    int mbi = proxy()->pixelMetric(PM_MenuButtonIndicator, btn, widget);
-                    QRect ir = btn->rect;
-                    QStyleOptionButton newBtn = *btn;
-                    newBtn.rect = QRect(ir.right() - mbi - 2, ir.height() / 2 - mbi / 2 + 3, mbi - 6, mbi - 6);
-                    newBtn.rect = visualRect(btn->direction, br, newBtn.rect);
-                    proxy()->drawPrimitive(PE_IndicatorArrowDown, &newBtn, p, widget);
+                    QStyleOption menuOpt = *btn;
+                    menuOpt.rect = QRect(btn->rect.right() - Constants::smallArrowSize - Constants::pushButtonMenuArrowPadding,
+                                         btn->rect.top(),
+                                         Constants::smallArrowSize,
+                                         btn->rect.height());
+                    drawPrimitive(PE_IndicatorArrowDown, &menuOpt, p, widget);
                 }
                 return;
             }
