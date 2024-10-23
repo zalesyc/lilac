@@ -66,14 +66,21 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
                 return pal.color(CGroup::Disabled, CRole::Text);
             return isDarkMode(pal) ? QColor(129, 201, 149) : QColor(14, 156, 87);
         }
-        case checkBoxHoverCircle: {
+        case checkBoxHoverCircleChecked: {
             QColor base = getColor(pal, Color::checkBoxInside, state);
-
             if (state.pressed) {
                 base.setAlpha(40);
                 return base;
             }
-
+            base.setAlpha(20);
+            return base;
+        }
+        case checkBoxHoverCircle: {
+            QColor base = pal.color(CGroup::Normal, CRole::Text);
+            if (state.pressed) {
+                base.setAlpha(40);
+                return base;
+            }
             base.setAlpha(20);
             return base;
         }
@@ -110,11 +117,13 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         }
 
         case sliderHandle:
+        case dialHandle:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Accent);
             return pal.color(CGroup::Normal, CRole::Accent);
 
-        case sliderHandleHoverCircle: {
+        case sliderHandleHoverCircle:
+        case dialHandleHoverCircle: {
             auto base = pal.color(CGroup::Normal, CRole::Accent);
             if (state.pressed) {
                 base.setAlpha(80);
@@ -125,11 +134,13 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         }
 
         case sliderLineBefore:
+        case dialLineBefore:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Accent);
             return pal.color(CGroup::Normal, CRole::Accent);
 
-        case sliderLineAfter: {
+        case sliderLineAfter:
+        case dialLineAfter: {
             const auto base = pal.color(CGroup::Disabled, CRole::Accent);
             if (!state.enabled)
                 return isDarkMode(pal) ? base.darker(110) : base.lighter(110);

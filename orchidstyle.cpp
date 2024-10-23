@@ -348,6 +348,64 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 return;
             }
             break;
+        case CC_Dial:
+            if (const auto* dial = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
+                /*
+                 * all values are in degrees
+                 * 0° is at the 6 o'clock position
+                 * when upsideDown is false, value rises in counterclockwise direction
+                 *
+                 * It doesnt use subControlRect for handle positions, as that would result in duplicate calulations
+                 */
+                const QRect groove = subControlRect(CC_Dial, dial, SC_DialGroove, widget);
+
+                const int arcLen = dial->dialWrapping ? 360 : Constants::dialRangeNonWaraping; // length in degrees, of the line
+                const int startAngle = (360 - arcLen) / 2;
+                const qreal dialRadius = (groove.width() - Constants::dialHandleHoverCircleDiameter) / 2;
+                const int value = sliderPositionFromValue(dial->minimum, dial->maximum, dial->sliderPosition, arcLen, dial->upsideDown);
+                const qreal handleX = qSin(qDegreesToRadians(qreal(startAngle + value))) * dialRadius; // this x and y is for a circle with
+                const qreal handleY = qCos(qDegreesToRadians(qreal(startAngle + value))) * dialRadius; // the centre at 0,0 and radius radius
+
+                const QRectF handleHover(groove.left() + dialRadius + handleX,
+                                         groove.top() + dialRadius + handleY,
+                                         Constants::dialHandleHoverCircleDiameter,
+                                         Constants::dialHandleHoverCircleDiameter);
+
+                const QRect slider = groove.adjusted(Constants::dialHandleHoverCircleDiameter / 2, Constants::dialHandleHoverCircleDiameter / 2,
+                                                     -Constants::dialHandleHoverCircleDiameter / 2, -Constants::dialHandleHoverCircleDiameter / 2);
+
+                p->save();
+                p->setRenderHint(QPainter::Antialiasing);
+
+                p->setBrush(Qt::NoBrush);
+                if (dial->upsideDown) {
+                    p->setPen(getPen(dial->palette, Color::dialLineAfter, state, 2));
+                    p->drawArc(slider, -90 * 16 + startAngle * 16, value * 16);
+                    p->setPen(getPen(dial->palette, Color::dialLineBefore, state, 2));
+                    p->drawArc(slider, 270 * 16 - startAngle * 16, (value - arcLen) * 16);
+                } else {
+                    p->setPen(getPen(dial->palette, Color::dialLineBefore, state, 2));
+                    p->drawArc(slider, 270 * 16 - startAngle * 16, (value - arcLen) * 16);
+                    p->setPen(getPen(dial->palette, Color::dialLineAfter, state, 2));
+                    p->drawArc(slider, -90 * 16 + startAngle * 16, value * 16);
+                }
+
+                p->setPen(Qt::NoPen);
+                p->setBrush(getBrush(dial->palette, Color::dialHandle, state));
+                QRectF handle(0, 0, Constants::dialHandleDiameter, Constants::dialHandleDiameter);
+                handle.moveCenter(handleHover.center());
+                p->drawEllipse(handle);
+
+                if ((state.hovered || state.pressed) && state.enabled) {
+                    p->setBrush(getBrush(dial->palette, Color::sliderHandleHoverCircle, state));
+                    p->drawEllipse(handleHover);
+                }
+
+                p->restore();
+
+                return;
+            }
+            break;
         default:
             break;
     }
@@ -1069,10 +1127,12 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                 const int size = qMin(Constants::checkBoxHoverCircleSize, qMin(opt->rect.height(), opt->rect.width()));
                 QRect hoverRect(0, 0, size, size);
                 hoverRect.moveCenter(opt->rect.center());
-                p->setPen(getPen(opt->palette, Color::checkBoxHoverCircle, state, indicatorRect.left() - hoverRect.left()));
-                p->setBrush(Qt::NoBrush);
-                const int adjustment = ((indicatorRect.left() - hoverRect.left()) / 2) + 1;
-                p->drawEllipse(hoverRect.adjusted(adjustment, adjustment, -adjustment, -adjustment));
+
+                p->setPen(Qt::NoPen);
+                p->setBrush(getBrush(opt->palette,
+                                     (opt->state & State_Off) ? Color::checkBoxHoverCircle : Color::checkBoxHoverCircleChecked,
+                                     state));
+                p->drawEllipse(hoverRect);
             }
 
             if (opt->state & (QStyle::State_Off)) {
@@ -1101,13 +1161,13 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
 
                 } else {
                     const auto center = opt->rect.center();
-                    const QPointF poinsts[3] = {
-                        QPointF(center.x() - indicatorSize / 4.0f, center.y()),
-                        QPointF(center.x() - indicatorSize / 10.0f, center.y() + indicatorSize / 5.0f),
-                        QPointF(center.x() + indicatorSize / 4.0f, center.y() - indicatorSize / 7.5f),
+                    const QPointF points[3] = {
+                        QPointF(center.x() - indicatorSize / 4.0, center.y()),
+                        QPointF(center.x() - indicatorSize / 10.0, center.y() + indicatorSize / 5.0),
+                        QPointF(center.x() + indicatorSize / 4.0, center.y() - indicatorSize / 7.5),
                     };
 
-                    p->drawPolyline(poinsts, 3);
+                    p->drawPolyline(points, 3);
                 }
             } else {
                 const double adjustment = indicatorSize * 0.35;
@@ -2000,6 +2060,20 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
 
                         return QRect(QPoint(box->rect.left() + box->lineWidth + 1, box->rect.top() + headerHeight),
                                      box->rect.bottomRight() - QPoint(box->lineWidth + 1, box->lineWidth + 1));
+                    }
+                    default:
+                        break;
+                }
+            }
+            break;
+        case CC_Dial:
+            if (const QStyleOptionSlider* dial = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
+                switch (element) {
+                    case SC_DialGroove: {
+                        const int size = qMin(dial->rect.width(), dial->rect.height());
+                        QRect rect(0, 0, size, size);
+                        rect.moveCenter(dial->rect.center());
+                        return rect;
                     }
                     default:
                         break;

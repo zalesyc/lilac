@@ -28,10 +28,11 @@ enum Color {
     buttonBg, // DHP
     toggleButtonChecked,
 
-    checkBoxInside,      // D all checkbox colors are also for radiobuttons
-    checkBoxCheck,       // D
-    checkBoxOutline,     // D
-    checkBoxHoverCircle, // HP
+    checkBoxInside,             // D all checkbox colors are also for radiobuttons
+    checkBoxCheck,              // D
+    checkBoxOutline,            // D
+    checkBoxHoverCircle,        // HP
+    checkBoxHoverCircleChecked, // HP
 
     tabCheckedOutline,
     tabCheckedFill,
@@ -93,6 +94,12 @@ enum Color {
 
     viewHeaderBg,          // DHP - when with table: pressed - the row/collumn is selected
     viewHeaderEmptyAreaBg, // D
+
+    dialLineBefore,        // D
+    dialLineAfter,         // D
+    dialHandle,            // D
+    dialHandleHoverCircle, // P
+
 };
 
 struct State {
@@ -182,6 +189,11 @@ constexpr int groupBoxCheckSize = checkBoxSize;
 constexpr int groupBoxTextCheckSpacing = 8;                             // spacing between the label and the checkbox
 constexpr int groupBoxHeaderVerticalPadding = 5;                        // space between the end of the line and the label/check
 constexpr int groupBoxLabelOffset = groupBoxHeaderVerticalPadding + 10; // length between the side of the groupbox and the label/check
+
+constexpr int dialHandleDiameter = 12;
+constexpr int dialHandleHoverCircleDiameter = 20;
+
+constexpr int dialRangeNonWaraping = 300; // degrees
 } // namespace Constants
 
 } // namespace Orchid
