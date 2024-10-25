@@ -32,9 +32,20 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [ ] Dock Widgets
 
 Widgets not mentioned in the docs
-- [ ] Dial
+- [x] Dial
 - [x] LineEdits 
 
 ## TODO
 - `Style::drawComplexControl` -> CC_Slider `qAcos` is expensive so remove it - the parameters are constants from PixelMetric so it should be replaced by a precalculated value
 - `CE_ProgressBarContents` -> make the busy indicator animated
+
+
+## Clang-format config:
+    ---
+    TabWidth: 4
+    IndentWidth: 4
+    PointerAlignment: Left
+    ColumnLimit: 0
+    BreakBeforeTernaryOperators: false
+    IndentCaseLabels: true
+    ...
