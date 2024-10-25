@@ -22,10 +22,8 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                     p->fillRect(bar->rect, getBrush(opt->palette, Color::scrollBarHoverBg));
                     if (opt->state & QStyle::State_Horizontal) {
                         p->drawLine(bar->rect.topLeft(), bar->rect.topRight());
-                        p->drawLine(bar->rect.bottomLeft(), bar->rect.bottomRight());
                     } else {
                         p->drawLine(bar->rect.topLeft(), bar->rect.bottomLeft());
-                        p->drawLine(bar->rect.topRight(), bar->rect.bottomRight());
                     }
                     p->restore();
                 }
@@ -572,9 +570,9 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             QRect rect;
             const int gapSize = (state.hovered && state.enabled) ? Constants::scrollBarSliderPaddingHover : Constants::scrollBarSliderPadding;
             if (opt->state & QStyle::State_Horizontal) {
-                rect = opt->rect.adjusted(0, gapSize, 0, -gapSize);
+                rect = opt->rect.adjusted(0, gapSize + 1, 0, -gapSize); // the +1 is for the separator line above the hovered separator width
             } else {
-                rect = opt->rect.adjusted(gapSize, 0, -gapSize, 0);
+                rect = opt->rect.adjusted(gapSize + 1, 0, -gapSize, 0);
             }
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
