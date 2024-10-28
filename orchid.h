@@ -38,6 +38,8 @@ enum Color {
     tabCheckedFill,
     tabUncheckedHover,
     tabWidgetPageArea,
+    tabCloseIndicator,            // DHP, just the x
+    tabCloseIndicatorHoverCircle, // HP
 
     scrollBarHoverBg,
     scrollBarHoverOutline,
@@ -129,6 +131,8 @@ constexpr int pushButtonMenuArrowPadding = 6; // length between the menu arrow a
 
 constexpr int checkBoxSize = 20;
 constexpr int checkBoxHoverCircleSize = 34;
+
+constexpr int tabCloseIndicatorSize = 6; // size of the x, without the hover circle whose size is specified in PixelMetric
 
 constexpr int sliderHandleHoverCircleDiameter = 32;
 constexpr int sliderHandleCircleDiameter = 12;

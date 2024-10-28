@@ -170,7 +170,8 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return base;
         }
 
-        case spinBoxIndicator: {
+        case spinBoxIndicator:
+        case tabCloseIndicator: {
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Text);
             const QColor base = pal.color(CGroup::Normal, CRole::Text);
@@ -180,7 +181,8 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
                 return isDarkMode(pal) ? base.lighter(130) : base.darker(130);
             return base;
         }
-        case spinBoxIndicatorHoverCircle: {
+        case spinBoxIndicatorHoverCircle:
+        case tabCloseIndicatorHoverCircle: {
             QColor base = pal.color(CGroup::Normal, CRole::Text);
             if (state.pressed) {
                 base.setAlpha(100);

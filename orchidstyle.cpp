@@ -1185,6 +1185,27 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->restore();
             return;
 
+        case PE_IndicatorTabClose: {
+            const int indicatorSize = qMin(Constants::tabCloseIndicatorSize, qMin(opt->rect.width(), opt->rect.height()));
+            QRectF indicatorRect(0, 0, indicatorSize, indicatorSize);
+            indicatorRect.moveCenter(opt->rect.toRectF().center());
+
+            p->save();
+            p->setRenderHints(QPainter::Antialiasing);
+            p->setPen(QPen(getBrush(opt->palette, Color::tabCloseIndicator, state), 2, Qt::SolidLine, Qt::RoundCap));
+
+            p->drawLine(indicatorRect.topLeft(), indicatorRect.bottomRight());
+            p->drawLine(indicatorRect.bottomLeft(), indicatorRect.topRight());
+
+            if ((state.hovered || state.pressed) && state.enabled) {
+                p->setBrush(getBrush(opt->palette, Color::tabCloseIndicatorHoverCircle, state));
+                p->setPen(Qt::NoPen);
+                p->drawEllipse(opt->rect);
+            }
+            p->restore();
+            return;
+        }
+
         case PE_PanelLineEdit:
             if (const QStyleOptionFrame* edit = qstyleoption_cast<const QStyleOptionFrame*>(opt)) {
                 if (edit->lineWidth > 0) {
@@ -1577,6 +1598,9 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_TabBarTabShiftHorizontal:
         case PM_TabBarTabShiftVertical:
             return 0;
+        case PM_TabCloseIndicatorWidth:
+        case PM_TabCloseIndicatorHeight:
+            return 24;
         case PM_SliderThickness:
         case PM_SliderControlThickness:
         case PM_SliderLength:
