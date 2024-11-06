@@ -34,6 +34,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 Widgets not mentioned in the docs
 - [x] Dial
 - [x] LineEdits 
+- [x] Frames
 
 ## TODO
 - `Style::drawComplexControl` -> CC_Slider `qAcos` is expensive so remove it - the parameters are constants from PixelMetric so it should be replaced by a precalculated value

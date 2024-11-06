@@ -1062,6 +1062,47 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             p->restore();
             return;
         }
+        case CE_ShapedFrame:
+            if (const auto* frame = qstyleoption_cast<const QStyleOptionFrame*>(opt)) {
+                switch (frame->frameShape) {
+                    case QFrame::HLine:
+                    case QFrame::VLine: {
+                        QLine line;
+                        if (frame->frameShape == QFrame::HLine) {
+                            const int y = frame->rect.center().y();
+                            line.setLine(frame->rect.left(), y, frame->rect.right(), y);
+                        } else {
+                            const int x = frame->rect.center().x();
+                            line.setLine(x, frame->rect.top(), x, frame->rect.bottom());
+                        }
+                        p->save();
+                        p->setPen(getPen(frame->palette, Color::line, state, 1));
+                        p->drawLine(line);
+                        p->restore();
+                        return;
+                    }
+                    case QFrame::Box:
+                    case QFrame::Panel:
+                    case QFrame::WinPanel: {
+                        p->save();
+                        p->setPen(getPen(frame->palette, Color::line, state, frame->lineWidth));
+                        p->setBrush(Qt::NoBrush);
+
+                        const int adjustment = frame->lineWidth / 2;
+                        p->drawRect(frame->rect.adjusted(adjustment, adjustment, -(adjustment + 1), -(adjustment + 1)));
+
+                        p->restore();
+                        return;
+                    }
+                    case QFrame::StyledPanel:
+                        // this option is also used by views
+                        drawPrimitive(QStyle::PE_Frame, opt, p, widget);
+                        return;
+                    case QFrame::NoFrame:
+                        return;
+                }
+            }
+            break;
 
         case CE_SizeGrip:
             return;
@@ -1459,12 +1500,6 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             }
             break;
 
-        case PE_FrameButtonTool:
-            return;
-
-        case PE_FrameMenu:
-            return;
-
         case PE_IndicatorArrowUp:
         case PE_IndicatorArrowDown:
         case PE_IndicatorArrowLeft:
@@ -1528,6 +1563,23 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->restore();
             return;
         }
+        case PE_Frame:
+            if (const auto* frame = qstyleoption_cast<const QStyleOptionFrame*>(opt)) {
+                p->save();
+                p->setPen(getPen(frame->palette, Color::line, state, frame->lineWidth));
+                p->setBrush(Qt::NoBrush);
+
+                const int adjustment = frame->lineWidth / 2;
+                p->drawRect(frame->rect.adjusted(adjustment, adjustment, -(adjustment + 1), -(adjustment + 1)));
+
+                p->restore();
+            }
+
+        case PE_FrameButtonTool:
+            return;
+
+        case PE_FrameMenu:
+            return;
 
         default:
             break;
@@ -1769,6 +1821,28 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 return rect;
             }
             break;
+        case SE_ShapedFrameContents:
+            if (const auto* frame = qstyleoption_cast<const QStyleOptionFrame*>(opt)) {
+                switch (frame->frameShape) {
+                    case QFrame::HLine:
+                    case QFrame::VLine:
+                    case QFrame::Box:
+                    case QFrame::Panel:
+                    case QFrame::WinPanel:
+                        return frame->rect.adjusted(frame->lineWidth, frame->lineWidth, -frame->lineWidth, -frame->lineWidth);
+
+                    case QFrame::StyledPanel:
+                        return subElementRect(QStyle::SE_FrameContents, frame, widget);
+
+                    case QFrame::NoFrame:
+                        return frame->rect;
+                }
+            }
+
+        case SE_FrameContents:
+            if (const auto* frame = qstyleoption_cast<const QStyleOptionFrame*>(opt)) {
+                return frame->rect.adjusted(frame->lineWidth, frame->lineWidth, -frame->lineWidth, -frame->lineWidth);
+            }
 
         default:
             break;
