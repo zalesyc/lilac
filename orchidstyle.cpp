@@ -1604,8 +1604,8 @@ void Style::polish(QWidget* widget) {
         menu->setAttribute(Qt::WA_TranslucentBackground);
         if (menu->graphicsEffect() == nullptr) {
             QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(menu);
-            shadow->setColor(QColor(10, 10, 10, 100));
-            shadow->setOffset(0, 1);
+            shadow->setOffset(0.3, 0.5);
+            shadow->setColor(getColor(menu->palette(), Color::menuShadow));
             shadow->setBlurRadius(Constants::menuShadowSize);
             menu->setGraphicsEffect(shadow);
         }
@@ -1666,7 +1666,7 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_MenuVMargin:
             return 5 + Constants::menuTransparentPadding;
         case PM_SubMenuOverlap:
-            return 0;
+            return 3;
         case PM_MenuBarItemSpacing:
             return 0;
         case PM_MenuBarHMargin:

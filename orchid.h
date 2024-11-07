@@ -25,6 +25,8 @@ enum Color {
 
     focusRect,
 
+    indicatorArrow, // D
+
     buttonBg, // DHP
     toggleButtonChecked,
 
@@ -68,7 +70,7 @@ enum Color {
     menuSeparator,    // D
     menuItemHoverBg,
     menuBg,
-    indicatorArrow,     // D
+    menuShadow,
     menuBarItemHoverBg, // HP - hover: hover without open menu, pressed: menu open
     menuBarItemText,    // D
     menuBarBg,          // D
@@ -157,8 +159,8 @@ constexpr int menuItemVerticalExternalPadding = 5;   // left and right of the me
 constexpr int menuItemVerticalInternalPadding = 5;   // left and right, inside hover rect
 constexpr int menuItemHorizontalInternalPadding = 5; // top and bottom, inside hover rect
 constexpr int menuSeparatorHorizontalPadding = 3;    // top and bottom
-constexpr int menuShadowSize = 4;                    // the size of the shadow,the shadow is added in polish.
-constexpr int menuTransparentPadding = 4;            // transparent padding added to the menu, that contains the shadow and is spacing
+constexpr int menuShadowSize = 6;                    // the size of the shadow,the shadow is added in polish.
+constexpr int menuTransparentPadding = 7;            // transparent padding added to the menu, that contains the shadow and is spacing
 constexpr int menuBorderRadius = 10;
 constexpr int menuTransparency = 255; // value between 0 and 255, 0: transparent; 255: opaque
 constexpr int menuSeparatorMinLen = 5;

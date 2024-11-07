@@ -241,6 +241,13 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
                 return pal.color(CGroup::Disabled, CRole::Base);
             return pal.color(CGroup::Normal, CRole::Base);
 
+        case menuShadow: {
+            QColor base = pal.color(CGroup::Normal, CRole::Shadow);
+            if (isDarkMode(pal))
+                return base;
+            base.setAlpha(80);
+            return base;
+        }
         case toolBarHandle:
         case toolBarSeparator: {
             const QColor base = getColor(pal, Color::line, state);
