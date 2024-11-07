@@ -746,7 +746,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 p->save();
                 p->setRenderHints(QPainter::Antialiasing);
 
-                p->fillRect(bar->rect, getColor(opt->palette, Color::menuBarBg, state));
+                p->fillRect(bar->rect, getColor(opt->palette, Color::menuBarBg));
 
                 if (state.hovered || state.pressed) {
                     p->setPen(Qt::NoPen);
@@ -786,7 +786,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             break;
         case CE_MenuBarEmptyArea: {
             p->save();
-            p->fillRect(opt->rect, getColor(opt->palette, Color::menuBarBg, state));
+            p->fillRect(opt->rect, getColor(opt->palette, Color::menuBarBg));
             p->setPen(getPen(opt->palette, Color::line, state, 1));
             p->drawLine(opt->rect.bottomLeft(), opt->rect.bottomRight());
             p->restore();
