@@ -134,7 +134,10 @@ constexpr int pushButtonMenuArrowPadding = 6; // length between the menu arrow a
 constexpr int checkBoxSize = 20;
 constexpr int checkBoxHoverCircleSize = 34;
 
-constexpr int tabCloseIndicatorSize = 6; // size of the x, without the hover circle whose size is specified in PixelMetric
+constexpr int tabCloseIndicatorSize = 6;         // size of the x, without the hover circle whose size is specified in
+constexpr int tabBarStartPadding = 6;            // padding on the left/top side of the tabbar, if the tab alighnment is left, only for QTabWidget
+constexpr int tabBarPaddingAboveTabs = 4;        // there is no rect for the tab position for both QTabBar and QTabWidget, the implementaion is hacky and would benefit from an improvement, e.g. reimplemntation of the relevant cases
+constexpr int tabWidgetPageAreaCornerRadius = 6; // corner radius for the frame arount the contents of QTabWidget
 
 constexpr int sliderHandleHoverCircleDiameter = 32;
 constexpr int sliderHandleCircleDiameter = 12;

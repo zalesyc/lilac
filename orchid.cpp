@@ -88,8 +88,13 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case tabCheckedFill:
             return getColor(pal, Color::tabWidgetPageArea);
 
-        case tabCheckedOutline:
-            return getColor(pal, Color::line);
+        case tabCheckedOutline: {
+            const auto base = getColor(pal, Color::line);
+            if (state.hasFocus) {
+                return pal.color(CGroup::Normal, CRole::Accent);
+            }
+            return base;
+        }
 
         case tabUncheckedHover:
             return getColor(pal, Color::tabCheckedFill);

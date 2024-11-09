@@ -429,31 +429,53 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             }
             break;
 
+        case CE_TabBarTab:
+            if (const auto* tab = qstyleoption_cast<const QStyleOptionTab*>(opt)) {
+                QStyleOptionTab tabOpt = *tab;
+                switch (tab->shape) {
+                    case QTabBar::RoundedNorth:
+                    case QTabBar::TriangularNorth:
+                        tabOpt.rect.adjust(0, Constants::tabBarPaddingAboveTabs, 0, 0);
+                        break;
+
+                    case QTabBar::RoundedSouth:
+                    case QTabBar::TriangularSouth:
+                        tabOpt.rect.adjust(0, 0, 0, -Constants::tabBarPaddingAboveTabs);
+                        break;
+
+                    case QTabBar::RoundedWest:
+                    case QTabBar::TriangularWest:
+                        tabOpt.rect.adjust(Constants::tabBarPaddingAboveTabs, 0, 0, 0);
+                        break;
+
+                    case QTabBar::RoundedEast:
+                    case QTabBar::TriangularEast:
+                        tabOpt.rect.adjust(0, 0, -Constants::tabBarPaddingAboveTabs, 0);
+                        break;
+                }
+                drawControl(CE_TabBarTabShape, &tabOpt, p, widget);
+                drawControl(CE_TabBarTabLabel, &tabOpt, p, widget);
+                return;
+            }
+            break;
+
         case CE_TabBarTabShape:
             if (const auto* tab = qstyleoption_cast<const QStyleOptionTab*>(opt)) {
-                if (!(tab->state & (QStyle::State_Selected | QStyle::State_HasFocus | QStyle::State_Sunken | QStyle::State_MouseOver))) {
-                    return;
-                }
-                if (!(tab->state & (QStyle::State_Enabled | QStyle::State_Selected | QStyle::State_HasFocus)) && tab->state & (QStyle::State_Sunken | QStyle::State_MouseOver)) {
-                    // this is for when the widget is disabled, to not show anything on hover
+                const bool isSelected = tab->state & QStyle::State_Selected;
+
+                if ((!isSelected && !state.hasFocus && !state.pressed && !state.hovered) || (!state.enabled && !isSelected)) {
                     return;
                 }
 
-                QRect rect;
-                if (tab->state & (QStyle::State_Selected | QStyle::State_HasFocus)) {
-                    rect = tab->rect.adjusted(1, 1, -1, 1);
-                } else {
-                    rect = tab->rect;
-                }
-
-                int cornerRectSize;
+                QRectF rect = tab->rect.toRectF();
+                qreal cornerRectSize;
                 switch (tab->shape) {
                     case QTabBar::RoundedNorth:
                     case QTabBar::TriangularNorth:
                     case QTabBar::RoundedSouth:
                     case QTabBar::TriangularSouth:
-                        cornerRectSize = qMin(Constants::cornerRadius * 2, // the corner radius is still btnRadius,
-                                              qMin(rect.width(),           // it has to be *2 due to implementation
+                        cornerRectSize = qMin(Constants::cornerRadius * 2.0, // the corner radius is still btnRadius,
+                                              qMin(rect.width(),             // it has to be *2 due to implementation
                                                    rect.height() * 2));
 
                         break;
@@ -462,7 +484,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QTabBar::TriangularEast:
                     case QTabBar::RoundedWest:
                     case QTabBar::TriangularWest:
-                        cornerRectSize = qMin(Constants::cornerRadius * 2,
+                        cornerRectSize = qMin(Constants::cornerRadius * 2.0,
                                               qMin(rect.height(),
                                                    rect.width() * 2));
                         break;
@@ -472,6 +494,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 switch (tab->shape) {
                     case QTabBar::RoundedNorth:
                     case QTabBar::TriangularNorth:
+                        rect.adjust(0.5, 0.5, -0.5, isSelected ? 0 : -1.5);
+
                         path.moveTo(rect.bottomLeft());
                         path.lineTo(rect.left(), rect.top() + Constants::cornerRadius);
                         path.arcTo(QRectF(
@@ -490,6 +514,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
                     case QTabBar::RoundedSouth:
                     case QTabBar::TriangularSouth:
+                        rect.adjust(0.5, isSelected ? 0 : 1.5, -0.5, -0.5);
+
                         path.moveTo(rect.topLeft());
                         path.lineTo(rect.left(), rect.bottom() - Constants::cornerRadius);
                         path.arcTo(QRectF(
@@ -506,26 +532,10 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                         path.lineTo(rect.topRight());
                         break;
 
-                    case QTabBar::RoundedEast:
-                    case QTabBar::TriangularEast:
-                        path.moveTo(rect.topLeft());
-                        path.lineTo(rect.right() - Constants::cornerRadius, rect.top());
-                        path.arcTo(QRectF(
-                                       rect.topRight(),
-                                       QPointF(rect.right() - cornerRectSize, rect.top() + cornerRectSize)),
-                                   90,
-                                   90);
-                        path.lineTo(rect.right(), rect.bottom() - Constants::cornerRadius);
-                        path.arcTo(QRectF(
-                                       rect.bottomRight(),
-                                       QPointF(rect.right() - cornerRectSize, rect.bottom() - cornerRectSize)),
-                                   180,
-                                   -90);
-                        path.lineTo(rect.bottomLeft());
-                        break;
-
                     case QTabBar::RoundedWest:
                     case QTabBar::TriangularWest:
+                        rect.adjust(0.5, 0.5, isSelected ? 0 : -1.5, -0.5);
+
                         path.moveTo(rect.topRight());
                         path.lineTo(rect.left() + Constants::cornerRadius, rect.top());
                         path.arcTo(QRectF(
@@ -541,17 +551,37 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                                    -90);
                         path.lineTo(rect.bottomRight());
                         break;
+
+                    case QTabBar::RoundedEast:
+                    case QTabBar::TriangularEast:
+                        rect.adjust(isSelected ? 0 : 1.5, 0.5, -0.5, -0.5);
+
+                        path.moveTo(rect.topLeft());
+                        path.lineTo(rect.right() - Constants::cornerRadius, rect.top());
+                        path.arcTo(QRectF(
+                                       rect.topRight(),
+                                       QPointF(rect.right() - cornerRectSize, rect.top() + cornerRectSize)),
+                                   90,
+                                   90);
+                        path.lineTo(rect.right(), rect.bottom() - Constants::cornerRadius);
+                        path.arcTo(QRectF(
+                                       rect.bottomRight(),
+                                       QPointF(rect.right() - cornerRectSize, rect.bottom() - cornerRectSize)),
+                                   180,
+                                   -90);
+                        path.lineTo(rect.bottomLeft());
+                        break;
                 }
                 p->save();
                 p->setRenderHints(QPainter::Antialiasing);
 
-                if (tab->state & (QStyle::State_Selected | QStyle::State_HasFocus)) {
-                    p->setPen(getPen(tab->palette, Color::tabCheckedOutline, 1));
-                    p->setBrush(getBrush(tab->palette, Color::tabCheckedFill));
+                if (isSelected || state.hasFocus) {
+                    p->setPen(getPen(tab->palette, Color::tabCheckedOutline, state, 1));
+                    p->setBrush(getBrush(tab->palette, Color::tabCheckedFill, state));
                     p->drawPath(path);
                 } else {
                     p->setPen(Qt::NoPen);
-                    p->setBrush(getBrush(tab->palette, Color::tabUncheckedHover));
+                    p->setBrush(getBrush(tab->palette, Color::tabUncheckedHover, state));
                     p->drawPath(path);
                 }
 
@@ -1210,13 +1240,16 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->restore();
             return;
         }
-        case PE_FrameTabWidget:
+        case PE_FrameTabWidget: {
+            QRectF rect = opt->rect.toRectF().adjusted(.5, .5, -.5, -.5);
             p->save();
+            p->setRenderHints(QPainter::Antialiasing);
             p->setBrush(getBrush(opt->palette, Color::tabWidgetPageArea));
             p->setPen(getPen(opt->palette, Color::tabCheckedOutline, 1));
-            p->drawRect(opt->rect.adjusted(1, 1, -1, -1));
+            p->drawRoundedRect(rect, Constants::tabWidgetPageAreaCornerRadius, Constants::tabWidgetPageAreaCornerRadius);
             p->restore();
             return;
+        }
 
         case PE_FrameTabBarBase:
             p->save();
@@ -1646,10 +1679,12 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_TabBarTabVSpace:
             return 20;
         case PM_TabBarTabHSpace:
-            return 24;
+            return 24 + Constants::tabBarPaddingAboveTabs;
         case PM_TabBarTabShiftHorizontal:
         case PM_TabBarTabShiftVertical:
             return 0;
+        case PM_TabBarBaseOverlap:
+            return 1;
         case PM_TabCloseIndicatorWidth:
         case PM_TabCloseIndicatorHeight:
             return 24;
@@ -1712,6 +1747,8 @@ int Style::styleHint(QStyle::StyleHint hint, const QStyleOption* option, const Q
             return true;
         case SH_DrawMenuBarSeparator:
             return false;
+        case SH_TabBar_Alignment:
+            return Qt::AlignLeft;
         case SH_ComboBox_Popup:
             return false;
         case SH_ComboBox_PopupFrameStyle:
@@ -1738,6 +1775,111 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
             rect.moveTopLeft(opt->rect.topLeft());
             return rect;
         }
+        case SE_TabWidgetTabBar:
+            if (const auto* tab = qstyleoption_cast<const QStyleOptionTabWidgetFrame*>(opt)) {
+                const bool centerTabs = styleHint(SH_TabBar_Alignment, tab, widget) & Qt::AlignCenter;
+                QRect rect;
+
+                switch (tab->shape) {
+                    case QTabBar::RoundedNorth: // horizontal tabbar
+                    case QTabBar::TriangularNorth:
+                    case QTabBar::RoundedSouth:
+                    case QTabBar::TriangularSouth: {
+                        const int maxAvailibleWidth = tab->rect.width() - tab->leftCornerWidgetSize.width() - tab->rightCornerWidgetSize.width();
+                        rect.setWidth(qMin(tab->tabBarSize.width(), maxAvailibleWidth));
+                        rect.setHeight(qMin(tab->tabBarSize.height(), tab->rect.height()));
+
+                        if (centerTabs) {
+                            rect.moveCenter(opt->rect.center());
+                        } else {
+                            rect.moveLeft(opt->rect.left() + Constants::tabBarStartPadding);
+                        }
+                        break;
+                    }
+                    case QTabBar::RoundedEast: // vertical tabbar
+                    case QTabBar::TriangularEast:
+                    case QTabBar::RoundedWest:
+                    case QTabBar::TriangularWest: {
+                        const int maxAvailibleHeight = tab->rect.height() - tab->leftCornerWidgetSize.height() - tab->rightCornerWidgetSize.height();
+                        rect.setHeight(qMin(tab->tabBarSize.height(), maxAvailibleHeight));
+                        rect.setWidth(qMin(tab->tabBarSize.width(), tab->rect.width()));
+
+                        if (centerTabs) {
+                            rect.moveCenter(opt->rect.center());
+                        } else {
+                            rect.moveTop(opt->rect.top() + Constants::tabBarStartPadding);
+                        }
+                        break;
+                    }
+                }
+
+                switch (tab->shape) {
+                    case QTabBar::RoundedNorth:
+                    case QTabBar::TriangularNorth:
+                        rect.moveTop(opt->rect.top());
+                        break;
+
+                    case QTabBar::RoundedSouth:
+                    case QTabBar::TriangularSouth:
+                        rect.moveBottom(opt->rect.bottom());
+                        break;
+
+                    case QTabBar::RoundedWest:
+                    case QTabBar::TriangularWest:
+                        rect.moveLeft(opt->rect.left());
+                        break;
+                    case QTabBar::RoundedEast:
+                    case QTabBar::TriangularEast:
+                        rect.moveRight(opt->rect.right());
+                        break;
+                }
+                return rect;
+            }
+            break;
+
+        case SE_TabBarTabRightButton:
+        case SE_TabBarTabLeftButton:
+            if (const auto* tab = qstyleoption_cast<const QStyleOptionTab*>(opt)) {
+                QRect rect = SuperStyle::subElementRect(element, opt, widget);
+
+                switch (tab->shape) {
+                    case QTabBar::RoundedNorth:
+                    case QTabBar::TriangularNorth:
+                        rect.moveTop(tab->rect.top() +
+                                     Constants::tabBarPaddingAboveTabs / 2.0 +
+                                     tab->rect.height() / 2.0 -
+                                     rect.height() / 2.0);
+                        break;
+
+                    case QTabBar::RoundedSouth:
+                    case QTabBar::TriangularSouth:
+                        rect.moveTop(tab->rect.top() +
+                                     tab->rect.height() / 2.0 -
+                                     Constants::tabBarPaddingAboveTabs / 2.0 -
+                                     rect.height() / 2.0);
+                        break;
+
+                    case QTabBar::RoundedWest:
+                    case QTabBar::TriangularWest:
+                        rect.moveLeft(tab->rect.left() +
+                                      Constants::tabBarPaddingAboveTabs / 2.0 +
+                                      tab->rect.width() / 2.0 -
+                                      rect.width() / 2.0);
+                        break;
+
+                    case QTabBar::RoundedEast:
+                    case QTabBar::TriangularEast:
+                        rect.moveLeft(tab->rect.left() +
+                                      tab->rect.width() / 2.0 -
+                                      Constants::tabBarPaddingAboveTabs / 2.0 -
+                                      rect.width() / 2.0);
+                        break;
+                }
+
+                return rect;
+            }
+            break;
+
         case SE_LineEditContents:
             if (const QStyleOptionFrame* edit = qstyleoption_cast<const QStyleOptionFrame*>(opt)) {
                 if (edit->lineWidth <= 0) {
