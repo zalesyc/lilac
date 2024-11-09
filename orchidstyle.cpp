@@ -1134,6 +1134,21 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             }
             break;
 
+        case CE_RubberBand:
+            if (const auto* band = qstyleoption_cast<const QStyleOptionRubberBand*>(opt)) {
+                if (band->shape == QRubberBand::Line) {
+                    p->fillRect(band->rect, getColor(band->palette, Color::rubberbandLine, state));
+                    return;
+                }
+                p->save();
+                p->setPen(getPen(band->palette, Color::rubberBandRectOutline, state, 1));
+                p->setBrush(getBrush(band->palette, band->opaque ? Color::rubberBandRectBgOpaque : Color::rubberBandRectBg, state));
+                p->drawRect(band->rect.toRectF().adjusted(0.5, 0.5, -0.5, -0.5));
+                p->restore();
+                return;
+            }
+            break;
+
         case CE_SizeGrip:
             return;
 

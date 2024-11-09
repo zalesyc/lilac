@@ -311,6 +311,17 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
                 return getColor(pal, Color::buttonBg, state);
             return getColor(pal, Color::viewHeaderEmptyAreaBg, state);
 
+        case rubberbandLine:
+        case rubberBandRectOutline:
+        case rubberBandRectBgOpaque:
+            return pal.color(CGroup::Normal, CRole::Accent);
+
+        case rubberBandRectBg: {
+            auto base = getColor(pal, rubberbandLine);
+            base.setAlpha(60);
+            return base;
+        }
+
         default:
             break;
     }

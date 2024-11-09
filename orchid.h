@@ -104,6 +104,11 @@ enum Color {
     dialHandle,            // D
     dialHandleHoverCircle, // P
 
+    rubberbandLine, // when shape is line
+    rubberBandRectOutline,
+    rubberBandRectBg,
+    rubberBandRectBgOpaque,
+
 };
 
 struct State {
