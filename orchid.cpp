@@ -220,6 +220,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case toolBtnText:
         case progressBarText:
         case groupBoxText:
+        case tabText:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Text);
             return pal.color(CGroup::Normal, CRole::Text);
