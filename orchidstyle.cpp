@@ -1901,14 +1901,13 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 if (tab->text.isEmpty()) {
                     return QRect();
                 }
-                const QRect tabRect = tabBarGetTabRect(tab->rect, tab->shape);
                 QSize textSize = tab->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), tab->text);
                 if (!tabIsHorizontal(tab->shape)) {
                     textSize.transpose();
                 }
                 QRect rect;
                 rect.setSize(textSize);
-                rect.moveCenter(tabRect.center());
+                rect.moveCenter(tab->rect.center());
 
                 int padding = Constants::tabInnerHorizontalPadding;
                 if (tabIsHorizontal(tab->shape)) {
@@ -1917,7 +1916,7 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                     if (!tab->icon.isNull())
                         padding += (tab->iconSize.width() + Constants::tabElementSpacing);
 
-                    rect.moveLeft(tabRect.left() + padding);
+                    rect.moveLeft(tab->rect.left() + padding);
                 } else {
                     if (tab->leftButtonSize.isValid())
                         padding += (tab->leftButtonSize.height() + Constants::tabElementSpacing);
@@ -1925,9 +1924,9 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                         padding += (tab->iconSize.height() + Constants::tabElementSpacing);
 
                     if (tab->shape == QTabBar::RoundedWest || tab->shape == QTabBar::TriangularWest) {
-                        rect.moveBottom(tabRect.bottom() - padding);
+                        rect.moveBottom(tab->rect.bottom() - padding);
                     } else {
-                        rect.moveTop(tabRect.top() + padding);
+                        rect.moveTop(tab->rect.top() + padding);
                     }
                 }
                 return rect;
