@@ -1,10 +1,10 @@
 # Orchid
 
 
-## Docs and useful
+## Docs
 - https://doc.qt.io/qt-6/style-reference.html
 - https://doc.qt.io/qt-6/qstyle.html
-- https://www.olivierclero.com/code/custom-qstyle/
+
 
 
 ## Implemented Widgets
@@ -40,8 +40,15 @@ Widgets not mentioned in the docs
 - `Style::drawComplexControl` -> CC_Slider `qAcos` is expensive so remove it - the parameters are constants from PixelMetric so it should be replaced by a precalculated value
 - `CE_ProgressBarContents` -> make the busy indicator animated
 
+## Useful resources
+- https://www.olivierclero.com/code/custom-qstyle/ 
+- kvantumpreview, for testing widgets: https://github.com/tsujan/Kvantum/tree/master/Kvantum/kvantumpreview
+- Qt galllery, also for widget testing (not as comprehensive as kvantumpreview): https://doc.qt.io/qt-6/gallery.html
+- gammaray, useful for finding out what type of widget a widget is in a app: https://www.kdab.com/development-resources/qt-tools/gammaray/
+- Qt source code, for looking at QCommonStyle or widgets implementations: https://github.com/qt/qtbase
 
-## Clang-format config:
+
+## Clang-format config
     ---
     TabWidth: 4
     IndentWidth: 4
