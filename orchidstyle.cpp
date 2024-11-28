@@ -903,7 +903,11 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 QRect iconRect;
                 QRect textRect;
                 Qt::Alignment textHalign = Qt::AlignLeft;
-                switch (btn->toolButtonStyle) {
+                const int btnStyle = (btn->toolButtonStyle == Qt::ToolButtonFollowStyle) ?
+                                         this->styleHint(SH_ToolButtonStyle, btn, widget) :
+                                         btn->toolButtonStyle;
+
+                switch (btnStyle) {
                     case Qt::ToolButtonIconOnly:
                         iconRect = QRect(QPoint(0, 0), btn->iconSize);
                         iconRect.moveCenter(rect.center());
@@ -1727,7 +1731,6 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_ButtonShiftHorizontal:
         case PM_ButtonShiftVertical:
             return 0;
-
         case PM_IndicatorHeight:
         case PM_IndicatorWidth:
         case PM_ExclusiveIndicatorWidth:
@@ -1812,10 +1815,16 @@ int Style::styleHint(QStyle::StyleHint hint, const QStyleOption* option, const Q
             return false;
         case SH_ComboBox_PopupFrameStyle:
             return 0;
+#if !HAS_KSTYLE
+        SH_Menu_SubMenuSloppyCloseTimeout:
+            return 300;
+
         case SH_ScrollBar_LeftClickAbsolutePosition:
             return true;
+
         case SH_ToolButtonStyle:
             return Qt::ToolButtonTextBesideIcon;
+#endif
         default:
             break;
     }
@@ -2561,7 +2570,11 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
         case CT_ToolButton:
             if (const auto* btn = qstyleoption_cast<const QStyleOptionToolButton*>(opt)) {
                 QSize size(0, 0);
-                switch (btn->toolButtonStyle) {
+                const int btnStyle = (btn->toolButtonStyle == Qt::ToolButtonFollowStyle) ?
+                                         this->styleHint(SH_ToolButtonStyle, btn, widget) :
+                                         btn->toolButtonStyle;
+
+                switch (btnStyle) {
                     case Qt::ToolButtonIconOnly:
                         size = btn->iconSize;
                         break;

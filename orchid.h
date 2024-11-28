@@ -9,9 +9,16 @@
 #include <QStyleOption>
 #include <QWidget>
 
-namespace Orchid {
-using SuperStyle = QCommonStyle;
+#if HAS_KSTYLE
+#include <KStyle>
+#endif
 
+namespace Orchid {
+#if HAS_KSTYLE
+using SuperStyle = KStyle;
+#else
+using SuperStyle = QCommonStyle;
+#endif
 enum Color {
     /*
      * letters after elements are for their possible states, that should be handled
