@@ -59,6 +59,8 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Text);
             const auto base = pal.color(CGroup::Normal, CRole::Text);
+            if (state.hasFocus)
+                return base;
             return isDarkMode(pal) ? base.darker(120) : base.lighter(120);
         }
         case checkBoxInside: {
@@ -221,6 +223,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case progressBarText:
         case groupBoxText:
         case tabText:
+        case checkBoxText:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Text);
             return pal.color(CGroup::Normal, CRole::Text);

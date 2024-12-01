@@ -430,6 +430,44 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             }
             break;
 
+        case CE_RadioButton:
+        case CE_CheckBox:
+            if (const auto* btn = qstyleoption_cast<const QStyleOptionButton*>(opt)) {
+                const bool radio = element == CE_RadioButton;
+                QStyleOptionButton btnOpt = *btn;
+                btnOpt.rect = subElementRect(radio ? SE_RadioButtonContents : SE_CheckBoxContents, btn, widget);
+                drawControl(radio ? CE_RadioButtonLabel : CE_CheckBoxLabel, &btnOpt, p, widget);
+                btnOpt.rect = subElementRect(radio ? SE_RadioButtonIndicator : SE_CheckBoxIndicator, btn, widget);
+                drawPrimitive(radio ? PE_IndicatorRadioButton : PE_IndicatorCheckBox, &btnOpt, p, widget);
+                return;
+            }
+            break;
+
+        case CE_RadioButtonLabel:
+        case CE_CheckBoxLabel:
+            if (const auto* btn = qstyleoption_cast<const QStyleOptionButton*>(opt)) {
+                const bool hasIcon = btn->iconSize.isValid() && !btn->icon.isNull();
+                const bool hasText = !btn->text.isEmpty();
+
+                if (hasIcon) {
+                    QRect iconRect = btn->rect;
+                    iconRect.setWidth(btn->iconSize.width());
+                    btn->icon.paint(p, iconRect, Qt::AlignCenter, state.enabled ? QIcon::Normal : QIcon::Disabled);
+                }
+                if (hasText) {
+                    QRect textRect = btn->rect;
+                    if (hasIcon) {
+                        textRect.setLeft(btn->rect.left() + btn->iconSize.width() + Constants::checkBoxElementSpacing);
+                    }
+                    p->save();
+                    p->setPen(getPen(btn->palette, Color::checkBoxText, state));
+                    p->drawText(textRect, (getTextFlags(btn) | Qt::AlignLeft | Qt::AlignVCenter), btn->text);
+                    p->restore();
+                }
+                return;
+            }
+            break;
+
         case CE_TabBarTab:
             if (const auto* tab = qstyleoption_cast<const QStyleOptionTab*>(opt)) {
                 QStyleOptionTab tabOpt = *tab;
@@ -1783,6 +1821,9 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
             return (Constants::toolBarHandleVerticalPadding * 2) + 2 + Constants::toolBarHandleLineSpacing; // 2 is for the line thickness
         case PM_ProgressBarChunkWidth:
             return 2;
+        case PM_RadioButtonLabelSpacing:
+        case PM_CheckBoxLabelSpacing: // implementtion uses Constants::checkBoxElementSpacing
+            return Constants::checkBoxElementSpacing;
         default:
             break;
     }
@@ -1841,6 +1882,13 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
             const int size = qMin(Constants::checkBoxHoverCircleSize, qMin(opt->rect.width(), opt->rect.height()));
             QRect rect(0, 0, size, size);
             rect.moveTopLeft(opt->rect.topLeft());
+            return rect;
+        }
+        case SE_RadioButtonContents:
+        case SE_CheckBoxContents: {
+            constexpr int indicatorSize = (Constants::checkBoxSize + Constants::checkBoxHoverCircleSize) / 2; // size of the indicator + the hover circle padding
+            QRect rect = opt->rect;
+            rect.setLeft(opt->rect.left() + indicatorSize + Constants::checkBoxElementSpacing);
             return rect;
         }
         case SE_TabWidgetTabBar:
@@ -2463,10 +2511,28 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
             break;
 
         case CT_RadioButton:
-        case CT_CheckBox: {
-            const QSize original = SuperStyle::sizeFromContents(ct, opt, contentsSize, widget);
-            return QSize(original.width() + (Constants::checkBoxHoverCircleSize - Constants::checkBoxSize), qMax(Constants::checkBoxHoverCircleSize, original.height()));
-        }
+        case CT_CheckBox:
+            if (const auto* btn = qstyleoption_cast<const QStyleOptionButton*>(opt)) {
+                const QSize textSize = btn->text.isEmpty() ? QSize() : btn->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), btn->text);
+                const QSize iconSize = btn->icon.isNull() ? QSize() : btn->iconSize;
+
+                if (!textSize.isValid() && !iconSize.isValid()) {
+                    return QSize(Constants::checkBoxHoverCircleSize, Constants::checkBoxHoverCircleSize);
+                }
+
+                const int height = qMax(Constants::checkBoxHoverCircleSize, qMax(textSize.height(), iconSize.height()));
+
+                int width = (Constants::checkBoxSize + Constants::checkBoxHoverCircleSize) / 2;
+                if (iconSize.isValid()) {
+                    width += (Constants::checkBoxElementSpacing + iconSize.width());
+                }
+                if (textSize.isValid()) {
+                    width += (Constants::checkBoxElementSpacing + textSize.width());
+                }
+
+                return QSize(width, height);
+            }
+            break;
         case CT_MenuItem:
             if (const auto* menu = qstyleoption_cast<const QStyleOptionMenuItem*>(opt)) {
                 switch (menu->menuItemType) {

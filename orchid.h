@@ -42,6 +42,7 @@ enum Color {
     checkBoxOutline,            // D
     checkBoxHoverCircle,        // HP
     checkBoxHoverCircleChecked, // HP
+    checkBoxText,               // D
 
     tabText,
     tabCheckedOutline,
@@ -144,8 +145,9 @@ constexpr int controlsTextHorizontalPadding = 10; // Top and bottom; buttons, li
 
 constexpr int pushButtonMenuArrowPadding = 6; // length between the menu arrow and the right side
 
-constexpr int checkBoxSize = 20;
+constexpr int checkBoxSize = 20; // all checkbox values are also used for radio buttons
 constexpr int checkBoxHoverCircleSize = 34;
+constexpr int checkBoxElementSpacing = 6; // between the indicator, icon and icon; sets PM_CheckBoxLabelSpacing
 
 constexpr int tabCloseIndicatorSize = 6;         // size of the x, the hover rect size is defined in PM_TabCloseIndicatorWidth/Height
 constexpr int tabBarStartPadding = 6;            // padding on the left/top side of the tabbar, if the tab alighnment is left, only for QTabWidget
