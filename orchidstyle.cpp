@@ -2546,6 +2546,8 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                         const MenuItemText text = menuItemGetText(menu);
                         if (!text.label.isEmpty()) {
                             labelSize = menu->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), text.label);
+                        } else if (text.shortcut.isEmpty()) {
+                            labelSize.setHeight(menu->fontMetrics.height()); // this is so a menuitem without any text is still tall like other menu items
                         }
                         if (!text.shortcut.isEmpty()) {
                             shortcutSize = menu->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), text.shortcut);
