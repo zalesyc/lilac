@@ -236,7 +236,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 
         case menuBg: {
             QColor base = pal.color(CGroup::Normal, CRole::AlternateBase);
-            base.setAlpha(Constants::menuTransparency);
+            base.setAlpha(Constants::menuBgOpacity);
             return base;
         }
 
@@ -327,7 +327,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return base;
         }
 
-        case floatingDockWidgetBg:
+        case dockWidgetFloatingBg:
             return pal.color(CGroup::Inactive, CRole::Window);
 
         default:
