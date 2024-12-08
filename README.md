@@ -29,7 +29,7 @@ Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-referen
 - [ ] Tool Boxes
 - [x] Size Grip
 - [x] Rubber Band
-- [ ] Dock Widgets
+- [x] Dock Widgets
 
 Widgets not mentioned in the docs
 - [x] Dial

@@ -1,6 +1,7 @@
 #include "orchidstyle.h"
 #include "orchid.h"
 
+#include <QDockWidget>
 #include <QGraphicsDropShadowEffect>
 #include <QMenu>
 #include <QPainter>
@@ -1233,6 +1234,30 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             }
             break;
 
+        case CE_DockWidgetTitle:
+            if (const auto* dock = qstyleoption_cast<const QStyleOptionDockWidget*>(opt)) {
+                p->save();
+                p->setPen(getPen(dock->palette, Color::line, state, 1));
+                p->setBrush(Qt::NoBrush);
+                if (widget) {
+                    const QDockWidget* dockWidget = qobject_cast<const QDockWidget*>(widget);
+                    if (dockWidget && !dockWidget->isFloating()) {
+                        p->drawRect(dock->rect.adjusted(0, 0, -1, 0));
+                    }
+                } else {
+                    p->drawRect(dock->rect.adjusted(0, 0, -1, 0));
+                }
+
+                if (!dock->title.isEmpty()) {
+                    const QRect textRect = subElementRect(SE_DockWidgetTitleBarText, dock, widget);
+                    p->setPen(getPen(dock->palette, Color::dockWidgetTitle, state));
+                    p->drawText(textRect, (getTextFlags(dock) | Qt::AlignLeft | Qt::AlignVCenter), dock->title);
+                }
+                p->restore();
+                return;
+            }
+            break;
+
         case CE_SizeGrip:
             return;
 
@@ -1707,6 +1732,26 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                 p->restore();
             }
 
+        case PE_FrameDockWidget: {
+            const QRectF rect = opt->rect.toRectF().adjusted(0.5, 0.5, -0.5, -0.5);
+
+            QPainterPath path(rect.bottomLeft());
+            QRectF arcRect = QRectF(rect.topLeft(), QSize(Constants::cornerRadius * 2, Constants::cornerRadius * 2));
+            path.arcTo(arcRect, 180, -90);
+            arcRect.moveTopRight(rect.topRight());
+            path.arcTo(arcRect, 90, -90);
+            path.lineTo(rect.bottomRight());
+            path.closeSubpath();
+
+            p->save();
+            p->setRenderHints(QPainter::Antialiasing);
+            p->setPen(getPen(opt->palette, Color::line, state, 1));
+            p->setBrush(getBrush(opt->palette, Color::floatingDockWidgetBg, state));
+            p->drawPath(path);
+            p->restore();
+            return;
+        } break;
+
         case PE_FrameButtonTool:
             return;
 
@@ -1742,6 +1787,9 @@ void Style::polish(QWidget* widget) {
             menu->setGraphicsEffect(shadow);
         }
     }
+    if (QDockWidget* dock = qobject_cast<QDockWidget*>(widget)) {
+        dock->setAttribute(Qt::WA_TranslucentBackground);
+    }
 }
 
 void Style::unpolish(QWidget* widget) {
@@ -1761,6 +1809,9 @@ void Style::unpolish(QWidget* widget) {
     if (QMenu* menu = qobject_cast<QMenu*>(widget)) {
         menu->setAttribute(Qt::WA_TranslucentBackground, false);
         menu->setGraphicsEffect(nullptr);
+    }
+    if (QDockWidget* dock = qobject_cast<QDockWidget*>(widget)) {
+        dock->setAttribute(Qt::WA_TranslucentBackground, false);
     }
 }
 
@@ -1824,6 +1875,15 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_RadioButtonLabelSpacing:
         case PM_CheckBoxLabelSpacing: // implementtion uses Constants::checkBoxElementSpacing
             return Constants::checkBoxElementSpacing;
+        case PM_DockWidgetTitleMargin:
+            return 6;
+        case PM_DockWidgetFrameWidth:
+            return 0;
+        case PM_DockWidgetTitleBarButtonMargin: // size of the doch header buttons
+            return 8;
+        case PM_DockWidgetSeparatorExtent:
+        case PM_DockWidgetHandleExtent:
+            return 3;
         default:
             break;
     }
@@ -2132,11 +2192,31 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                         return frame->rect;
                 }
             }
+            break;
 
         case SE_FrameContents:
             if (const auto* frame = qstyleoption_cast<const QStyleOptionFrame*>(opt)) {
                 return frame->rect.adjusted(frame->lineWidth, frame->lineWidth, -frame->lineWidth, -frame->lineWidth);
             }
+            break;
+
+        case SE_DockWidgetTitleBarText:
+            if (const auto* dock = qstyleoption_cast<const QStyleOptionDockWidget*>(opt)) {
+                int right;
+                if (dock->floatable) {
+                    right = subElementRect(SE_DockWidgetFloatButton, dock, widget).left();
+                } else if (dock->closable) {
+                    right = subElementRect(SE_DockWidgetCloseButton, dock, widget).left();
+                } else {
+                    right = dock->rect.right() - Constants::dockHeaderLabelHorizontalPadding;
+                }
+
+                QRect rect = dock->rect;
+                rect.setLeft(dock->rect.left() + Constants::dockHeaderLabelHorizontalPadding);
+                rect.setRight(right);
+                return rect;
+            }
+            break;
 
         default:
             break;

@@ -118,6 +118,9 @@ enum Color {
     rubberBandRectBg,
     rubberBandRectBgOpaque,
 
+    dockWidgetTitle, // D
+    floatingDockWidgetBg,
+
 };
 
 struct State {
@@ -222,6 +225,9 @@ constexpr int dialHandleDiameter = 12;
 constexpr int dialHandleHoverCircleDiameter = 20;
 
 constexpr int dialRangeNonWaraping = 300; // degrees
+
+constexpr int dockHeaderLabelHorizontalPadding = cornerRadius / 2; // left and right
+constexpr int dockHeaderControlsHeight = 12;                       // for the close and float buttons
 } // namespace Constants
 
 } // namespace Orchid

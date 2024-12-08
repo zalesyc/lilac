@@ -224,6 +224,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case groupBoxText:
         case tabText:
         case checkBoxText:
+        case dockWidgetTitle:
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Text);
             return pal.color(CGroup::Normal, CRole::Text);
@@ -325,6 +326,9 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             base.setAlpha(60);
             return base;
         }
+
+        case floatingDockWidgetBg:
+            return pal.color(CGroup::Inactive, CRole::Window);
 
         default:
             break;
