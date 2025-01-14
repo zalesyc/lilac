@@ -206,6 +206,7 @@ constexpr int menuBarItemMargin = 2;
 constexpr int comboArrowWidth = 30; // the part that is clickable, the indicator is smaller
 constexpr int comboMinWidthChars = lineEditMinWidthChars;
 constexpr int comboTextLeftPadding = lineEditTextHorizontalPadding; // used left of icon and left of text
+constexpr int comboPopupOffset = 4;
 
 constexpr int toolBtnMenuArrowSize = 8;             // the small arrow in the bottom left corner
 constexpr QPoint toolBtnArrowOffset = QPoint(5, 5); // offset from bottomRight of the widget, for the small arrow in the bottom left

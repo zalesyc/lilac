@@ -1915,7 +1915,10 @@ int Style::styleHint(QStyle::StyleHint hint, const QStyleOption* option, const Q
         case SH_ComboBox_Popup:
             return false;
         case SH_ComboBox_PopupFrameStyle:
-            return 0;
+            return QFrame::StyledPanel;
+        case SH_ItemView_ShowDecorationSelected:
+            return true;
+
 #if !HAS_KSTYLE
         SH_Menu_SubMenuSloppyCloseTimeout:
             return 300;
@@ -2357,6 +2360,11 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                     }
                     case SC_ComboBoxFrame:
                         return combo->rect;
+                    case SC_ComboBoxListBoxPopup:
+                        return QRect(combo->rect.left(),
+                                     combo->rect.bottom() + 3,
+                                     combo->rect.width(),
+                                     combo->popupRect.height());
 
                     default:
                         break;
@@ -2866,6 +2874,9 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                              height + Constants::tabElementSpacing * (elements - 1));
             }
             break;
+        case CT_ItemViewItem:
+            return SuperStyle::sizeFromContents(ct, opt, contentsSize, widget) + QSize(0, 8);
+
         case CT_SizeGrip:
             return QSize();
 
