@@ -1873,8 +1873,11 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_ProgressBarChunkWidth:
             return 2;
         case PM_RadioButtonLabelSpacing:
-        case PM_CheckBoxLabelSpacing: // implementtion uses Constants::checkBoxElementSpacing
-            return Constants::checkBoxElementSpacing;
+        case PM_CheckBoxLabelSpacing: // implementtion uses Constants::checkBoxElementSpacing,
+            /* here i add 1/2 of the check width as a workaround for qqc2-desktop-theme styled apps,
+             * as they apparently count this distance from the center of the checkbox
+             */
+            return Constants::checkBoxElementSpacing + Constants::checkBoxSize / 2;
         case PM_DockWidgetTitleMargin:
             return 6;
         case PM_DockWidgetFrameWidth:
