@@ -1,4 +1,4 @@
-# Orchid
+# Lilac
 
 
 ## Docs
@@ -43,7 +43,7 @@ Widgets not mentioned in the docs
 
 ## Compilation options
 ### Kstyle:
-when you build orchid, you can select whether to inherit from KStyle, which is recomended when you use kde plasma
+when you build lilac, you can select whether to inherit from KStyle, which is recomended when you use kde plasma
 or QCommonStyle, which is recommended othervise. 
 
 By default, kstyle is used when it is already installed, othervise QCommonStyle.
@@ -58,7 +58,7 @@ There are two cmake flags to change this behavior:
 - kvantumpreview, for testing widgets: https://github.com/tsujan/Kvantum/tree/master/Kvantum/kvantumpreview
 - Qt galllery, also for widget testing (not as comprehensive as kvantumpreview): https://doc.qt.io/qt-6/gallery.html
 - gammaray, useful for finding out what type of widget a widget is in a app: https://www.kdab.com/development-resources/qt-tools/gammaray/
-- Qt source code, for looking at QCommonStyle or widgets implementations: https://github.com/qt/qtbase
+- Qt source code: https://github.com/qt/qtbase
 
 ## Clang-format config
     ---

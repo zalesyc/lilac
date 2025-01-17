@@ -2,11 +2,11 @@
 
 #include <QStylePlugin>
 
-namespace Orchid {
+namespace Lilac {
 class StylePlugin : public QStylePlugin {
     Q_OBJECT
 
-    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QStyleFactoryInterface" FILE "orchid.json")
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QStyleFactoryInterface" FILE "lilac.json")
 
   public:
     //* constructor
@@ -21,4 +21,4 @@ class StylePlugin : public QStylePlugin {
     QStyle* create(const QString&) override;
 };
 
-} // namespace Orchid
+} // namespace Lilac

@@ -5,15 +5,15 @@
 #include <QStyleOption>
 #include <QWidget>
 
-#include "orchid.h"
+#include "lilac.h"
 
-namespace Orchid {
+namespace Lilac {
 
 class Style : public SuperStyle {
     Q_OBJECT
 
   public:
-    QString name() const { return QStringLiteral("Orchid"); }
+    QString name() const { return QStringLiteral("Lilac"); }
 
     void drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget = nullptr) const override;
     void drawControl(QStyle::ControlElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget = nullptr) const override;
@@ -40,4 +40,4 @@ class Style : public SuperStyle {
     static QRect tabBarGetTabRect(const QRect& originalRect, const QTabBar::Shape& tabShape);
     static const bool tabIsHorizontal(const QTabBar::Shape& tabShape);
 };
-} // namespace Orchid
+} // namespace Lilac

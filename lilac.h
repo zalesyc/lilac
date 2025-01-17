@@ -13,7 +13,7 @@
 #include <KStyle>
 #endif
 
-namespace Orchid {
+namespace Lilac {
 #if HAS_KSTYLE
 using SuperStyle = KStyle;
 #else
@@ -244,4 +244,4 @@ constexpr int dockHeaderLabelHorizontalPadding = cornerRadius / 2;
 constexpr int dockHeaderControlsHeight = 12; // for the close and float buttons
 } // namespace Constants
 
-} // namespace Orchid
+} // namespace Lilac

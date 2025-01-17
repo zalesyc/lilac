@@ -1,6 +1,6 @@
-#include "orchid.h"
+#include "lilac.h"
 
-namespace Orchid {
+namespace Lilac {
 
 using CRole = QPalette::ColorRole;
 using CGroup = QPalette::ColorGroup;
@@ -356,4 +356,4 @@ QColor lessContrastingBg(const QPalette& pal, const CGroup cgroup) {
     return base;
 }
 
-} // namespace Orchid
+} // namespace Lilac

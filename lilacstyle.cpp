@@ -1,5 +1,5 @@
-#include "orchidstyle.h"
-#include "orchid.h"
+#include "lilacstyle.h"
+#include "lilac.h"
 
 #include <QDockWidget>
 #include <QGraphicsDropShadowEffect>
@@ -10,10 +10,10 @@
 #include <QStyleFactory>
 #include <QtMath>
 
-namespace Orchid {
+namespace Lilac {
 
 void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget) const {
-    Orchid::State state(opt->state); // this hat to be defined as Orchid::State because just State would conflict with State from QStyle
+    Lilac::State state(opt->state); // this hat to be defined as Lilac::State because just State would conflict with State from QStyle
     switch (control) {
         case CC_ScrollBar:
             if (const QStyleOptionSlider* bar = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
@@ -413,7 +413,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
 }
 
 void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget) const {
-    Orchid::State state(opt->state);
+    Lilac::State state(opt->state);
     switch (element) {
         case CE_PushButtonBevel:
             if (const auto* btn = qstyleoption_cast<const QStyleOptionButton*>(opt)) {
@@ -923,7 +923,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     textRect.setLeft(labelRect.left() + (hasIcon ? combo->iconSize.width() + Constants::lineEditTextHorizontalPadding : 0));
 
                     p->save();
-                    p->setPen(getPen(combo->palette, Orchid::comboBoxUneditableText));
+                    p->setPen(getPen(combo->palette, Lilac::comboBoxUneditableText));
                     p->setBrush(Qt::NoBrush);
                     p->drawText(textRect, (getTextFlags(combo) | Qt::AlignLeft | Qt::AlignVCenter), combo->currentText);
                     p->restore();
@@ -1268,7 +1268,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 }
 
 void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget) const {
-    const Orchid::State state(opt->state);
+    const Lilac::State state(opt->state);
     switch (element) {
         case PE_PanelButtonCommand:
             if (const auto* btn = qstyleoption_cast<const QStyleOptionButton*>(opt)) {
@@ -2980,4 +2980,4 @@ const bool Style::tabIsHorizontal(const QTabBar::Shape& tabShape) {
     }
     return true;
 }
-} // namespace Orchid
+} // namespace Lilac

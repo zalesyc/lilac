@@ -1,17 +1,17 @@
-#include "orchidstyleplugin.h"
-#include "orchidstyle.h"
+#include "lilacstyleplugin.h"
+#include "lilacstyle.h"
 #include <QStringList>
 #include <QStringLiteral>
 
-namespace Orchid {
+namespace Lilac {
 QStyle* StylePlugin::create(const QString& key) {
-    if (key.compare(QLatin1String("orchid"), Qt::CaseInsensitive) == 0) {
+    if (key.compare(QLatin1String("lilac"), Qt::CaseInsensitive) == 0) {
         return new Style;
     }
     return nullptr;
 }
 
 QStringList StylePlugin::keys() const {
-    return QStringList(QStringLiteral("Orchid"));
+    return QStringList(QStringLiteral("Lilac"));
 }
-} // namespace Orchid
+} // namespace Lilac

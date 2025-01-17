@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(Orchid LANGUAGES CXX)
+project(Lilac LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -22,30 +22,30 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-add_library(Orchid SHARED
-    orchidstyleplugin.cpp
-    orchidstyleplugin.h
-    orchidstyle.cpp
-    orchid.json
-    orchidstyle.cpp
-    orchidstyle.h
-    orchid.cpp
-    orchid.h
+add_library(Lilac SHARED
+    lilacstyleplugin.cpp
+    lilacstyleplugin.h
+    lilacstyle.cpp
+    lilac.json
+    lilacstyle.cpp
+    lilacstyle.h
+    lilac.cpp
+    lilac.h
 )
 
-target_link_libraries(Orchid PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(Lilac PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
 if (KF6FrameworkIntegration_FOUND)
-    target_link_libraries(Orchid PRIVATE KF6::Style)
-    target_compile_definitions(Orchid PUBLIC HAS_KSTYLE=1)
+    target_link_libraries(Lilac PRIVATE KF6::Style)
+    target_compile_definitions(Lilac PUBLIC HAS_KSTYLE=1)
 else()
-    target_compile_definitions(Orchid PUBLIC HAS_KSTYLE=0)
+    target_compile_definitions(Lilac PUBLIC HAS_KSTYLE=0)
 endif()
 
-target_compile_definitions(Orchid PRIVATE ORCHID_LIBRARY)
+target_compile_definitions(Lilac PRIVATE LILAC_LIBRARY)
 
 install(TARGETS
-    Orchid
+    Lilac
     DESTINATION
     ${CMAKE_INSTALL_LIBDIR}/qt${QT_VERSION_MAJOR}/plugins/styles
 
