@@ -1751,6 +1751,15 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             return;
         } break;
 
+        case PE_PanelTipLabel:
+            p->save();
+            p->setRenderHints(QPainter::Antialiasing);
+            p->setPen(Qt::NoPen);
+            p->setBrush(getBrush(opt->palette, Color::tooltipBg));
+            p->drawRoundedRect(opt->rect, Constants::cornerRadius, Constants::cornerRadius);
+            p->restore();
+            return;
+
         case PE_FrameButtonTool:
             return;
 
@@ -1762,6 +1771,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
     }
     SuperStyle::drawPrimitive(element, opt, p, widget);
 }
+
 void Style::polish(QWidget* widget) {
     SuperStyle::polish(widget);
     if (widget->inherits("QAbstractButton") ||
@@ -1786,8 +1796,9 @@ void Style::polish(QWidget* widget) {
             menu->setGraphicsEffect(shadow);
         }
     }
-    if (QDockWidget* dock = qobject_cast<QDockWidget*>(widget)) {
-        dock->setAttribute(Qt::WA_TranslucentBackground);
+    if (widget->inherits("QDockWidget") ||
+        widget->inherits("QTipLabel")) {
+        widget->setAttribute(Qt::WA_TranslucentBackground);
     }
 }
 
@@ -1809,8 +1820,9 @@ void Style::unpolish(QWidget* widget) {
         menu->setAttribute(Qt::WA_TranslucentBackground, false);
         menu->setGraphicsEffect(nullptr);
     }
-    if (QDockWidget* dock = qobject_cast<QDockWidget*>(widget)) {
-        dock->setAttribute(Qt::WA_TranslucentBackground, false);
+    if (widget->inherits("QDockWidget") ||
+        widget->inherits("QTipLabel")) {
+        widget->setAttribute(Qt::WA_TranslucentBackground, false);
     }
 }
 
@@ -1886,6 +1898,8 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_DockWidgetSeparatorExtent:
         case PM_DockWidgetHandleExtent:
             return 3;
+        case PM_ToolTipLabelFrameWidth:
+            return 6;
         default:
             break;
     }
@@ -2756,7 +2770,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                 if (btn->subControls & SC_ToolButtonMenu)
                     size += QSize(Constants::toolbtnArrowSectionWidth, 0);
 
-                if (size.width() < size.height())
+                if (size.width() < size.height() && (btn->text.isEmpty() || btnStyle == Qt::ToolButtonIconOnly))
                     return QSize(size.height(), size.height());
 
                 return size;

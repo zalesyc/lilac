@@ -35,6 +35,7 @@ Widgets not mentioned in the docs
 - [x] Dial
 - [x] LineEdits 
 - [x] Frames
+- [x] Tooltips
 
 ## TODO
 - `Style::drawComplexControl` -> CC_Slider `qAcos` is expensive so remove it - the parameters are constants from PixelMetric so it should be replaced by a precalculated value

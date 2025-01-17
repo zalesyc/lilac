@@ -327,6 +327,9 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case dockWidgetFloatingBg:
             return pal.color(CGroup::Inactive, CRole::Window);
 
+        case tooltipBg:
+            return QColor(20, 20, 20, 235);
+
         default:
             break;
     }

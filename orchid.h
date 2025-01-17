@@ -121,6 +121,8 @@ enum Color {
     dockWidgetTitle, // D
     dockWidgetFloatingBg,
 
+    tooltipBg,
+
 };
 
 struct State {
