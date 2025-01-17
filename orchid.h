@@ -161,7 +161,7 @@ constexpr int pushButtonMenuArrowPadding = 6; // length between the menu arrow a
 
 constexpr int checkBoxSize = 20; // all checkbox values are also used for radio buttons
 constexpr int checkBoxHoverCircleSize = 34;
-constexpr int checkBoxElementSpacing = 6; // between the indicator, icon and icon; sets PM_CheckBoxLabelSpacing
+constexpr int checkBoxElementSpacing = 6; // between the indicator, icon and label; sets PM_CheckBoxLabelSpacing
 
 constexpr int tabCloseIndicatorSize = 6;         // size of the x, the hover rect size is defined in PM_TabCloseIndicatorWidth/Height
 constexpr int tabBarStartMargin = 6;             // padding on the left/top side of the tabbar, if the tab alighnment is left, only for QTabWidget

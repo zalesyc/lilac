@@ -1239,9 +1239,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 p->save();
                 p->setPen(getPen(dock->palette, Color::line, state, 1));
                 p->setBrush(Qt::NoBrush);
-                if (widget) {
-                    const QDockWidget* dockWidget = qobject_cast<const QDockWidget*>(widget);
-                    if (dockWidget && !dockWidget->isFloating()) {
+                if (const QDockWidget* dockWidget = qobject_cast<const QDockWidget*>(widget)) {
+                    if (!dockWidget->isFloating()) {
                         p->drawRect(dock->rect.adjusted(0, 0, -1, 0));
                     }
                 } else {
@@ -1733,21 +1732,20 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             }
 
         case PE_FrameDockWidget: {
-            const QRectF rect = opt->rect.toRectF().adjusted(0.5, 0.5, -0.5, -0.5);
-
-            QPainterPath path(rect.bottomLeft());
-            QRectF arcRect = QRectF(rect.topLeft(), QSize(Constants::cornerRadius * 2, Constants::cornerRadius * 2));
-            path.arcTo(arcRect, 180, -90);
-            arcRect.moveTopRight(rect.topRight());
-            path.arcTo(arcRect, 90, -90);
-            path.lineTo(rect.bottomRight());
-            path.closeSubpath();
-
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
             p->setPen(getPen(opt->palette, Color::line, state, 1));
             p->setBrush(getBrush(opt->palette, Color::dockWidgetFloatingBg, state));
-            p->drawPath(path);
+
+            const auto* dockWidget = qobject_cast<const QDockWidget*>(widget);
+            if (dockWidget && dockWidget->isFloating()) {
+                p->drawRoundedRect(opt->rect.toRectF().adjusted(0.5, 0.5, -0.5, -0.5),
+                                   Constants::cornerRadius / 2,
+                                   Constants::cornerRadius / 2);
+            } else {
+                p->drawRect(opt->rect);
+            }
+
             p->restore();
             return;
         } break;
