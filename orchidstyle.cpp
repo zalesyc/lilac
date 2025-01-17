@@ -121,7 +121,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                         this->sliderGetTickmarks(&lines, slider, tickmarksRect, len, interval);
                     }
                     p->setRenderHint(QPainter::Antialiasing, false);
-                    p->setPen(getPen(slider->palette, sliderTickmarks, 1));
+                    p->setPen(getPen(slider->palette, sliderTickmarks, state, 1));
                     p->drawLines(lines);
                     p->setRenderHint(QPainter::Antialiasing);
 
@@ -1239,7 +1239,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 p->save();
                 p->setPen(getPen(dock->palette, Color::line, state, 1));
                 p->setBrush(Qt::NoBrush);
-                if (const QDockWidget* dockWidget = qobject_cast<const QDockWidget*>(widget)) {
+
+                if (auto dockWidget = qobject_cast<const QDockWidget*>(widget)) {
                     if (!dockWidget->isFloating()) {
                         p->drawRect(dock->rect.adjusted(0, 0, -1, 0));
                     }
@@ -1737,13 +1738,13 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->setPen(getPen(opt->palette, Color::line, state, 1));
             p->setBrush(getBrush(opt->palette, Color::dockWidgetFloatingBg, state));
 
-            const auto* dockWidget = qobject_cast<const QDockWidget*>(widget);
+            auto dockWidget = qobject_cast<const QDockWidget*>(widget);
             if (dockWidget && dockWidget->isFloating()) {
                 p->drawRoundedRect(opt->rect.toRectF().adjusted(0.5, 0.5, -0.5, -0.5),
                                    Constants::cornerRadius / 2,
                                    Constants::cornerRadius / 2);
             } else {
-                p->drawRect(opt->rect);
+                p->drawRect(opt->rect.toRectF().adjusted(0.5, 0.5, -0.5, -0.5));
             }
 
             p->restore();

@@ -2,11 +2,11 @@
 
 namespace Orchid {
 
-static QColor getColorFromPallete(const QPalette& pal, const Color color, const State& state);
-static QColor getColorHardcoded(const QPalette& pal, const Color color, const State& state);
-
 using CRole = QPalette::ColorRole;
 using CGroup = QPalette::ColorGroup;
+
+static QColor getColorFromPallete(const QPalette& pal, const Color color, const State& state);
+QColor lessContrastingBg(const QPalette& pal, const CGroup cgroup);
 
 const QColor getColor(const QPalette& pal, const Color color, const State& state) {
     return getColorFromPallete(pal, color, state);
@@ -28,8 +28,8 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case groupBoxLine:
         case menuSeparator:
         case line: {
-            const auto base = pal.color(CGroup::Normal, CRole::Base);
-            return isDarkMode(pal) ? base.lighter(180) : base.darker(180);
+            const auto base = lessContrastingBg(pal, CGroup::Normal);
+            return isDarkMode(pal) ? base.lighter(125) : base.darker(110);
         }
 
         case focusRect:
@@ -123,12 +123,6 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return isDarkMode(pal) ? base.lighter(230) : base.darker(130);
         }
 
-        case sliderHandle:
-        case dialHandle:
-            if (!state.enabled)
-                return pal.color(CGroup::Disabled, CRole::Accent);
-            return pal.color(CGroup::Normal, CRole::Accent);
-
         case sliderHandleHoverCircle:
         case dialHandleHoverCircle: {
             auto base = pal.color(CGroup::Normal, CRole::Accent);
@@ -140,21 +134,25 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return base;
         }
 
+        case sliderHandle:
+        case dialHandle:
         case sliderLineBefore:
         case dialLineBefore:
-            if (!state.enabled)
-                return pal.color(CGroup::Disabled, CRole::Accent);
+            if (!state.enabled) {
+                const auto base = lessContrastingBg(pal, CGroup::Normal);
+                return isDarkMode(pal) ? base.lighter(120) : base.darker(120);
+            }
             return pal.color(CGroup::Normal, CRole::Accent);
 
         case sliderLineAfter:
         case dialLineAfter: {
-            const auto base = pal.color(CGroup::Disabled, CRole::Accent);
+            const auto base = lessContrastingBg(pal, CGroup::Normal);
             if (!state.enabled)
-                return isDarkMode(pal) ? base.darker(110) : base.lighter(110);
-            return isDarkMode(pal) ? base.lighter(180) : base.darker(180);
+                return isDarkMode(pal) ? base.lighter(130) : base.darker(130);
+            return isDarkMode(pal) ? base.lighter(160) : base.darker(185);
         }
         case sliderTickmarks:
-            return getColor(pal, sliderLineAfter);
+            return getColor(pal, sliderLineAfter, state);
 
         case lineEditBg:
         case spinBoxBg:
@@ -253,9 +251,6 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 
         case menuShadow: {
             QColor base = pal.color(CGroup::Normal, CRole::Shadow);
-            if (isDarkMode(pal))
-                return base;
-            base.setAlpha(80);
             return base;
         }
         case toolBarHandle:
@@ -308,13 +303,15 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case progressBarIndicatorBg:
             return pal.color(state.enabled ? CGroup::Normal : CGroup::Disabled, CRole::Button);
 
-        case branchIndicator:
-            return isDarkMode(pal) ? pal.color(CGroup::Normal, CRole::Text).darker(190) : pal.color(CGroup::Normal, CRole::Text).lighter(190);
-
         case viewHeaderBg:
             if ((state.pressed || state.hovered) && state.enabled)
                 return getColor(pal, Color::buttonBg, state);
             return getColor(pal, Color::viewHeaderEmptyAreaBg, state);
+
+        case branchIndicator: {
+            const auto base = getColor(pal, Color::line, state);
+            return isDarkMode(pal) ? base.lighter(125) : base.darker(105);
+        }
 
         case rubberbandLine:
         case rubberBandRectOutline:
@@ -345,6 +342,15 @@ State::State(const QStyle::State& state) {
 
 bool isDarkMode(const QPalette& pal) {
     return pal.color(QPalette::ColorRole::Window).lightness() < pal.color(QPalette::ColorRole::Text).lightness();
+}
+
+QColor lessContrastingBg(const QPalette& pal, const CGroup cgroup) {
+    const auto window = pal.color(cgroup, CRole::Window);
+    const auto base = pal.color(cgroup, CRole::Base);
+    if ((window.lightness() > base.lightness()) == isDarkMode(pal)) {
+        return window;
+    }
+    return base;
 }
 
 } // namespace Orchid

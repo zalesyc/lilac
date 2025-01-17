@@ -58,8 +58,8 @@ enum Color {
 
     sliderHandle,            // D
     sliderHandleHoverCircle, // P
-    sliderLineBefore,        // D
-    sliderLineAfter,         // D
+    sliderLineBefore,        // D, the colored part
+    sliderLineAfter,         // D, the gray part
     sliderTickmarks,
 
     lineEditBg,      // D
