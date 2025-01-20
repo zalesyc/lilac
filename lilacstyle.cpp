@@ -274,9 +274,15 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 QRect buttonRect = subControlRect(control, btn, SC_ToolButton, widget);
 
                 QStyleOptionToolButton toolOpt = *btn;
-                toolOpt.rect = buttonRect;
+
+                // this line cannot be moved into CE_ToolButtonLabel, because it creates a bug in KMultiTabBar
+                toolOpt.rect = buttonRect.adjusted(Constants::toolBtnLabelHorizontalPadding,
+                                                   Constants::toolBtnLabelVerticalPadding,
+                                                   -Constants::toolBtnLabelHorizontalPadding,
+                                                   -Constants::toolBtnLabelVerticalPadding);
                 drawControl(CE_ToolButtonLabel, &toolOpt, p, widget);
 
+                toolOpt.rect = buttonRect;
                 if (btn->subControls & SC_ToolButtonMenu) {
                     const QRect menuRect = subControlRect(control, btn, SC_ToolButtonMenu, widget);
                     toolOpt.rect = menuRect;
@@ -2451,10 +2457,10 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
             if (const auto* btn = qstyleoption_cast<const QStyleOptionToolButton*>(opt)) {
                 switch (element) {
                     case SC_ToolButton:
-                        return btn->rect.adjusted(Constants::toolBtnLabelHorizontalPadding,
-                                                  Constants::toolBtnLabelVerticalPadding,
-                                                  -Constants::toolBtnLabelHorizontalPadding - ((btn->subControls & SC_ToolButtonMenu) ? Constants::toolbtnArrowSectionWidth : 0),
-                                                  -Constants::toolBtnLabelVerticalPadding);
+                        if (btn->subControls & SC_ToolButtonMenu) {
+                            return btn->rect.adjusted(0, 0, -Constants::toolbtnArrowSectionWidth, 0);
+                        }
+                        return btn->rect;
                     case SC_ToolButtonMenu:
                         if (btn->subControls & SC_ToolButtonMenu) {
                             QRect rect = btn->rect;
