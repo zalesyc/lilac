@@ -934,34 +934,33 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
         case CE_ToolButtonLabel:
             if (const auto* btn = qstyleoption_cast<const QStyleOptionToolButton*>(opt)) {
-                QRect rect = btn->rect.adjusted(Constants::toolBtnLabelHorizontalPadding,
-                                                Constants::toolBtnLabelVerticalPadding,
-                                                -Constants::toolBtnLabelHorizontalPadding,
-                                                -Constants::toolBtnLabelVerticalPadding);
-
                 QRect iconRect;
                 QRect textRect;
                 Qt::Alignment textHalign = Qt::AlignLeft;
-                const int btnStyle = (btn->toolButtonStyle == Qt::ToolButtonFollowStyle) ?
-                                         this->styleHint(SH_ToolButtonStyle, btn, widget) :
-                                         btn->toolButtonStyle;
+                int btnStyle = btn->toolButtonStyle;
+
+                if (btn->icon.isNull() && !(btn->features & QStyleOptionToolButton::Arrow)) {
+                    btnStyle = Qt::ToolButtonTextOnly;
+                } else if (btn->toolButtonStyle == Qt::ToolButtonFollowStyle) {
+                    btnStyle = this->styleHint(SH_ToolButtonStyle, btn, widget);
+                }
 
                 switch (btnStyle) {
                     case Qt::ToolButtonIconOnly:
                         iconRect = QRect(QPoint(0, 0), btn->iconSize);
-                        iconRect.moveCenter(rect.center());
+                        iconRect.moveCenter(btn->rect.center());
                         break;
                     case Qt::ToolButtonTextOnly:
-                        textRect = rect;
+                        textRect = btn->rect;
                         break;
                     case Qt::ToolButtonTextBesideIcon:
                     case Qt::ToolButtonFollowStyle:
-                        iconRect = QRect(rect.left(), rect.top(), btn->iconSize.width(), rect.height());
-                        textRect = QRect(QPoint(iconRect.right() + Constants::toolbtnLabelSpacing, rect.top()), rect.bottomRight());
+                        iconRect = QRect(btn->rect.left(), btn->rect.top(), btn->iconSize.width(), btn->rect.height());
+                        textRect = QRect(QPoint(iconRect.right() + Constants::toolbtnLabelSpacing, btn->rect.top()), btn->rect.bottomRight());
                         break;
                     case Qt::ToolButtonTextUnderIcon:
-                        iconRect = QRect(rect.left(), rect.top(), rect.width(), btn->iconSize.height());
-                        textRect = QRect(QPoint(rect.left(), iconRect.bottom() + Constants::toolbtnLabelSpacing), rect.bottomRight());
+                        iconRect = QRect(btn->rect.left(), btn->rect.top(), btn->rect.width(), btn->iconSize.height());
+                        textRect = QRect(QPoint(btn->rect.left(), iconRect.bottom() + Constants::toolbtnLabelSpacing), btn->rect.bottomRight());
                         textHalign = Qt::AlignHCenter;
                         break;
                 }
@@ -972,7 +971,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 if (iconRect.isValid()) {
                     if (!btn->icon.isNull()) {
                         btn->icon.paint(p, iconRect, Qt::AlignCenter, state.enabled ? QIcon::Normal : QIcon::Disabled);
-                    } else if (btn->arrowType != Qt::NoArrow) {
+                    } else if (btn->features & QStyleOptionToolButton::Arrow && btn->arrowType != Qt::NoArrow) {
                         PrimitiveElement arrow;
                         switch (btn->arrowType) {
                             case Qt::RightArrow:
@@ -2452,10 +2451,10 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
             if (const auto* btn = qstyleoption_cast<const QStyleOptionToolButton*>(opt)) {
                 switch (element) {
                     case SC_ToolButton:
-                        if (btn->subControls & SC_ToolButtonMenu) {
-                            return btn->rect.adjusted(0, 0, -Constants::toolbtnArrowSectionWidth, 0);
-                        }
-                        return btn->rect;
+                        return btn->rect.adjusted(Constants::toolBtnLabelHorizontalPadding,
+                                                  Constants::toolBtnLabelVerticalPadding,
+                                                  -Constants::toolBtnLabelHorizontalPadding - ((btn->subControls & SC_ToolButtonMenu) ? Constants::toolbtnArrowSectionWidth : 0),
+                                                  -Constants::toolBtnLabelVerticalPadding);
                     case SC_ToolButtonMenu:
                         if (btn->subControls & SC_ToolButtonMenu) {
                             QRect rect = btn->rect;
@@ -2741,10 +2740,14 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
 
         case CT_ToolButton:
             if (const auto* btn = qstyleoption_cast<const QStyleOptionToolButton*>(opt)) {
+                if (btn->iconSize.isValid() && widget && widget->inherits("KMultiTabBarTab")) {
+                    return btn->iconSize + QSize(Constants::toolBtnLabelHorizontalPadding * 2, Constants::toolBtnLabelVerticalPadding * 2);
+                }
+
                 QSize size(0, 0);
-                const int btnStyle = (btn->toolButtonStyle == Qt::ToolButtonFollowStyle) ?
-                                         this->styleHint(SH_ToolButtonStyle, btn, widget) :
-                                         btn->toolButtonStyle;
+                int btnStyle = (btn->toolButtonStyle == Qt::ToolButtonFollowStyle) ?
+                                   this->styleHint(SH_ToolButtonStyle, btn, widget) :
+                                   btn->toolButtonStyle;
 
                 switch (btnStyle) {
                     case Qt::ToolButtonIconOnly:
@@ -2772,7 +2775,6 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
 
                 if (size.width() < size.height() && (btn->text.isEmpty() || btnStyle == Qt::ToolButtonIconOnly))
                     return QSize(size.height(), size.height());
-
                 return size;
             }
             break;
