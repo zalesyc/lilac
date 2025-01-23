@@ -242,6 +242,8 @@ constexpr int dialRangeNonWaraping = 300; // degrees
 
 constexpr int dockHeaderLabelHorizontalPadding = cornerRadius / 2;
 constexpr int dockHeaderControlsHeight = 12; // for the close and float buttons
+
+constexpr int tooltipOpacity = 235;
 } // namespace Constants
 
 } // namespace Lilac

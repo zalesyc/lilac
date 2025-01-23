@@ -1,15 +1,33 @@
 #include "lilac.h"
 
+#if HAS_KCOLORSCHEME
+#include <KColorScheme>
+#endif
+
 namespace Lilac {
 
 using CRole = QPalette::ColorRole;
 using CGroup = QPalette::ColorGroup;
 
+#if HAS_KCOLORSCHEME
+using KCSet = KColorScheme::ColorSet;
+using KBgRole = KColorScheme::BackgroundRole;
+using KDcRole = KColorScheme::DecorationRole;
+using KFgRole = KColorScheme::ForegroundRole;
+using KShRole = KColorScheme::ShadeRole;
+#endif
+
 static QColor getColorFromPallete(const QPalette& pal, const Color color, const State& state);
+static QColor getColorFromKColorScheme(const QPalette& pal, const Color color, const State& state);
 QColor lessContrastingBg(const QPalette& pal, const CGroup cgroup);
+CGroup groupFromState(const State& state);
 
 const QColor getColor(const QPalette& pal, const Color color, const State& state) {
+#if HAS_KCOLORSCHEME
+    return getColorFromKColorScheme(pal, color, state);
+#else
     return getColorFromPallete(pal, color, state);
+#endif
 }
 
 const QBrush getBrush(const QPalette& pal, const Color color, const State& state) {
@@ -87,9 +105,6 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return base;
         }
 
-        case tabCheckedFill:
-            return getColor(pal, Color::tabWidgetPageArea);
-
         case tabCheckedOutline: {
             const auto base = getColor(pal, Color::line);
             if (state.hasFocus) {
@@ -98,9 +113,8 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return base;
         }
 
+        case tabCheckedFill:
         case tabUncheckedHover:
-            return getColor(pal, Color::tabCheckedFill);
-
         case tabWidgetPageArea:
             return pal.color(CGroup::Normal, CRole::Base);
 
@@ -144,6 +158,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             }
             return pal.color(CGroup::Normal, CRole::Accent);
 
+        case sliderTickmarks:
         case sliderLineAfter:
         case dialLineAfter: {
             const auto base = lessContrastingBg(pal, CGroup::Normal);
@@ -151,15 +166,11 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
                 return isDarkMode(pal) ? base.lighter(130) : base.darker(130);
             return isDarkMode(pal) ? base.lighter(160) : base.darker(185);
         }
-        case sliderTickmarks:
-            return getColor(pal, sliderLineAfter, state);
 
         case lineEditBg:
         case spinBoxBg:
         case comboBoxBg:
-            if (!state.enabled)
-                return pal.color(CGroup::Disabled, CRole::Button);
-            return pal.color(CGroup::Normal, CRole::Button);
+            return pal.color(groupFromState(state), CRole::Button);
 
         case lineEditOutline:
         case spinBoxOutline: {
@@ -223,9 +234,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case tabText:
         case checkBoxText:
         case dockWidgetTitle:
-            if (!state.enabled)
-                return pal.color(CGroup::Disabled, CRole::Text);
-            return pal.color(CGroup::Normal, CRole::Text);
+            return pal.color(groupFromState(state), CRole::Text);
 
         case menuShortcutText:
             if (isDarkMode(pal))
@@ -245,9 +254,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case toolBarBg:
         case viewHeaderEmptyAreaBg:
         case menuBarBg:
-            if (!state.enabled)
-                return pal.color(CGroup::Disabled, CRole::Base);
-            return pal.color(CGroup::Normal, CRole::Base);
+            return pal.color(groupFromState(state), CRole::Base);
 
         case menuShadow: {
             QColor base = pal.color(CGroup::Normal, CRole::Shadow);
@@ -271,7 +278,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 
         case toolBtnBgAutoRiseChecked: {
             if (!state.enabled) {
-                QColor base = pal.color(CGroup::Normal, CRole::Button);
+                QColor base = getColor(pal, Color::toolBtnBg, state);
                 base.setAlpha(120);
                 return base;
             }
@@ -298,10 +305,10 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return isDarkMode(pal) ? pal.color(CGroup::Normal, CRole::Text).darker(140) : pal.color(CGroup::Normal, CRole::Text).lighter(140);
 
         case progressBarIndicator:
-            return pal.color(state.enabled ? CGroup::Normal : CGroup::Disabled, CRole::Accent);
+            return pal.color(groupFromState(state), CRole::Accent);
 
         case progressBarIndicatorBg:
-            return pal.color(state.enabled ? CGroup::Normal : CGroup::Disabled, CRole::Button);
+            return pal.color(groupFromState(state), CRole::Button);
 
         case viewHeaderBg:
             if ((state.pressed || state.hovered) && state.enabled)
@@ -336,6 +343,65 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
     return QColor(Qt::red);
 }
 
+#if HAS_KCOLORSCHEME
+static QColor getColorFromKColorScheme(const QPalette& pal, const Color color, const State& state) {
+    switch (color) {
+        case toolBtnBg:
+        case buttonBg: {
+            const auto base = KColorScheme(groupFromState(state), KCSet::Button).background(KBgRole::NormalBackground).color();
+            if (state.pressed)
+                return isDarkMode(pal) ? base.lighter(140) : base.darker(140);
+            if (state.hovered)
+                return isDarkMode(pal) ? base.lighter(120) : base.darker(120);
+            return base;
+        }
+
+        case groupBoxText:
+        case menuText:
+        case tabText:
+        case checkBoxText:
+        case dockWidgetTitle:
+            return KColorScheme(groupFromState(state), KCSet::Window).foreground(KFgRole::NormalText).color();
+
+        case menuBarItemText:
+            return KColorScheme(groupFromState(state), KCSet::Header).foreground(KFgRole::NormalText).color();
+
+        case comboBoxUneditableText:
+        case toolBtnText:
+        case progressBarText:
+            return KColorScheme(groupFromState(state), KCSet::Button).foreground(KFgRole::NormalText).color();
+
+        case menuShortcutText:
+            return KColorScheme(groupFromState(state), KCSet::Window).foreground(KFgRole::InactiveText).color();
+
+        case menuBg: {
+            QColor base = KColorScheme(CGroup::Normal, KCSet::Window).background(KBgRole::AlternateBackground).color();
+            base.setAlpha(Constants::menuBgOpacity);
+            return base;
+        }
+
+        case toolBarBg:
+        case menuBarBg:
+            return KColorScheme(groupFromState(state), KCSet::Header).background(KBgRole::NormalBackground).color();
+
+        case tooltipBg: {
+            auto base = KColorScheme(CGroup::Normal, KCSet::Tooltip).background(KBgRole::NormalBackground).color();
+            base.setAlpha(Constants::tooltipOpacity);
+            return base;
+        }
+
+        case tabUncheckedHover:
+        case tabCheckedFill:
+        case tabWidgetPageArea:
+            return KColorScheme(CGroup::Normal, KCSet::View).background(KBgRole::NormalBackground).color();
+
+        default:
+            break;
+    }
+    return getColorFromPallete(pal, color, state);
+}
+#endif
+
 State::State(const QStyle::State& state) {
     enabled = state & QStyle::State_Enabled;
     hovered = state & QStyle::State_MouseOver;
@@ -354,6 +420,10 @@ QColor lessContrastingBg(const QPalette& pal, const CGroup cgroup) {
         return window;
     }
     return base;
+}
+
+CGroup groupFromState(const State& state) {
+    return state.enabled ? CGroup::Active : CGroup::Disabled;
 }
 
 } // namespace Lilac

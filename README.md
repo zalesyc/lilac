@@ -53,6 +53,19 @@ There are two cmake flags to change this behavior:
 2. `-DNO_KSTYLE=ON` to not use kstyle
 
 
+### KColorScheme:
+[KcolorScheme](https://api.kde.org/frameworks/kcolorscheme/html/classKColorScheme.html) is an expantion on top of QPallete, 
+you should probably use it, unless you don't want to install the dependency.
+
+KColorScheme makes the application colors more consistent.
+
+By default, KColorScheme is used when it is already installed.
+
+There are two cmake flags to change this behavior:
+1. `-REQUIRE_KCOLORSCHEME=ON` to set KColorScheme as required dependency 
+2. `-NO_KCOLORSCHEME=ON` to not use KColorScheme
+
+
 ## Useful resources
 - https://www.olivierclero.com/code/custom-qstyle/ 
 - kvantumpreview, for testing widgets: https://github.com/tsujan/Kvantum/tree/master/Kvantum/kvantumpreview
