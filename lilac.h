@@ -92,7 +92,8 @@ enum Color {
     toolBtnMenuSeparator,     // D
     toolBtnFocusOutline,
 
-    toolBarBg,        // D
+    toolBarBgOther,   // D - all positions except for top
+    toolBarBgHeader,  // D - only if on top
     toolBarHandle,    // D
     toolBarSeparator, // D
 

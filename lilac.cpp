@@ -251,7 +251,8 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case menuBarItemHoverBg:
             return isDarkMode(pal) ? QColor(255, 255, 255, 26) : QColor(0, 0, 0, 26);
 
-        case toolBarBg:
+        case toolBarBgHeader:
+        case toolBarBgOther:
         case viewHeaderEmptyAreaBg:
         case menuBarBg:
             return pal.color(groupFromState(state), CRole::Base);
@@ -380,9 +381,12 @@ static QColor getColorFromKColorScheme(const QPalette& pal, const Color color, c
             return base;
         }
 
-        case toolBarBg:
+        case toolBarBgHeader:
         case menuBarBg:
             return KColorScheme(groupFromState(state), KCSet::Header).background(KBgRole::NormalBackground).color();
+
+        case toolBarBgOther:
+            return KColorScheme(groupFromState(state), KCSet::Window).background(KBgRole::NormalBackground).color();
 
         case tooltipBg: {
             auto base = KColorScheme(CGroup::Normal, KCSet::Tooltip).background(KBgRole::NormalBackground).color();

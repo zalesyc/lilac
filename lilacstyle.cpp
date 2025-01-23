@@ -1026,7 +1026,9 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
                 p->save();
                 p->setBrush(Qt::NoBrush);
-                p->fillRect(bar->rect, getColor(bar->palette, Color::toolBarBg, state));
+                p->fillRect(bar->rect, getColor(bar->palette,
+                                                bar->toolBarArea == Qt::TopToolBarArea ? Color::toolBarBgHeader : Color::toolBarBgOther,
+                                                state));
                 p->setPen(getPen(bar->palette, Color::line, state, 1));
                 p->drawLine(separatorLine);
                 p->restore();
