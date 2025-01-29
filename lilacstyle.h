@@ -37,7 +37,7 @@ class Style : public SuperStyle {
     static const MenuItemText menuItemGetText(const QStyleOptionMenuItem* menu);
     const int scrollbarGetSliderLength(const QStyleOptionSlider* bar) const;
     const int getTextFlags(const QStyleOption* opt) const;
-    static QRect tabBarGetTabRect(const QRect& originalRect, const QTabBar::Shape& tabShape);
+    static QRect tabBarGetTabRect(const QStyleOptionTab* tab);
     static const bool tabIsHorizontal(const QTabBar::Shape& tabShape);
 };
 } // namespace Lilac

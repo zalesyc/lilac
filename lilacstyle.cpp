@@ -476,9 +476,25 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             break;
 
         case CE_TabBarTab:
+            /* Moving tab is buggy because the margin on the sides
+             * of the tab bar is created by making the side tabs
+             * wider, tabBarGetTabRect() then makes the part of the
+             * tab that's drawn the correct size.
+             *
+             * Unfortunately QT doesnt update the tab size on move,
+             * only on selecting, this makes the babs jump around,
+             * as they have th incorrect dimensions until one of
+             * them is selected.
+             *
+             * This can be solved by shrinking the tabbar in
+             * SE_TabWidgetTabBar, but this causes the lines to not get
+             * drawn until the end which is an issue with tabbars
+             * which have enabled documentMode
+             */
+
             if (const auto* tab = qstyleoption_cast<const QStyleOptionTab*>(opt)) {
                 QStyleOptionTab tabOpt = *tab;
-                tabOpt.rect = tabBarGetTabRect(tab->rect, tab->shape);
+                tabOpt.rect = tabBarGetTabRect(tab);
                 drawControl(CE_TabBarTabShape, &tabOpt, p, widget);
                 drawControl(CE_TabBarTabLabel, &tabOpt, p, widget);
                 return;
@@ -1386,7 +1402,13 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->save();
             p->setBrush(Qt::NoBrush);
             p->setPen(getPen(opt->palette, Color::tabCheckedOutline, 1));
-            p->drawRect(opt->rect);
+            if (widget && widget->inherits("DolphinTabBar")) {
+                p->fillRect(opt->rect, getColor(opt->palette, Color::toolBarBgHeader, state));
+                p->drawLine(opt->rect.topLeft(), opt->rect.bottomLeft());
+                p->drawLine(opt->rect.topRight(), opt->rect.bottomRight());
+            } else {
+                p->drawRect(opt->rect);
+            }
             p->restore();
             return;
 
@@ -1851,6 +1873,11 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_TabBarTabShiftVertical:
             return 0;
         case PM_TabBarBaseOverlap:
+            if (widget && widget->inherits("DolphinTabBar")) {
+                if (const auto tab = qstyleoption_cast<const QStyleOptionTab*>(opt)) {
+                    return tabIsHorizontal(tab->shape) ? tab->rect.height() : tab->rect.width();
+                }
+            }
             return 1;
         case PM_TabCloseIndicatorWidth:
         case PM_TabCloseIndicatorHeight:
@@ -1984,8 +2011,7 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 if (tabIsHorizontal(tab->shape)) {
                     const int maxAvailibleWidth = tab->rect.width() -
                                                   (tab->leftCornerWidgetSize.isValid() ? tab->leftCornerWidgetSize.width() : 0) -
-                                                  (tab->rightCornerWidgetSize.isValid() ? tab->rightCornerWidgetSize.width() : 0) -
-                                                  2 * Constants::tabBarStartMargin;
+                                                  (tab->rightCornerWidgetSize.isValid() ? tab->rightCornerWidgetSize.width() : 0);
 
                     rect.setWidth(qMin(tab->tabBarSize.width(), maxAvailibleWidth));
                     rect.setHeight(qMin(tab->tabBarSize.height(), tab->rect.height()));
@@ -1994,14 +2020,13 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                         rect.moveCenter(opt->rect.center());
                     } else {
                         rect.moveLeft(opt->rect.left() + (tab->leftCornerWidgetSize.isValid() ?
-                                                              qMax(tab->leftCornerWidgetSize.width(), Constants::tabBarStartMargin) :
-                                                              Constants::tabBarStartMargin));
+                                                              tab->leftCornerWidgetSize.width() :
+                                                              0));
                     }
                 } else {
                     const int maxAvailibleHeight = tab->rect.height() -
                                                    (tab->leftCornerWidgetSize.isValid() ? tab->leftCornerWidgetSize.height() : 0) -
-                                                   (tab->rightCornerWidgetSize.isValid() ? tab->rightCornerWidgetSize.height() : 0) -
-                                                   2 * Constants::tabBarStartMargin;
+                                                   (tab->rightCornerWidgetSize.isValid() ? tab->rightCornerWidgetSize.height() : 0);
 
                     rect.setHeight(qMin(tab->tabBarSize.height(), maxAvailibleHeight));
                     rect.setWidth(qMin(tab->tabBarSize.width(), tab->rect.width()));
@@ -2010,8 +2035,8 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                         rect.moveCenter(opt->rect.center());
                     } else {
                         rect.moveTop(opt->rect.top() + (tab->leftCornerWidgetSize.isValid() ?
-                                                            qMax(tab->leftCornerWidgetSize.height(), Constants::tabBarStartMargin) :
-                                                            Constants::tabBarStartMargin));
+                                                            tab->leftCornerWidgetSize.height() :
+                                                            0));
                     }
                 }
 
@@ -2081,7 +2106,7 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 if (tab->leftButtonSize.isNull()) {
                     return QRect();
                 }
-                const QRect tabRect = tabBarGetTabRect(tab->rect, tab->shape);
+                const QRect tabRect = tabBarGetTabRect(tab);
                 QRect rect;
                 rect.setSize(tab->leftButtonSize);
                 rect.moveCenter(tabRect.center());
@@ -2102,7 +2127,7 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 if (tab->rightButtonSize.isNull()) {
                     return QRect();
                 }
-                const QRect tabRect = tabBarGetTabRect(tab->rect, tab->shape);
+                const QRect tabRect = tabBarGetTabRect(tab);
                 QRect rect;
                 rect.setSize(tab->rightButtonSize);
                 rect.moveCenter(tabRect.center());
@@ -2860,6 +2885,13 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                         elements++;
                         width += textSize.width();
                     }
+
+                    if (tab->position == QStyleOptionTab::Beginning || tab->position == QStyleOptionTab::End) {
+                        width += Constants::tabBarStartMargin;
+                    } else if (tab->position == QStyleOptionTab::OnlyOneTab) {
+                        width += 2 * Constants::tabBarStartMargin;
+                    }
+
                     const int height = qMax(maxHeight,
                                             tab->fontMetrics.height() + 2 * pixelMetric(PM_TabBarTabVSpace));
                     return QSize(width + Constants::tabElementSpacing * (elements - 1),
@@ -2891,6 +2923,12 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                 if (textSize.isValid()) {
                     elements++;
                     height += textSize.width();
+                }
+
+                if (tab->position == QStyleOptionTab::Beginning || tab->position == QStyleOptionTab::End) {
+                    height += Constants::tabBarStartMargin;
+                } else if (tab->position == QStyleOptionTab::OnlyOneTab) {
+                    height += 2 * Constants::tabBarStartMargin;
                 }
 
                 const int width = qMax(maxWidth,
@@ -2955,25 +2993,32 @@ const int Style::getTextFlags(const QStyleOption* opt) const {
     return textFlags;
 }
 
-QRect Style::tabBarGetTabRect(const QRect& originalRect, const QTabBar::Shape& tabShape) {
-    switch (tabShape) {
+QRect Style::tabBarGetTabRect(const QStyleOptionTab* tab) {
+    const int startMargin = (tab->position == QStyleOptionTab::Beginning || tab->position == QStyleOptionTab::OnlyOneTab) ?
+                                Constants::tabBarStartMargin :
+                                0;
+    const int endMargin = (tab->position == QStyleOptionTab::End || tab->position == QStyleOptionTab::OnlyOneTab) ?
+                              Constants::tabBarStartMargin :
+                              0;
+
+    switch (tab->shape) {
         case QTabBar::RoundedNorth:
         case QTabBar::TriangularNorth:
-            return originalRect.adjusted(0, Constants::tabBarMarginAboveTabs, 0, 0);
+            return tab->rect.adjusted(startMargin, Constants::tabBarMarginAboveTabs, -endMargin, 0);
 
         case QTabBar::RoundedSouth:
         case QTabBar::TriangularSouth:
-            return originalRect.adjusted(0, 0, 0, -Constants::tabBarMarginAboveTabs);
+            return tab->rect.adjusted(startMargin, 0, -endMargin, -Constants::tabBarMarginAboveTabs);
 
         case QTabBar::RoundedWest:
         case QTabBar::TriangularWest:
-            return originalRect.adjusted(Constants::tabBarMarginAboveTabs, 0, 0, 0);
+            return tab->rect.adjusted(Constants::tabBarMarginAboveTabs, startMargin, 0, -endMargin);
 
         case QTabBar::RoundedEast:
         case QTabBar::TriangularEast:
-            return originalRect.adjusted(0, 0, -Constants::tabBarMarginAboveTabs, 0);
+            return tab->rect.adjusted(0, startMargin, -Constants::tabBarMarginAboveTabs, -endMargin);
     }
-    return originalRect;
+    return tab->rect;
 }
 const bool Style::tabIsHorizontal(const QTabBar::Shape& tabShape) {
     switch (tabShape) {
