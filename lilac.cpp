@@ -430,4 +430,4 @@ CGroup groupFromState(const State& state) {
     return state.enabled ? CGroup::Active : CGroup::Disabled;
 }
 
-} // namespace Lilac
+}  // namespace Lilac

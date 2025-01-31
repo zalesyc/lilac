@@ -1,7 +1,7 @@
 #include "lilacstyleplugin.h"
-#include "lilacstyle.h"
 #include <QStringList>
 #include <QStringLiteral>
+#include "lilacstyle.h"
 
 namespace Lilac {
 QStyle* StylePlugin::create(const QString& key) {
@@ -14,4 +14,4 @@ QStyle* StylePlugin::create(const QString& key) {
 QStringList StylePlugin::keys() const {
     return QStringList(QStringLiteral("Lilac"));
 }
-} // namespace Lilac
+}  // namespace Lilac

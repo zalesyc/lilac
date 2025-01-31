@@ -12,7 +12,7 @@ namespace Lilac {
 class Style : public SuperStyle {
     Q_OBJECT
 
-  public:
+   public:
     QString name() const { return QStringLiteral("Lilac"); }
 
     void drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget = nullptr) const override;
@@ -28,7 +28,7 @@ class Style : public SuperStyle {
     QRect subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex* opt, QStyle::SubControl element, const QWidget* widget = nullptr) const override;
     QSize sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, const QSize& contentsSize, const QWidget* widget = nullptr) const override;
 
-  private:
+   private:
     struct MenuItemText {
         QString label = "";
         QString shortcut = "";
@@ -40,4 +40,4 @@ class Style : public SuperStyle {
     static QRect tabBarGetTabRect(const QStyleOptionTab* tab);
     static const bool tabIsHorizontal(const QTabBar::Shape& tabShape);
 };
-} // namespace Lilac
+}  // namespace Lilac

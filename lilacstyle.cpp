@@ -13,7 +13,7 @@
 namespace Lilac {
 
 void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget) const {
-    Lilac::State state(opt->state); // this hat to be defined as Lilac::State because just State would conflict with State from QStyle
+    Lilac::State state(opt->state);  // this had to be defined as Lilac::State because just State would conflict with State from QStyle
     switch (control) {
         case CC_ScrollBar:
             if (const QStyleOptionSlider* bar = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
@@ -367,12 +367,12 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                  */
                 const QRect groove = subControlRect(CC_Dial, dial, SC_DialGroove, widget);
 
-                const int arcLen = dial->dialWrapping ? 360 : Constants::dialRangeNonWaraping; // length in degrees, of the line
+                const int arcLen = dial->dialWrapping ? 360 : Constants::dialRangeNonWaraping;  // length in degrees, of the line
                 const int startAngle = (360 - arcLen) / 2;
                 const qreal dialRadius = (groove.width() - Constants::dialHandleHoverCircleDiameter) / 2;
                 const int value = sliderPositionFromValue(dial->minimum, dial->maximum, dial->sliderPosition, arcLen, dial->upsideDown);
-                const qreal handleX = qSin(qDegreesToRadians(qreal(startAngle + value))) * dialRadius; // this x and y is for a circle with
-                const qreal handleY = qCos(qDegreesToRadians(qreal(startAngle + value))) * dialRadius; // the centre at 0,0 and radius radius
+                const qreal handleX = qSin(qDegreesToRadians(qreal(startAngle + value))) * dialRadius;  // this x and y is for a circle with
+                const qreal handleY = qCos(qDegreesToRadians(qreal(startAngle + value))) * dialRadius;  // the centre at 0,0 and radius radius
 
                 const QRectF handleHover(groove.left() + dialRadius + handleX,
                                          groove.top() + dialRadius + handleY,
@@ -518,8 +518,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QTabBar::TriangularNorth:
                     case QTabBar::RoundedSouth:
                     case QTabBar::TriangularSouth:
-                        cornerRectSize = qMin(Constants::cornerRadius * 2.0, // the corner radius is still btnRadius,
-                                              qMin(rect.width(),             // it has to be *2 due to implementation
+                        cornerRectSize = qMin(Constants::cornerRadius * 2.0,  // the corner radius is still btnRadius,
+                                              qMin(rect.width(),              // it has to be *2 due to implementation
                                                    rect.height() * 2));
 
                         break;
@@ -705,7 +705,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             QRect rect;
             const int gapSize = (state.hovered && state.enabled) ? Constants::scrollBarSliderPaddingHover : Constants::scrollBarSliderPadding;
             if (opt->state & QStyle::State_Horizontal) {
-                rect = opt->rect.adjusted(0, gapSize + 1, 0, -gapSize); // the +1 is for the separator line above the hovered separator width
+                rect = opt->rect.adjusted(0, gapSize + 1, 0, -gapSize);  // the +1 is for the separator line above the hovered separator width
             } else {
                 rect = opt->rect.adjusted(gapSize + 1, 0, -gapSize, 0);
             }
@@ -1867,9 +1867,9 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_ExclusiveIndicatorWidth:
         case PM_ExclusiveIndicatorHeight:
             return 20;
-        case PM_TabBarTabHSpace: // unused in the impementation
+        case PM_TabBarTabHSpace:  // unused in the impementation
             return Constants::tabHorizontalPadding;
-        case PM_TabBarTabVSpace: // vertical padding, for horizontal tabbar: top and bottom
+        case PM_TabBarTabVSpace:  // vertical padding, for horizontal tabbar: top and bottom
             return 10;
         case PM_TabBarTabShiftHorizontal:
         case PM_TabBarTabShiftVertical:
@@ -1916,11 +1916,11 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_ToolBarSeparatorExtent:
             return 3;
         case PM_ToolBarHandleExtent:
-            return (Constants::toolBarHandleHorizontalPadding * 2) + 2 + Constants::toolBarHandleLineSpacing; // 2 is for the line thickness
+            return (Constants::toolBarHandleHorizontalPadding * 2) + 2 + Constants::toolBarHandleLineSpacing;  // 2 is for the line thickness
         case PM_ProgressBarChunkWidth:
             return 2;
         case PM_RadioButtonLabelSpacing:
-        case PM_CheckBoxLabelSpacing: // implementtion uses Constants::checkBoxElementSpacing,
+        case PM_CheckBoxLabelSpacing:  // implementtion uses Constants::checkBoxElementSpacing,
             /* here i add 1/2 of the check width as a workaround for qqc2-desktop-theme styled apps,
              * as they apparently count this distance from the center of the checkbox
              */
@@ -1929,7 +1929,7 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
             return 6;
         case PM_DockWidgetFrameWidth:
             return 0;
-        case PM_DockWidgetTitleBarButtonMargin: // size of the doch header buttons
+        case PM_DockWidgetTitleBarButtonMargin:  // size of the doch header buttons
             return 8;
         case PM_DockWidgetSeparatorExtent:
         case PM_DockWidgetHandleExtent:
@@ -2001,7 +2001,7 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
         }
         case SE_RadioButtonContents:
         case SE_CheckBoxContents: {
-            constexpr int indicatorSize = (Constants::checkBoxSize + Constants::checkBoxHoverCircleSize) / 2; // size of the indicator + the hover circle padding
+            constexpr int indicatorSize = (Constants::checkBoxSize + Constants::checkBoxHoverCircleSize) / 2;  // size of the indicator + the hover circle padding
             QRect rect = opt->rect;
             rect.setLeft(opt->rect.left() + indicatorSize + Constants::checkBoxElementSpacing);
             return rect;
@@ -2566,7 +2566,7 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                                                     box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text).height() :
                                                     0;
                         const int checkHeight = (box->subControls & SC_GroupBoxCheckBox) ? Constants::groupBoxCheckSize : 0;
-                        const int headerHeight = qMax(checkHeight, labelHeight); // height of the label area
+                        const int headerHeight = qMax(checkHeight, labelHeight);  // height of the label area
 
                         return QRect(QPoint(box->rect.left(), box->rect.top() + headerHeight / 2), box->rect.bottomRight());
                     }
@@ -2575,7 +2575,7 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                                                     box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text).height() :
                                                     0;
                         const int checkHeight = (box->subControls & SC_GroupBoxCheckBox) ? Constants::groupBoxCheckSize : 0;
-                        const int headerHeight = qMax(checkHeight, labelHeight); // height of the label area
+                        const int headerHeight = qMax(checkHeight, labelHeight);  // height of the label area
 
                         return QRect(QPoint(box->rect.left() + box->lineWidth + 1, box->rect.top() + headerHeight),
                                      box->rect.bottomRight() - QPoint(box->lineWidth + 1, box->lineWidth + 1));
@@ -2677,7 +2677,6 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                     case QStyleOptionMenuItem::Normal:
                     case QStyleOptionMenuItem::DefaultItem:
                     case QStyleOptionMenuItem::SubMenu: {
-
                         // textSize
                         QSize labelSize(0, 0);
                         QSize shortcutSize(0, 0);
@@ -2685,7 +2684,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                         if (!text.label.isEmpty()) {
                             labelSize = menu->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), text.label);
                         } else if (text.shortcut.isEmpty()) {
-                            labelSize.setHeight(menu->fontMetrics.height()); // this is so a menuitem without any text is still tall like other menu items
+                            labelSize.setHeight(menu->fontMetrics.height());  // this is so a menuitem without any text is still tall like other menu items
                         }
                         if (!text.shortcut.isEmpty()) {
                             shortcutSize = menu->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), text.shortcut);
@@ -2731,7 +2730,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
 
                         const int height = labelSize.height() + (Constants::menuItemVerticalPadding * 2);
 
-                        return QSize(width, height % 2 == 1 ? height : height + 1); // height will always be odd
+                        return QSize(width, height % 2 == 1 ? height : height + 1);  // height will always be odd
                     }
 
                     default:
@@ -2844,7 +2843,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                                             box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text) :
                                             QSize(0, 0);
                 const int checkSize = (box->subControls & SC_GroupBoxCheckBox) ? Constants::groupBoxCheckSize : 0;
-                const int headerHeight = qMax(checkSize, labelSize.height()); // height of the label area
+                const int headerHeight = qMax(checkSize, labelSize.height());  // height of the label area
 
                 const int minHeaderWidth = labelSize.width() + checkSize + ((labelSize.isValid() && checkSize > 0) ? Constants::groupBoxTextCheckSpacing : 0);
 
@@ -2981,7 +2980,7 @@ const int Style::scrollbarGetSliderLength(const QStyleOptionSlider* bar) const {
     const int barLen = bar->orientation == Qt::Horizontal ? bar->rect.width() : bar->rect.height();
     const int contentLen = bar->maximum - bar->minimum + bar->pageStep;
     const int minSliderLen = pixelMetric(PM_ScrollBarSliderMin, bar);
-    if (contentLen <= 0) // to avoid division by 0
+    if (contentLen <= 0)  // to avoid division by 0
         return minSliderLen;
     const int sliderLen = qreal(bar->pageStep) / contentLen * barLen;
 
@@ -3037,4 +3036,4 @@ const bool Style::tabIsHorizontal(const QTabBar::Shape& tabShape) {
     }
     return true;
 }
-} // namespace Lilac
+}  // namespace Lilac

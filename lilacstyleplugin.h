@@ -8,7 +8,7 @@ class StylePlugin : public QStylePlugin {
 
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QStyleFactoryInterface" FILE "lilac.json")
 
-  public:
+   public:
     //* constructor
     explicit StylePlugin(QObject* parent = nullptr)
         : QStylePlugin(parent) {
@@ -21,4 +21,4 @@ class StylePlugin : public QStylePlugin {
     QStyle* create(const QString&) override;
 };
 
-} // namespace Lilac
+}  // namespace Lilac
