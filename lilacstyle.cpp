@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-FileCopyrightText: 2025 zalesyc and the lilac-qt contributors
+
 #include "lilacstyle.h"
 #include "lilac.h"
 
