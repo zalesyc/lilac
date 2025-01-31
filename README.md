@@ -1,84 +1,82 @@
 # Lilac
 
+**Lilac**, a Qt6 theme inspired by the [Orchis GTK theme](https://github.com/vinceliuice/Orchis-theme) by [Vinceliuice](https://github.com/vinceliuice)
 
-## Docs
-- https://doc.qt.io/qt-6/style-reference.html
-- https://doc.qt.io/qt-6/qstyle.html
+## About
+A native Qt6 application style for KDE Plasma that provides modern widget styling without relying on Kvantum. This theme fully supports KDE color schemes, automatically adapting to your system colors.
 
+This is strictly an application style - it handles only the appearance of Qt widgets and interface elements. It does not include icons, color schemes, or window decorations. Users are encouraged to pair it with their preferred color scheme, icon theme, window decorations…
 
+## Building:
+### Build Configuration
+#### KStyle Integration
 
-## Implemented Widgets
-Taken from the [docs](https://doc.qt.io/qt-6/style-reference.html#widget-reference)
-- [x] Push Buttons 
-- [x] Check and Radio Buttons
-- [x] Tabs
-- [x] Scroll Bars
-- [x] Sliders
-- [x] Spin Boxes
-- [ ] Title Bar
-- [x] Combo Box - **Partially:** without the popup menu
-- [x] Group Boxes
-- [ ] Splitters
-- [x] Progress Bar
-- [x] Tool Buttons
-- [x] Toolbars
-- [x] Menus
-- [x] Menu Bar
-- [x] Item View Headers
-- [x] Tree Branch Indicators
-- [ ] Tool Boxes
-- [x] Size Grip
-- [x] Rubber Band
-- [x] Dock Widgets
+[KStyle](https://api.kde.org/frameworks/frameworkintegration/html/classKStyle.html) provides enhanced integration with KDE Plasma. You can configure its usage during build time:
 
-Widgets not mentioned in the docs
-- [x] Dial
-- [x] LineEdits 
-- [x] Frames
-- [x] Tooltips
+- **Default behavior**: Uses KStyle if installed, falls back to QCommonStyle otherwise  
+- **Available options**:  
+  - `-DREQUIRE_KSTYLE=ON`: Makes KStyle a required dependency  
+  - `-DNO_KSTYLE=ON`: Forces QCommonStyle usage regardless of KStyle availability
 
-## TODO
-- `Style::drawComplexControl` -> CC_Slider `qAcos` is expensive so remove it - the parameters are constants from PixelMetric so it should be replaced by a precalculated value
-- `CE_ProgressBarContents` -> make the busy indicator animated
+**Recommendation**: Use KStyle with KDE Plasma, otherwise probably use QCommonStyle (KStyle has a ot of dependencies)
 
-## Compilation options
-### Kstyle:
-when you build lilac, you can select whether to inherit from KStyle, which is recomended when you use kde plasma
-or QCommonStyle, which is recommended othervise. 
+#### KColorScheme Support
 
-By default, kstyle is used when it is already installed, othervise QCommonStyle.
+[KColorScheme](https://api.kde.org/frameworks/kcolorscheme/html/classKColorScheme.html) extends QPalette functionality to provide better color consistency across KDE applications.
 
-There are two cmake flags to change this behavior:
-1. `-DREQUIRE_KSTYLE=ON` to set kstyle as required dependency 
-2. `-DNO_KSTYLE=ON` to not use kstyle
+- **Default behavior**: KColorScheme is required dependency
+- **Available options**:  
+    `-DNO_KCOLORSCHEME=ON`: Disables KColorScheme support
 
+**Note**: KColorScheme is recommended for better color consistency, but can be disabled to reduce dependencies.
 
-### KColorScheme:
-[KcolorScheme](https://api.kde.org/frameworks/kcolorscheme/html/classKColorScheme.html) is an expantion on top of QPallete, 
-you should probably use it, unless you don't want to install the dependency.
+### Installation steps:
 
-KColorScheme makes the application colors more consistent.
+**Note:** this theme support **only Qt >= 6.6.0**
 
-By default, KColorScheme is used when it is already installed.
+1. **Install dependencies**
 
-There are two cmake flags to change this behavior:
-1. `-REQUIRE_KCOLORSCHEME=ON` to set KColorScheme as required dependency 
-2. `-NO_KCOLORSCHEME=ON` to not use KColorScheme
+    `TODO`  
 
+2. **Clone the repository** 
 
-## Useful resources
-- https://www.olivierclero.com/code/custom-qstyle/ 
-- kvantumpreview, for testing widgets: https://github.com/tsujan/Kvantum/tree/master/Kvantum/kvantumpreview
-- Qt galllery, also for widget testing (not as comprehensive as kvantumpreview): https://doc.qt.io/qt-6/gallery.html
-- gammaray, useful for finding out what type of widget a widget is in a app: https://www.kdab.com/development-resources/qt-tools/gammaray/
-- Qt source code: https://github.com/qt/qtbase
+    ~~~ shell
+    git clone https://github.com/zalesyc/lilac-qt.git && cd lilac-qt
+    ~~~
 
-## Clang-format config
-    ---
-    TabWidth: 4
-    IndentWidth: 4
-    PointerAlignment: Left
-    ColumnLimit: 0
-    BreakBeforeTernaryOperators: false
-    IndentCaseLabels: true
-    ...
+3. **Configure**
+
+    3.1 create the build directory
+    ~~~ shell
+    mkdir build && cd build
+    ~~~
+
+    3.2 Configure the project with cmake
+
+    here you can add the options from the Build Configuration section
+
+    ~~~ shell
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr ..
+    ~~~
+
+4. **Build and Install**
+
+    4.1 Compile
+    ~~~ shell
+    cmake --build . --parallel 
+    ~~~
+
+    4.2 Install
+    ~~~ shell
+    sudo cmake --install . 
+    ~~~
+
+The style can now be selected from system settings
+
+## Issues / TODO:
+
+- Right-to-left language support  
+- Implement animations  
+- Create settings window with some options  
+- Allow for translucent menus, and maybe also translucent windows  
+  
