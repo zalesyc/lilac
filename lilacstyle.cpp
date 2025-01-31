@@ -127,48 +127,50 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
 
                     // ------------- slider
                     const QRectF handleRectF(handleRect);
-                    // TODO: remove the qAcos func as it is expensive - the parameters are constants
-                    // from PixelMetric so it should be replaced by a precalculated value
                     const qreal handleRadius = handleRectF.height() / 2.0;
-                    const qreal targentsAngle = qRadiansToDegrees(qAcos(handleRadius / (handleRadius + tickOffset)));
-                    const qreal circleRestAngle = 360 - (2 * targentsAngle);
-                    const qreal circleBetweenTargentsAngle = 180 - (2 * targentsAngle);
+                    /* Here is calculated the angle between the botom of the handle circle and
+                     * the point the tangent touches the handle circle.
+                     * The tangens create the pointy part of the handle.
+                     */
+                    const qreal tangentsAngle = qRadiansToDegrees(qAcos(handleRadius / (handleRadius + tickOffset)));
+                    const qreal circleRestAngle = 360 - (2 * tangentsAngle);
+                    const qreal circleBetweenTargentsAngle = 180 - (2 * tangentsAngle);
 
                     QPainterPath path;
                     if (slider->orientation == Qt::Horizontal) {
                         switch (slider->tickPosition) {
                             case QSlider::TicksAbove:
                                 path.moveTo(handleRectF.center().x(), handleRectF.top() - tickOffset);
-                                path.arcTo(handleRectF, 90 - targentsAngle, -circleRestAngle);
+                                path.arcTo(handleRectF, 90 - tangentsAngle, -circleRestAngle);
                                 break;
                             case QSlider::TicksBothSides:
                                 path.moveTo(handleRectF.center().x(), handleRectF.top() - tickOffset);
-                                path.arcTo(handleRectF, 90 - targentsAngle, -circleBetweenTargentsAngle);
+                                path.arcTo(handleRectF, 90 - tangentsAngle, -circleBetweenTargentsAngle);
                                 path.lineTo(handleRectF.center().x(), handleRectF.bottom() + tickOffset);
-                                path.arcTo(handleRectF, 270 - targentsAngle, -circleBetweenTargentsAngle);
+                                path.arcTo(handleRectF, 270 - tangentsAngle, -circleBetweenTargentsAngle);
                                 break;
                             case QSlider::NoTicks:
                             case QSlider::TicksBelow:
                                 path.moveTo(handleRectF.center().x(), handleRectF.bottom() + tickOffset);
-                                path.arcTo(handleRectF, 270 - targentsAngle, -circleRestAngle);
+                                path.arcTo(handleRectF, 270 - tangentsAngle, -circleRestAngle);
                                 break;
                         }
                     } else {
                         switch (slider->tickPosition) {
                             case QSlider::TicksLeft:
                                 path.moveTo(handleRectF.left() - tickOffset, handleRectF.center().y());
-                                path.arcTo(handleRectF, 180 - targentsAngle, -circleRestAngle);
+                                path.arcTo(handleRectF, 180 - tangentsAngle, -circleRestAngle);
                                 break;
                             case QSlider::TicksBothSides:
                                 path.moveTo(handleRectF.left() - tickOffset, handleRectF.center().y());
-                                path.arcTo(handleRectF, 180 - targentsAngle, -circleBetweenTargentsAngle);
+                                path.arcTo(handleRectF, 180 - tangentsAngle, -circleBetweenTargentsAngle);
                                 path.lineTo(handleRectF.right() + tickOffset, handleRectF.center().y());
-                                path.arcTo(handleRectF, 360 - targentsAngle, -circleBetweenTargentsAngle);
+                                path.arcTo(handleRectF, 360 - tangentsAngle, -circleBetweenTargentsAngle);
                                 break;
                             case QSlider::NoTicks:
                             case QSlider::TicksRight:
                                 path.moveTo(handleRectF.right() + tickOffset, handleRectF.center().y());
-                                path.arcTo(handleRectF, 360 - targentsAngle, -circleRestAngle);
+                                path.arcTo(handleRectF, 360 - tangentsAngle, -circleRestAngle);
                                 break;
                         }
                     }
