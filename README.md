@@ -11,14 +11,13 @@ This is strictly an application style - it handles only the appearance of Qt wid
 ### Build Configuration
 #### KStyle Integration
 
-[KStyle](https://api.kde.org/frameworks/frameworkintegration/html/classKStyle.html) provides enhanced integration with KDE Plasma. You can configure its usage during build time:
+[KStyle](https://api.kde.org/frameworks/frameworkintegration/html/classKStyle.html) provides enhanced integration with KDE Plasma. If you dont use KStyle, QCommonStyle is used. You can configure its usage during build time:
 
-- **Default behavior**: Uses KStyle if installed, falls back to QCommonStyle otherwise  
+- **Default behavior**: KStyle is a required dependency  
 - **Available options**:  
-  - `-DREQUIRE_KSTYLE=ON`: Makes KStyle a required dependency  
-  - `-DNO_KSTYLE=ON`: Forces QCommonStyle usage regardless of KStyle availability
+  - `-DNO_KSTYLE=ON`: Doesn't use KStyle
 
-**Recommendation**: Use KStyle with KDE Plasma, otherwise probably use QCommonStyle (KStyle has a ot of dependencies)
+**Recommendation**: Use KStyle with KDE Plasma, otherwise probably use QCommonStyle (KStyle has a lot of dependencies)
 
 #### KColorScheme Support
 
