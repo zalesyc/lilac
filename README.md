@@ -7,6 +7,10 @@ A native Qt6 application style for KDE Plasma that provides modern widget stylin
 
 This is strictly an application style - it handles only the appearance of Qt widgets and interface elements. It does not include icons, color schemes, or window decorations. Users are encouraged to pair it with their preferred color scheme, icon theme, window decorations…
 
+
+![A screenshot showing Qt gallery using lilac-qt](./screenshot.png)
+Screenshot: Icons: Fluent, ColorScheme: Breeze-Light/FluentDark
+
 ## Building:
 ### Build Configuration
 #### KStyle Integration
