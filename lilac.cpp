@@ -260,10 +260,9 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case menuBarBg:
             return pal.color(groupFromState(state), CRole::Base);
 
-        case menuShadow: {
-            QColor base = pal.color(CGroup::Normal, CRole::Shadow);
-            return base;
-        }
+        case menuShadow:
+            return QColor(0, 0, 0);
+
         case toolBarHandle:
         case toolBarSeparator: {
             const QColor base = getColor(pal, Color::line, state);
