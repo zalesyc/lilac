@@ -31,6 +31,9 @@ class Style : public SuperStyle {
     QRect subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex* opt, QStyle::SubControl element, const QWidget* widget = nullptr) const override;
     QSize sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, const QSize& contentsSize, const QWidget* widget = nullptr) const override;
 
+   protected:
+    Lilac::Config config;
+
    private:
     struct MenuItemText {
         QString label = "";
@@ -40,7 +43,7 @@ class Style : public SuperStyle {
     static const MenuItemText menuItemGetText(const QStyleOptionMenuItem* menu);
     const int scrollbarGetSliderLength(const QStyleOptionSlider* bar) const;
     const int getTextFlags(const QStyleOption* opt) const;
-    static QRect tabBarGetTabRect(const QStyleOptionTab* tab);
+    const QRect tabBarGetTabRect(const QStyleOptionTab* tab) const;
     static const bool tabIsHorizontal(const QTabBar::Shape& tabShape);
 };
 }  // namespace Lilac
