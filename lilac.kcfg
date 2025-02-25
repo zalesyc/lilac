@@ -3,10 +3,13 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
                           http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
-  <group name="General">
-    <entry name="CornerRadius" type="Int">
-      <label>General corner radius of all widgets.</label>
-      <default>12</default>
-    </entry>
-  </group>
+
+    <kcfgfile name="lilacrc"/>
+
+    <group name="General">
+        <entry name="CornerRadius" type="Int">
+            <label>General corner radius of all widgets.</label>
+            <default>12</default>
+        </entry>
+    </group>
 </kcfg>

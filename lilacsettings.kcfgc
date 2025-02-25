@@ -3,3 +3,4 @@ ClassName=LilacSettings
 NameSpace=Lilac
 Singleton=true
 Mutators=true
+DefaultValueGetters=true

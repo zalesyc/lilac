@@ -28,7 +28,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-add_library(Lilac SHARED
+add_library(LilacStyle SHARED
     lilacstyleplugin.cpp
     lilacstyleplugin.h
     lilacstyle.cpp
@@ -39,36 +39,62 @@ add_library(Lilac SHARED
     lilac.h
 )
 
-target_link_libraries(Lilac PRIVATE Qt6::Widgets)
+target_link_libraries(LilacStyle PRIVATE Qt6::Widgets)
+
+if (NOT NO_SETTINGS)
+    add_library(LilacSettings SHARED
+        settings/lilacsettingsapp.h
+        settings/lilacsettingsapp.cpp
+      settings/lilacsettingsapp.ui
+    )
+    kconfig_add_kcfg_files(LilacSettings lilacsettings.kcfgc)
+    target_link_libraries(LilacSettings PRIVATE Qt6::Widgets)
+    target_link_libraries(LilacSettings PRIVATE KF6::ConfigCore KF6::ConfigGui)
+endif()
 
 if (NOT NO_KSTYLE)
-    target_link_libraries(Lilac PRIVATE KF6::Style)
-    target_compile_definitions(Lilac PRIVATE HAS_KSTYLE=1)
+    target_link_libraries(LilacStyle PRIVATE KF6::Style)
+    target_compile_definitions(LilacStyle PRIVATE HAS_KSTYLE=1)
 else()
-    target_compile_definitions(Lilac PRIVATE HAS_KSTYLE=0)
+    target_compile_definitions(LilacStyle PRIVATE HAS_KSTYLE=0)
 endif()
 
 if (NOT NO_KCOLORSCHEME)
-    target_link_libraries(Lilac PRIVATE KF6::ColorScheme)
-    target_compile_definitions(Lilac PRIVATE HAS_KCOLORSCHEME=1)
+    target_link_libraries(LilacStyle PRIVATE KF6::ColorScheme)
+    target_compile_definitions(LilacStyle PRIVATE HAS_KCOLORSCHEME=1)
 else()
-    target_compile_definitions(Lilac PRIVATE HAS_KCOLORSCHEME=0)
+    target_compile_definitions(LilacStyle PRIVATE HAS_KCOLORSCHEME=0)
 endif()
 
 if (NOT NO_SETTINGS)
-    kconfig_add_kcfg_files(Lilac lilacsettings.kcfgc)
-    target_link_libraries(Lilac PRIVATE KF6::ConfigCore KF6::ConfigGui)
-    target_compile_definitions(Lilac PRIVATE HAS_SETTINGS=1)
+    kconfig_add_kcfg_files(LilacStyle lilacsettings.kcfgc)
+    target_link_libraries(LilacStyle PRIVATE KF6::ConfigCore KF6::ConfigGui)
+    target_compile_definitions(LilacStyle PRIVATE HAS_SETTINGS=1)
 else()
-    target_compile_definitions(Lilac PRIVATE HAS_SETTINGS=0)
+    target_compile_definitions(LilacStyle PRIVATE HAS_SETTINGS=0)
 endif()
 
-target_compile_definitions(Lilac PRIVATE LILAC_LIBRARY)
-
-install(TARGETS
-    Lilac
-    DESTINATION
-    ${CMAKE_INSTALL_LIBDIR}/qt6/plugins/styles
-
+target_compile_definitions(LilacStyle PRIVATE LILAC_LIBRARY)
+set_target_properties(LilacStyle PROPERTIES
+    OUTPUT_NAME "Lilac"
 )
+
+install(
+    TARGETS LilacStyle
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/qt6/plugins/styles
+)
+
+if (NOT NO_SETTINGS)
+    set_target_properties(LilacSettings PROPERTIES
+        OUTPUT_NAME "LilacSettings"
+    )
+    install(
+        TARGETS LilacSettings
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/qt6/plugins/kstyle_config
+    )
+    install(
+        FILES settings/lilac.themerc
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/kstyle/themes
+    )
+endif()
 
