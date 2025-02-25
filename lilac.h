@@ -3,6 +3,10 @@
 
 #pragma once
 
+#if HAS_SETTINGS
+#include "lilacsettings.h"
+#endif
+
 #include <QCommonStyle>
 #include <QPainter>
 #include <QPair>
@@ -256,6 +260,11 @@ struct Config {
     static constexpr int dockHeaderControlsHeight = 12;  // for the close and float buttons
 
     static constexpr int tooltipOpacity = 235;
+
+    // methods
+#if HAS_SETTINGS
+    void initFromSettings(LilacSettings* settings);
+#endif
 };
 
 }  // namespace Lilac

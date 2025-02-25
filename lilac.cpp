@@ -432,4 +432,10 @@ CGroup groupFromState(const State& state) {
     return state.enabled ? CGroup::Active : CGroup::Disabled;
 }
 
+#if HAS_SETTINGS
+void Config::initFromSettings(LilacSettings* settings) {
+    cornerRadius = settings->cornerRadius();
+}
+#endif
+
 }  // namespace Lilac

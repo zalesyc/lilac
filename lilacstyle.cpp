@@ -2954,7 +2954,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
     return SuperStyle::sizeFromContents(ct, opt, contentsSize, widget);
 }
 
-const void Style::sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptionSlider* slider, const QRect& tickmarksRect, const int sliderLen, const int interval) {
+void Style::sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptionSlider* slider, const QRect& tickmarksRect, const int sliderLen, const int interval) {
     for (int val = slider->minimum; val < slider->maximum; val += interval) {
         if (slider->orientation == Qt::Horizontal) {
             int pos = sliderPositionFromValue(slider->minimum, slider->maximum, val, tickmarksRect.width() - sliderLen, slider->upsideDown) + (sliderLen / 2);
@@ -2966,7 +2966,7 @@ const void Style::sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptio
     }
 }
 
-const Style::MenuItemText Style::menuItemGetText(const QStyleOptionMenuItem* menu) {
+Style::MenuItemText Style::menuItemGetText(const QStyleOptionMenuItem* menu) {
     const auto tabPosition = menu->text.lastIndexOf('\t');
     Style::MenuItemText text;
     if (tabPosition >= 0) {
@@ -2979,7 +2979,7 @@ const Style::MenuItemText Style::menuItemGetText(const QStyleOptionMenuItem* men
     return text;
 }
 
-const int Style::scrollbarGetSliderLength(const QStyleOptionSlider* bar) const {
+int Style::scrollbarGetSliderLength(const QStyleOptionSlider* bar) const {
     const int barLen = bar->orientation == Qt::Horizontal ? bar->rect.width() : bar->rect.height();
     const int contentLen = bar->maximum - bar->minimum + bar->pageStep;
     const int minSliderLen = pixelMetric(PM_ScrollBarSliderMin, bar);
@@ -2990,14 +2990,14 @@ const int Style::scrollbarGetSliderLength(const QStyleOptionSlider* bar) const {
     return qMin(qMax(minSliderLen, sliderLen), barLen);
 }
 
-const int Style::getTextFlags(const QStyleOption* opt) const {
+int Style::getTextFlags(const QStyleOption* opt) const {
     int textFlags = Qt::TextShowMnemonic;
     if (!styleHint(SH_UnderlineShortcut, opt))
         textFlags |= Qt::TextHideMnemonic;
     return textFlags;
 }
 
-const QRect Style::tabBarGetTabRect(const QStyleOptionTab* tab) const {
+QRect Style::tabBarGetTabRect(const QStyleOptionTab* tab) const {
     const int startMargin = (tab->position == QStyleOptionTab::Beginning || tab->position == QStyleOptionTab::OnlyOneTab) ?
                                 config.tabBarStartMargin :
                                 0;
@@ -3024,7 +3024,7 @@ const QRect Style::tabBarGetTabRect(const QStyleOptionTab* tab) const {
     }
     return tab->rect;
 }
-const bool Style::tabIsHorizontal(const QTabBar::Shape& tabShape) {
+bool Style::tabIsHorizontal(const QTabBar::Shape& tabShape) {
     switch (tabShape) {
         case QTabBar::RoundedNorth:
         case QTabBar::TriangularNorth:
