@@ -45,11 +45,22 @@ if (NOT NO_SETTINGS)
     add_library(LilacSettings SHARED
         settings/lilacsettingsapp.h
         settings/lilacsettingsapp.cpp
-      settings/lilacsettingsapp.ui
+        settings/lilacsettingsapp.ui
     )
     kconfig_add_kcfg_files(LilacSettings lilacsettings.kcfgc)
     target_link_libraries(LilacSettings PRIVATE Qt6::Widgets)
     target_link_libraries(LilacSettings PRIVATE KF6::ConfigCore KF6::ConfigGui)
+
+
+    add_executable(LilacSettingsApp
+        settings/lilacsettingsapp.h
+        settings/lilacsettingsapp.cpp
+        settings/lilacsettingsapp.ui
+        settings/main.cpp
+    )
+    kconfig_add_kcfg_files(LilacSettingsApp lilacsettings.kcfgc)
+    target_link_libraries(LilacSettingsApp PRIVATE Qt6::Widgets)
+    target_link_libraries(LilacSettingsApp PRIVATE KF6::ConfigCore KF6::ConfigGui)
 endif()
 
 if (NOT NO_KSTYLE)
@@ -95,6 +106,13 @@ if (NOT NO_SETTINGS)
     install(
         FILES settings/lilac.themerc
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/kstyle/themes
+    )
+    set_target_properties(LilacSettingsApp PROPERTIES
+        OUTPUT_NAME "lilacsettings"
+    )
+    install(
+        TARGETS LilacSettingsApp
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 endif()
 
