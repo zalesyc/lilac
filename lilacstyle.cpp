@@ -4,6 +4,10 @@
 #include "lilacstyle.h"
 #include "lilac.h"
 
+#if HAS_SETTINGS
+#include "lilacsettings.h"
+#endif
+
 #include <QDockWidget>
 #include <QGraphicsDropShadowEffect>
 #include <QMenu>
@@ -13,7 +17,39 @@
 #include <QStyleFactory>
 #include <QtMath>
 
+#if HAS_DBUS
+#include <QDBusConnection>
+#endif
+
 namespace Lilac {
+
+Style::Style() {
+    settingsChanged();
+#if HAS_DBUS
+    auto dbus = QDBusConnection::sessionBus();
+    dbus.connect(
+        "",
+        "/LilacStyle",
+        "com.github.zalesyc.lilacqt",
+        "settingsChanged",
+        this,
+        SLOT(settingsChanged()));
+    dbus.connect(
+        "",
+        "/KGlobalSettings",
+        "org.kde.KGlobalSettings",
+        "notifyChange",
+        this,
+        SLOT(settingsChanged()));
+    dbus.connect(
+        "",
+        "/KWin",
+        "org.kde.KWin",
+        "reloadConfig",
+        this,
+        SLOT(settingsChanged()));
+#endif
+};
 
 void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget) const {
     Lilac::State state(opt->state);  // this had to be defined as Lilac::State because just State would conflict with State from QStyle
@@ -2952,6 +2988,14 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
             break;
     }
     return SuperStyle::sizeFromContents(ct, opt, contentsSize, widget);
+}
+
+void Style::settingsChanged() {
+#if HAS_SETTINGS
+    auto settings = LilacSettings::self();
+    settings->load();
+    config.initFromSettings(settings);
+#endif
 }
 
 void Style::sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptionSlider* slider, const QRect& tickmarksRect, const int sliderLen, const int interval) {

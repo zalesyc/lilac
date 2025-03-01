@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>409</width>
     <height>300</height>
    </rect>
   </property>
@@ -25,13 +25,6 @@
     <widget class="QSpinBox" name="radiusSpin">
      <property name="maximum">
       <number>18</number>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0" colspan="2">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>You may need to close and reopen all apps for the settings to apply</string>
      </property>
     </widget>
    </item>

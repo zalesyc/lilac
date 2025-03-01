@@ -1,6 +1,11 @@
 #include "lilacsettingsapp.h"
 #include "ui_lilacsettingsapp.h"
 
+#if HAS_DBUS
+#include <QDBusConnection>
+#include <QDBusMessage>
+#endif
+
 extern "C" {
 Q_DECL_EXPORT QWidget* allocate_kstyle_config(QWidget* parent) {
     return new Lilac::SettingsApp(parent);
@@ -25,6 +30,13 @@ void SettingsApp::defaults() {
 void SettingsApp::save() {
     settings->setCornerRadius(ui->radiusSpin->value());
     settings->save();
+#if HAS_DBUS
+    auto msg = QDBusMessage::createSignal(
+        "/LilacStyle",
+        "com.github.zalesyc.lilacqt",
+        "settingsChanged");
+    QDBusConnection::sessionBus().send(msg);
+#endif
 }
 
 void SettingsApp::initFromSettings() {

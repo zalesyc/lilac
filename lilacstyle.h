@@ -10,10 +10,6 @@
 
 #include "lilac.h"
 
-#if HAS_SETTINGS
-#include "lilacsettings.h"
-#endif
-
 namespace Lilac {
 
 class Style : public SuperStyle {
@@ -21,12 +17,7 @@ class Style : public SuperStyle {
 
    public:
     QString name() const { return QStringLiteral("Lilac"); }
-    Style() {
-#if HAS_SETTINGS
-        config.initFromSettings(LilacSettings::self());
-#endif
-    };
-
+    Style();
     void drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget = nullptr) const override;
     void drawControl(QStyle::ControlElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget = nullptr) const override;
     void drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget = nullptr) const override;
@@ -42,6 +33,9 @@ class Style : public SuperStyle {
 
    protected:
     Lilac::Config config;
+
+   public slots:
+    void settingsChanged();
 
    private:
     struct MenuItemText {
