@@ -17,7 +17,7 @@ Screenshot: Icons: Fluent, ColorScheme: Breeze-Light/FluentDark
 
 [KStyle](https://api.kde.org/frameworks/frameworkintegration/html/classKStyle.html) provides enhanced integration with KDE Plasma. If you dont use KStyle, QCommonStyle is used. You can configure its usage during build time:
 
-- **Default behavior**: KStyle is a required dependency  
+- **Default behavior**: `OFF` (i.e. KStyle will be used)
 - **Available options**:  
   - `-DNO_KSTYLE=ON`: Doesn't use KStyle
 
@@ -27,11 +27,20 @@ Screenshot: Icons: Fluent, ColorScheme: Breeze-Light/FluentDark
 
 [KColorScheme](https://api.kde.org/frameworks/kcolorscheme/html/classKColorScheme.html) extends QPalette functionality to provide better color consistency across KDE applications.
 
-- **Default behavior**: KColorScheme is required dependency
+- **Default behavior**: `OFF` (i.e. KColorScheme will be used)
 - **Available options**:  
     `-DNO_KCOLORSCHEME=ON`: Disables KColorScheme support
 
 **Note**: KColorScheme is recommended for better color consistency, but can be disabled to reduce dependencies.
+
+#### Settings
+
+Whether to enable settings, this requires `QDbus` and `KConfig` as dependencies. 
+When enabled, two aditional targets will be created, a standalone settings app and a library to integrate with the KDE plasma systemsetings.
+
+- **Default behavior**: `OFF` (i.e. Settings will be enabled)
+- **Available options**:  
+    `-DNO_SETTINGS=ON`: Disables settings
 
 ### Installation steps:
 
@@ -80,6 +89,5 @@ The style can now be selected from system settings
 
 - Right-to-left language support  
 - Implement animations  
-- Create settings window with some options  
 - Allow for translucent menus, and maybe also translucent windows  
   
