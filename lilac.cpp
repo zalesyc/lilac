@@ -87,7 +87,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case checkBoxInside: {
             if (!state.enabled)
                 return pal.color(CGroup::Disabled, CRole::Text);
-            return isDarkMode(pal) ? QColor(129, 201, 149) : QColor(14, 156, 87);
+            return pal.color(CGroup::Normal, CRole::Accent);
         }
         case checkBoxHoverCircleChecked: {
             QColor base = getColor(pal, Color::checkBoxInside, state);
