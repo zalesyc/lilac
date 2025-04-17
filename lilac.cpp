@@ -228,6 +228,13 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return base;
         }
 
+        case comboBoxFramelessOutline: {
+            if (state.enabled && (state.hovered || state.hasFocus || state.pressed)) {
+                return getColor(pal, comboBoxOutline, state);
+            }
+            return QColor(Qt::transparent);
+        }
+
         case menuText:
         case menuBarItemText:
         case comboBoxUneditableText:

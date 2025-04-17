@@ -283,12 +283,22 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
         case CC_ComboBox:
             if (const auto combo = qstyleoption_cast<const QStyleOptionComboBox*>(opt)) {
                 state.pressed = (combo->state & State_On);
-                p->save();
-                p->setRenderHint(QPainter::Antialiasing);
-                p->setPen(getPen(combo->palette, Color::comboBoxOutline, state, 2));
-                p->setBrush(getBrush(combo->palette, Color::comboBoxBg, state));
-                p->drawRoundedRect(combo->rect.adjusted(1, 1, -1, -1), config.cornerRadius, config.cornerRadius);
-                p->restore();
+
+                bool noBackground = false;
+                if (const QWidget* parent = widget->parentWidget()) {
+                    if (parent->inherits("DolphinUrlNavigator")) {
+                        noBackground = true;
+                    }
+                }
+
+                if (!noBackground) {
+                    p->save();
+                    p->setRenderHint(QPainter::Antialiasing);
+                    p->setPen(getPen(combo->palette, combo->frame ? Color::comboBoxOutline : Color::comboBoxFramelessOutline, state, 2));
+                    p->setBrush(combo->frame ? getBrush(combo->palette, Color::comboBoxBg, state) : Qt::NoBrush);
+                    p->drawRoundedRect(combo->rect.adjusted(1, 1, -1, -1), config.cornerRadius, config.cornerRadius);
+                    p->restore();
+                }
 
                 // arrow
                 const QRect arrowAreaRect = this->subControlRect(CC_ComboBox, combo, SC_ComboBoxArrow, widget);

@@ -77,9 +77,10 @@ enum Color {
     spinBoxIndicator,             // DHP
     spinBoxIndicatorHoverCircle,  // HP
 
-    comboBoxBg,              // DHPF - pressed: menu is open
-    comboBoxOutline,         // DHPF
-    comboBoxUneditableText,  // D
+    comboBoxBg,                // DHPF - pressed: menu is open
+    comboBoxOutline,           // DHPF
+    comboBoxFramelessOutline,  // DHPF
+    comboBoxUneditableText,    // D
 
     menuText,          // D
     menuShortcutText,  // D
