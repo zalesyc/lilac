@@ -1,0 +1,6 @@
+[Misc]
+Name=Lilac
+ConfigPage=kstyle_config/libLilacSettings
+Comment=A modern Qt6 QStyle theme.
+[KDE]
+WidgetStyle=Lilac

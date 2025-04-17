@@ -3,6 +3,10 @@
 
 #pragma once
 
+#if HAS_SETTINGS
+#include "lilacsettings.h"
+#endif
+
 #include <QCommonStyle>
 #include <QPainter>
 #include <QPair>
@@ -146,108 +150,121 @@ const QPen getPen(const QPalette& pal, const Color color, const qreal penWidth =
 
 bool isDarkMode(const QPalette& pal);
 
-namespace Constants {
-/*
- * padding and margin are used acording to the css box model:
- *   padding: inside the border
- *   margin: outside the border
- *
- * vertical and horizontal padding/margin:
- *  vertical: top, bottom
- *  horizontal: left, right
- *
- * unless specified othervise, sizes are in logical pixels
- */
-constexpr int cornerRadius = 12;
-constexpr int smallArrowSize = 10;
+struct Config {
+    /*
+     * padding and margin are used acording to the css box model:
+     *   padding: inside the border
+     *   margin: outside the border
+     *
+     * vertical and horizontal padding/margin:
+     *  vertical: top, bottom
+     *  horizontal: left, right
+     *
+     * unless specified othervise, sizes are in logical pixels
+     *
+     *
+     * Constexpr variables cannot be changed, other variables may
+     * change trough the configuration system.
+     */
 
-constexpr int controlsTextVerticalPadding = 10;  // buttons, lineEdits, spinBoxes, comboboxes
+    // Configurable
+    int cornerRadius = 12;
 
-constexpr int pushButtonMenuArrowPadding = 6;  // length between the menu arrow and the right side
+    // Constants
+    static constexpr int smallArrowSize = 10;
 
-constexpr int checkBoxSize = 20;  // all checkbox values are also used for radio buttons
-constexpr int checkBoxHoverCircleSize = 34;
-constexpr int checkBoxElementSpacing = 6;  // between the indicator, icon and label; sets PM_CheckBoxLabelSpacing
+    static constexpr int controlsTextVerticalPadding = 10;  // buttons, lineEdits, spinBoxes, comboboxes
 
-constexpr int tabCloseIndicatorSize = 6;          // size of the x, the hover rect size is defined in PM_TabCloseIndicatorWidth/Height
-constexpr int tabBarStartMargin = 6;              // padding on the left/top side of the tabbar, if the tab alighnment is left, only for QTabWidget
-constexpr int tabBarMarginAboveTabs = 4;          // there is no rect for the tab position for both QTabBar and QTabWidget so the implemention is not ideal
-constexpr int tabWidgetPageAreaCornerRadius = 6;  // corner radius for the frame arount the contents of QTabWidget
-constexpr int tabHorizontalPadding = 8;           // padding between the sides of the tab and the first/last element
-constexpr int tabElementSpacing = 7;              // spacing between the inner elements of the tab
+    static constexpr int pushButtonMenuArrowPadding = 6;  // length between the menu arrow and the right side
 
-constexpr int sliderHandleHoverCircleDiameter = 32;
-constexpr int sliderHandleCircleDiameter = 12;
-constexpr int sliderTickmarksLen = 8;
+    static constexpr int checkBoxSize = 20;  // all checkbox values are also used for radio buttons
+    static constexpr int checkBoxHoverCircleSize = 34;
+    static constexpr int checkBoxElementSpacing = 6;  // between the indicator, icon and label; sets PM_CheckBoxLabelSpacing
 
-constexpr int scrollBarThickness = 18;
-constexpr int scrollBarSliderPadding = 6;  // left and right of the slider -> sets the thickness
-constexpr int scrollBarSliderPaddingHover = 4;
+    static constexpr int tabCloseIndicatorSize = 6;          // size of the x, the hover rect size is defined in PM_TabCloseIndicatorWidth/Height
+    static constexpr int tabBarStartMargin = 6;              // padding on the left/top side of the tabbar, if the tab alighnment is left, only for QTabWidget
+    static constexpr int tabBarMarginAboveTabs = 4;          // there is no rect for the tab position for both QTabBar and QTabWidget so the implemention is not ideal
+    static constexpr int tabWidgetPageAreaCornerRadius = 6;  // corner radius for the frame arount the contents of QTabWidget
+    static constexpr int tabHorizontalPadding = 8;           // padding between the sides of the tab and the first/last element
+    static constexpr int tabElementSpacing = 7;              // spacing between the inner elements of the tab
 
-constexpr int lineEditTextHorizontalPadding = 6;
-constexpr int lineEditMinWidthChars = 14;  // minimal width of lineedit: lineEditMinWidthChars * averageCharWidth
+    static constexpr int sliderHandleHoverCircleDiameter = 32;
+    static constexpr int sliderHandleCircleDiameter = 12;
+    static constexpr int sliderTickmarksLen = 8;
 
-constexpr int spinIndicatorWidth = 30;  // the width of the clickable space
-constexpr int spinIndicatorIconSize = 10;
-constexpr int spinIndicatorHoverCircleSize = 24;
-constexpr int spinMinWidthChars = lineEditMinWidthChars;
-constexpr int spinTextLeftPadding = lineEditTextHorizontalPadding;
+    static constexpr int scrollBarThickness = 18;
+    static constexpr int scrollBarSliderPadding = 6;  // left and right of the slider -> sets the thickness
+    static constexpr int scrollBarSliderPaddingHover = 4;
 
-constexpr int menuHorizontalSpacing = 8;
-constexpr int menuItemBorderRadius = 5;
-constexpr int menuItemHorizontalMargin = 5;
-constexpr int menuItemHorizontalPadding = 5;
-constexpr int menuItemVerticalPadding = 5;
-constexpr int menuSeparatorVerticalMargin = 3;
-constexpr int menuShadowSize = 6;  // the size of the shadow,the shadow is added in polish.
-constexpr int menuMargin = 7;      // transparent margin added to the menu, this margin contains the shadow and creates spacing between submenus
-constexpr int menuBorderRadius = 10;
-constexpr int menuBgOpacity = 255;  // value between 0 and 255, 0: transparent; 255: opaque
-constexpr int menuSeparatorMinLen = 5;
+    static constexpr int lineEditTextHorizontalPadding = 6;
+    static constexpr int lineEditMinWidthChars = 14;  // minimal width of lineedit: lineEditMinWidthChars * averageCharWidth
 
-constexpr int menuBarItemMinHeight = 24;  // without the margin
-constexpr int menuBarItemBorderRadius = 4;
-constexpr int menuBarItemMargin = 2;
+    static constexpr int spinIndicatorWidth = 30;  // the width of the clickable space
+    static constexpr int spinIndicatorIconSize = 10;
+    static constexpr int spinIndicatorHoverCircleSize = 24;
+    static constexpr int spinMinWidthChars = lineEditMinWidthChars;
+    static constexpr int spinTextLeftPadding = lineEditTextHorizontalPadding;
 
-constexpr int comboArrowWidth = 30;  // the part that is clickable, the indicator is smaller
-constexpr int comboMinWidthChars = lineEditMinWidthChars;
-constexpr int comboTextLeftPadding = lineEditTextHorizontalPadding;  // used left of icon and left of text
-constexpr int comboPopupOffset = 4;
+    static constexpr int menuHorizontalSpacing = 8;
+    static constexpr int menuItemBorderRadius = 5;
+    static constexpr int menuItemHorizontalMargin = 5;
+    static constexpr int menuItemHorizontalPadding = 5;
+    static constexpr int menuItemVerticalPadding = 5;
+    static constexpr int menuSeparatorVerticalMargin = 3;
+    static constexpr int menuShadowSize = 6;  // the size of the shadow,the shadow is added in polish.
+    static constexpr int menuMargin = 7;      // transparent margin added to the menu, this margin contains the shadow and creates spacing between submenus
+    static constexpr int menuBorderRadius = 10;
+    static constexpr int menuBgOpacity = 255;  // value between 0 and 255, 0: transparent; 255: opaque
+    static constexpr int menuSeparatorMinLen = 5;
 
-constexpr int toolBtnMenuArrowSize = 8;              // the small arrow in the bottom left corner
-constexpr QPoint toolBtnArrowOffset = QPoint(5, 5);  // offset from bottomRight of the widget, for the small arrow in the bottom left
-constexpr int toolBtnLabelVerticalPadding = controlsTextVerticalPadding;
-constexpr int toolBtnLabelHorizontalPadding = 6;
-constexpr int toolbtnLabelSpacing = 4;        // between the icon and text
-constexpr int toolbtnArrowSectionWidth = 20;  // width of the separated arrow section on the right, poppupMode: MenuButtonPopup
-constexpr int toolBtnMenuSeparatorVerticalPadding = 4;
+    static constexpr int menuBarItemMinHeight = 24;  // without the margin
+    static constexpr int menuBarItemBorderRadius = 4;
+    static constexpr int menuBarItemMargin = 2;
 
-constexpr int toolBarHandleVerticalPadding = 6;     // vertical when toolbar is horizontal
-constexpr int toolBarSeparatorVerticalPadding = 3;  // vertical when toolbar is horizontal
-constexpr int toolBarHandleHorizontalPadding = 2;   // horizontal when toolbar is horizontal
-constexpr int toolBarHandleLineSpacing = 2;
+    static constexpr int comboArrowWidth = 30;  // the part that is clickable, the indicator is smaller
+    static constexpr int comboMinWidthChars = lineEditMinWidthChars;
+    static constexpr int comboTextLeftPadding = lineEditTextHorizontalPadding;  // used left of icon and left of text
+    static constexpr int comboPopupOffset = 4;
 
-constexpr int progressBarLabelHorizontalPadding = 3;  // around the label, horizontal when the progressbar is horizontal
-constexpr int progressBarThickness = 6;
+    static constexpr int toolBtnMenuArrowSize = 8;              // the small arrow in the bottom left corner
+    static constexpr QPoint toolBtnArrowOffset = QPoint(5, 5);  // offset from bottomRight of the widget, for the small arrow in the bottom left
+    static constexpr int toolBtnLabelVerticalPadding = controlsTextVerticalPadding;
+    static constexpr int toolBtnLabelHorizontalPadding = 6;
+    static constexpr int toolbtnLabelSpacing = 4;        // between the icon and text
+    static constexpr int toolbtnArrowSectionWidth = 20;  // width of the separated arrow section on the right, poppupMode: MenuButtonPopup
+    static constexpr int toolBtnMenuSeparatorVerticalPadding = 4;
 
-constexpr int treeIndicatorArrowSize = 10;
-constexpr int treeIndicatorArrowLineMargin = 4;   // the distance between the arrow and start of the line
-constexpr int treeIndicatorLastCornerRadius = 5;  // the radius of the curve on the last indicator
+    static constexpr int toolBarHandleVerticalPadding = 6;     // vertical when toolbar is horizontal
+    static constexpr int toolBarSeparatorVerticalPadding = 3;  // vertical when toolbar is horizontal
+    static constexpr int toolBarHandleHorizontalPadding = 2;   // horizontal when toolbar is horizontal
+    static constexpr int toolBarHandleLineSpacing = 2;
 
-constexpr int groupBoxCheckSize = checkBoxSize;
-constexpr int groupBoxTextCheckSpacing = 8;                                // spacing between the label and the checkbox
-constexpr int groupBoxHeaderHorizontalPadding = 5;                         // space between the end of the line and the label/check
-constexpr int groupBoxLabelOffset = groupBoxHeaderHorizontalPadding + 10;  // length between the side of the groupbox and the label/check
+    static constexpr int progressBarLabelHorizontalPadding = 3;  // around the label, horizontal when the progressbar is horizontal
+    static constexpr int progressBarThickness = 6;
 
-constexpr int dialHandleDiameter = 12;
-constexpr int dialHandleHoverCircleDiameter = 20;
+    static constexpr int treeIndicatorArrowSize = 10;
+    static constexpr int treeIndicatorArrowLineMargin = 4;   // the distance between the arrow and start of the line
+    static constexpr int treeIndicatorLastCornerRadius = 5;  // the radius of the curve on the last indicator
 
-constexpr int dialRangeNonWaraping = 300;  // degrees
+    static constexpr int groupBoxCheckSize = checkBoxSize;
+    static constexpr int groupBoxTextCheckSpacing = 8;                                // spacing between the label and the checkbox
+    static constexpr int groupBoxHeaderHorizontalPadding = 5;                         // space between the end of the line and the label/check
+    static constexpr int groupBoxLabelOffset = groupBoxHeaderHorizontalPadding + 10;  // length between the side of the groupbox and the label/check
 
-constexpr int dockHeaderLabelHorizontalPadding = cornerRadius / 2;
-constexpr int dockHeaderControlsHeight = 12;  // for the close and float buttons
+    static constexpr int dialHandleDiameter = 12;
+    static constexpr int dialHandleHoverCircleDiameter = 20;
 
-constexpr int tooltipOpacity = 235;
-}  // namespace Constants
+    static constexpr int dialRangeNonWaraping = 300;  // degrees
+
+    static constexpr int dockHeaderLabelHorizontalPadding = 6;
+    static constexpr int dockHeaderControlsHeight = 12;  // for the close and float buttons
+
+    static constexpr int tooltipOpacity = 235;
+
+    // methods
+#if HAS_SETTINGS
+    void initFromSettings(LilacSettings* settings);
+#endif
+};
 
 }  // namespace Lilac

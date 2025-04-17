@@ -17,7 +17,7 @@ class Style : public SuperStyle {
 
    public:
     QString name() const { return QStringLiteral("Lilac"); }
-
+    Style();
     void drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget = nullptr) const override;
     void drawControl(QStyle::ControlElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget = nullptr) const override;
     void drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget = nullptr) const override;
@@ -31,16 +31,22 @@ class Style : public SuperStyle {
     QRect subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex* opt, QStyle::SubControl element, const QWidget* widget = nullptr) const override;
     QSize sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, const QSize& contentsSize, const QWidget* widget = nullptr) const override;
 
+   protected:
+    Lilac::Config config;
+
+   public slots:
+    void settingsChanged();
+
    private:
     struct MenuItemText {
         QString label = "";
         QString shortcut = "";
     };
-    static const void sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptionSlider* slider, const QRect& tickmarksRect, const int sliderLen, const int interval);
-    static const MenuItemText menuItemGetText(const QStyleOptionMenuItem* menu);
-    const int scrollbarGetSliderLength(const QStyleOptionSlider* bar) const;
-    const int getTextFlags(const QStyleOption* opt) const;
-    static QRect tabBarGetTabRect(const QStyleOptionTab* tab);
-    static const bool tabIsHorizontal(const QTabBar::Shape& tabShape);
+    static void sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptionSlider* slider, const QRect& tickmarksRect, const int sliderLen, const int interval);
+    static MenuItemText menuItemGetText(const QStyleOptionMenuItem* menu);
+    int scrollbarGetSliderLength(const QStyleOptionSlider* bar) const;
+    int getTextFlags(const QStyleOption* opt) const;
+    QRect tabBarGetTabRect(const QStyleOptionTab* tab) const;
+    static bool tabIsHorizontal(const QTabBar::Shape& tabShape);
 };
 }  // namespace Lilac

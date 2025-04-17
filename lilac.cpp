@@ -246,7 +246,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 
         case menuBg: {
             QColor base = pal.color(CGroup::Normal, CRole::AlternateBase);
-            base.setAlpha(Constants::menuBgOpacity);
+            base.setAlpha(Config::menuBgOpacity);
             return base;
         }
 
@@ -379,7 +379,7 @@ static QColor getColorFromKColorScheme(const QPalette& pal, const Color color, c
 
         case menuBg: {
             QColor base = KColorScheme(CGroup::Normal, KCSet::Window).background(KBgRole::AlternateBackground).color();
-            base.setAlpha(Constants::menuBgOpacity);
+            base.setAlpha(Config::menuBgOpacity);
             return base;
         }
 
@@ -392,7 +392,7 @@ static QColor getColorFromKColorScheme(const QPalette& pal, const Color color, c
 
         case tooltipBg: {
             auto base = KColorScheme(CGroup::Normal, KCSet::Tooltip).background(KBgRole::NormalBackground).color();
-            base.setAlpha(Constants::tooltipOpacity);
+            base.setAlpha(Config::tooltipOpacity);
             return base;
         }
 
@@ -431,5 +431,11 @@ QColor lessContrastingBg(const QPalette& pal, const CGroup cgroup) {
 CGroup groupFromState(const State& state) {
     return state.enabled ? CGroup::Active : CGroup::Disabled;
 }
+
+#if HAS_SETTINGS
+void Config::initFromSettings(LilacSettings* settings) {
+    cornerRadius = settings->cornerRadius();
+}
+#endif
 
 }  // namespace Lilac

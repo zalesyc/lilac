@@ -4,6 +4,10 @@
 #include "lilacstyle.h"
 #include "lilac.h"
 
+#if HAS_SETTINGS
+#include "lilacsettings.h"
+#endif
+
 #include <QDockWidget>
 #include <QGraphicsDropShadowEffect>
 #include <QMenu>
@@ -13,7 +17,39 @@
 #include <QStyleFactory>
 #include <QtMath>
 
+#if HAS_DBUS
+#include <QDBusConnection>
+#endif
+
 namespace Lilac {
+
+Style::Style() {
+    settingsChanged();
+#if HAS_DBUS
+    auto dbus = QDBusConnection::sessionBus();
+    dbus.connect(
+        "",
+        "/LilacStyle",
+        "com.github.zalesyc.lilacqt",
+        "settingsChanged",
+        this,
+        SLOT(settingsChanged()));
+    dbus.connect(
+        "",
+        "/KGlobalSettings",
+        "org.kde.KGlobalSettings",
+        "notifyChange",
+        this,
+        SLOT(settingsChanged()));
+    dbus.connect(
+        "",
+        "/KWin",
+        "org.kde.KWin",
+        "reloadConfig",
+        this,
+        SLOT(settingsChanged()));
+#endif
+};
 
 void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget) const {
     Lilac::State state(opt->state);  // this had to be defined as Lilac::State because just State would conflict with State from QStyle
@@ -45,8 +81,8 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 const QRect grooveRect = subControlRect(QStyle::CC_Slider, slider, QStyle::SC_SliderGroove, widget);
                 const QRect handleHoverRect = subControlRect(QStyle::CC_Slider, slider, QStyle::SC_SliderHandle, widget);
                 QRect handleRect;
-                handleRect.setWidth(Constants::sliderHandleCircleDiameter);
-                handleRect.setHeight(Constants::sliderHandleCircleDiameter);
+                handleRect.setWidth(config.sliderHandleCircleDiameter);
+                handleRect.setHeight(config.sliderHandleCircleDiameter);
                 handleRect.moveCenter(handleHoverRect.center());
 
                 const int len = slider->orientation == Qt::Horizontal ? handleHoverRect.width() : handleHoverRect.height();
@@ -204,7 +240,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                     p->setRenderHint(QPainter::Antialiasing);
                     p->setPen(getPen(spin->palette, Color::spinBoxOutline, state, 2));
                     p->setBrush(getBrush(spin->palette, Color::spinBoxBg, state));
-                    p->drawRoundedRect(spin->rect.adjusted(1, 1, -1, -1), Constants::cornerRadius, Constants::cornerRadius);
+                    p->drawRoundedRect(spin->rect.adjusted(1, 1, -1, -1), config.cornerRadius, config.cornerRadius);
                     p->restore();
                 }
 
@@ -251,12 +287,12 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 p->setRenderHint(QPainter::Antialiasing);
                 p->setPen(getPen(combo->palette, Color::comboBoxOutline, state, 2));
                 p->setBrush(getBrush(combo->palette, Color::comboBoxBg, state));
-                p->drawRoundedRect(combo->rect.adjusted(1, 1, -1, -1), Constants::cornerRadius, Constants::cornerRadius);
+                p->drawRoundedRect(combo->rect.adjusted(1, 1, -1, -1), config.cornerRadius, config.cornerRadius);
                 p->restore();
 
                 // arrow
                 const QRect arrowAreaRect = this->subControlRect(CC_ComboBox, combo, SC_ComboBoxArrow, widget);
-                const int arrowSize = Constants::smallArrowSize;
+                const int arrowSize = config.smallArrowSize;
                 QStyleOption arrowOpt(*combo);
                 arrowOpt.rect = QRect(0, 0, arrowSize, arrowSize);
                 arrowOpt.rect.moveCenter(arrowAreaRect.center());
@@ -281,10 +317,10 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 QStyleOptionToolButton toolOpt = *btn;
 
                 // this line cannot be moved into CE_ToolButtonLabel, because it creates a bug in KMultiTabBar
-                toolOpt.rect = buttonRect.adjusted(Constants::toolBtnLabelHorizontalPadding,
-                                                   Constants::toolBtnLabelVerticalPadding,
-                                                   -Constants::toolBtnLabelHorizontalPadding,
-                                                   -Constants::toolBtnLabelVerticalPadding);
+                toolOpt.rect = buttonRect.adjusted(config.toolBtnLabelHorizontalPadding,
+                                                   config.toolBtnLabelVerticalPadding,
+                                                   -config.toolBtnLabelHorizontalPadding,
+                                                   -config.toolBtnLabelVerticalPadding);
                 drawControl(CE_ToolButtonLabel, &toolOpt, p, widget);
 
                 toolOpt.rect = buttonRect;
@@ -292,13 +328,13 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                     const QRect menuRect = subControlRect(control, btn, SC_ToolButtonMenu, widget);
                     toolOpt.rect = menuRect;
                     drawPrimitive(PE_IndicatorButtonDropDown, &toolOpt, p, widget);
-                    toolOpt.rect = QRect(0, 0, Constants::smallArrowSize, Constants::smallArrowSize);
+                    toolOpt.rect = QRect(0, 0, config.smallArrowSize, config.smallArrowSize);
                     toolOpt.rect.moveCenter(menuRect.center());
                     drawPrimitive(PE_IndicatorArrowDown, &toolOpt, p, widget);
 
                 } else if (btn->features & QStyleOptionToolButton::HasMenu) {
-                    toolOpt.rect = QRect(0, 0, Constants::toolBtnMenuArrowSize, Constants::toolBtnMenuArrowSize);
-                    toolOpt.rect.moveBottomRight(buttonRect.bottomRight() - Constants::toolBtnArrowOffset);
+                    toolOpt.rect = QRect(0, 0, config.toolBtnMenuArrowSize, config.toolBtnMenuArrowSize);
+                    toolOpt.rect.moveBottomRight(buttonRect.bottomRight() - config.toolBtnArrowOffset);
                     drawPrimitive(PE_IndicatorArrowDown, &toolOpt, p, widget);
                 }
                 return;
@@ -330,14 +366,14 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 if (box->subControls & SC_GroupBoxFrame) {
                     QRect clipRect;
                     if (hasCheck) {
-                        clipRect.setTopLeft(checkRect.topLeft() - QPoint(Constants::groupBoxHeaderHorizontalPadding, 0));
+                        clipRect.setTopLeft(checkRect.topLeft() - QPoint(config.groupBoxHeaderHorizontalPadding, 0));
                     } else if (hasLabel) {
-                        clipRect.setTopLeft(labelRect.topLeft() - QPoint(Constants::groupBoxHeaderHorizontalPadding, 0));
+                        clipRect.setTopLeft(labelRect.topLeft() - QPoint(config.groupBoxHeaderHorizontalPadding, 0));
                     }
                     if (hasLabel) {
-                        clipRect.setBottomRight(labelRect.bottomRight() + QPoint(Constants::groupBoxHeaderHorizontalPadding, 0));
+                        clipRect.setBottomRight(labelRect.bottomRight() + QPoint(config.groupBoxHeaderHorizontalPadding, 0));
                     } else if (hasCheck) {
-                        clipRect.setBottomRight(checkRect.bottomRight() + QPoint(Constants::groupBoxHeaderHorizontalPadding, 0));
+                        clipRect.setBottomRight(checkRect.bottomRight() + QPoint(config.groupBoxHeaderHorizontalPadding, 0));
                     }
 
                     QStyleOptionFrame frameOpt;
@@ -370,20 +406,20 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                  */
                 const QRect groove = subControlRect(CC_Dial, dial, SC_DialGroove, widget);
 
-                const int arcLen = dial->dialWrapping ? 360 : Constants::dialRangeNonWaraping;  // length in degrees, of the line
+                const int arcLen = dial->dialWrapping ? 360 : config.dialRangeNonWaraping;  // length in degrees, of the line
                 const int startAngle = (360 - arcLen) / 2;
-                const qreal dialRadius = (groove.width() - Constants::dialHandleHoverCircleDiameter) / 2;
+                const qreal dialRadius = (groove.width() - config.dialHandleHoverCircleDiameter) / 2;
                 const int value = sliderPositionFromValue(dial->minimum, dial->maximum, dial->sliderPosition, arcLen, dial->upsideDown);
                 const qreal handleX = qSin(qDegreesToRadians(qreal(startAngle + value))) * dialRadius;  // this x and y is for a circle with
                 const qreal handleY = qCos(qDegreesToRadians(qreal(startAngle + value))) * dialRadius;  // the centre at 0,0 and radius radius
 
                 const QRectF handleHover(groove.left() + dialRadius + handleX,
                                          groove.top() + dialRadius + handleY,
-                                         Constants::dialHandleHoverCircleDiameter,
-                                         Constants::dialHandleHoverCircleDiameter);
+                                         config.dialHandleHoverCircleDiameter,
+                                         config.dialHandleHoverCircleDiameter);
 
-                const QRect slider = groove.adjusted(Constants::dialHandleHoverCircleDiameter / 2, Constants::dialHandleHoverCircleDiameter / 2,
-                                                     -Constants::dialHandleHoverCircleDiameter / 2, -Constants::dialHandleHoverCircleDiameter / 2);
+                const QRect slider = groove.adjusted(config.dialHandleHoverCircleDiameter / 2, config.dialHandleHoverCircleDiameter / 2,
+                                                     -config.dialHandleHoverCircleDiameter / 2, -config.dialHandleHoverCircleDiameter / 2);
 
                 p->save();
                 p->setRenderHint(QPainter::Antialiasing);
@@ -403,7 +439,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
 
                 p->setPen(Qt::NoPen);
                 p->setBrush(getBrush(dial->palette, Color::dialHandle, state));
-                QRectF handle(0, 0, Constants::dialHandleDiameter, Constants::dialHandleDiameter);
+                QRectF handle(0, 0, config.dialHandleDiameter, config.dialHandleDiameter);
                 handle.moveCenter(handleHover.center());
                 p->drawEllipse(handle);
 
@@ -432,9 +468,9 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
                 if (btn->features & QStyleOptionButton::HasMenu) {
                     QStyleOption menuOpt = *btn;
-                    menuOpt.rect = QRect(btn->rect.right() - Constants::smallArrowSize - Constants::pushButtonMenuArrowPadding,
+                    menuOpt.rect = QRect(btn->rect.right() - config.smallArrowSize - config.pushButtonMenuArrowPadding,
                                          btn->rect.top(),
-                                         Constants::smallArrowSize,
+                                         config.smallArrowSize,
                                          btn->rect.height());
                     drawPrimitive(PE_IndicatorArrowDown, &menuOpt, p, widget);
                 }
@@ -469,7 +505,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 if (hasText) {
                     QRect textRect = btn->rect;
                     if (hasIcon) {
-                        textRect.setLeft(btn->rect.left() + btn->iconSize.width() + Constants::checkBoxElementSpacing);
+                        textRect.setLeft(btn->rect.left() + btn->iconSize.width() + config.checkBoxElementSpacing);
                     }
                     p->save();
                     p->setPen(getPen(btn->palette, Color::checkBoxText, state));
@@ -521,8 +557,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QTabBar::TriangularNorth:
                     case QTabBar::RoundedSouth:
                     case QTabBar::TriangularSouth:
-                        cornerRectSize = qMin(Constants::cornerRadius * 2.0,  // the corner radius is still btnRadius,
-                                              qMin(rect.width(),              // it has to be *2 due to implementation
+                        cornerRectSize = qMin(config.cornerRadius * 2.0,  // the corner radius is still btnRadius,
+                                              qMin(rect.width(),          // it has to be *2 due to implementation
                                                    rect.height() * 2));
 
                         break;
@@ -531,7 +567,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QTabBar::TriangularEast:
                     case QTabBar::RoundedWest:
                     case QTabBar::TriangularWest:
-                        cornerRectSize = qMin(Constants::cornerRadius * 2.0,
+                        cornerRectSize = qMin(config.cornerRadius * 2.0,
                                               qMin(rect.height(),
                                                    rect.width() * 2));
                         break;
@@ -544,13 +580,13 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                         rect.adjust(0.5, 0.5, -0.5, isSelected ? 0 : -1.5);
 
                         path.moveTo(rect.bottomLeft());
-                        path.lineTo(rect.left(), rect.top() + Constants::cornerRadius);
+                        path.lineTo(rect.left(), rect.top() + config.cornerRadius);
                         path.arcTo(QRectF(
                                        rect.topLeft(),
                                        QPointF(rect.left() + cornerRectSize, rect.top() + cornerRectSize)),
                                    180,
                                    -90);
-                        path.lineTo(rect.right() - Constants::cornerRadius, rect.top());
+                        path.lineTo(rect.right() - config.cornerRadius, rect.top());
                         path.arcTo(QRectF(
                                        rect.topRight(),
                                        QPointF(rect.right() - cornerRectSize, rect.top() + cornerRectSize)),
@@ -564,13 +600,13 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                         rect.adjust(0.5, isSelected ? 0 : 1.5, -0.5, -0.5);
 
                         path.moveTo(rect.topLeft());
-                        path.lineTo(rect.left(), rect.bottom() - Constants::cornerRadius);
+                        path.lineTo(rect.left(), rect.bottom() - config.cornerRadius);
                         path.arcTo(QRectF(
                                        rect.bottomLeft(),
                                        QPointF(rect.left() + cornerRectSize, rect.bottom() - cornerRectSize)),
                                    180,
                                    -90);
-                        path.lineTo(rect.right() - Constants::cornerRadius, rect.bottom());
+                        path.lineTo(rect.right() - config.cornerRadius, rect.bottom());
                         path.arcTo(QRectF(
                                        rect.bottomRight(),
                                        QPointF(rect.right() - cornerRectSize, rect.bottom() - cornerRectSize)),
@@ -584,13 +620,13 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                         rect.adjust(0.5, 0.5, isSelected ? 0 : -1.5, -0.5);
 
                         path.moveTo(rect.topRight());
-                        path.lineTo(rect.left() + Constants::cornerRadius, rect.top());
+                        path.lineTo(rect.left() + config.cornerRadius, rect.top());
                         path.arcTo(QRectF(
                                        rect.topLeft(),
                                        QPointF(rect.left() + cornerRectSize, rect.top() + cornerRectSize)),
                                    90,
                                    90);
-                        path.lineTo(rect.left(), rect.bottom() - Constants::cornerRadius);
+                        path.lineTo(rect.left(), rect.bottom() - config.cornerRadius);
                         path.arcTo(QRectF(
                                        rect.bottomLeft(),
                                        QPointF(rect.left() + cornerRectSize, rect.bottom() - cornerRectSize)),
@@ -604,13 +640,13 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                         rect.adjust(isSelected ? 0 : 1.5, 0.5, -0.5, -0.5);
 
                         path.moveTo(rect.topLeft());
-                        path.lineTo(rect.right() - Constants::cornerRadius, rect.top());
+                        path.lineTo(rect.right() - config.cornerRadius, rect.top());
                         path.arcTo(QRectF(
                                        rect.topRight(),
                                        QPointF(rect.right() - cornerRectSize, rect.top() + cornerRectSize)),
                                    90,
                                    90);
-                        path.lineTo(rect.right(), rect.bottom() - Constants::cornerRadius);
+                        path.lineTo(rect.right(), rect.bottom() - config.cornerRadius);
                         path.arcTo(QRectF(
                                        rect.bottomRight(),
                                        QPointF(rect.right() - cornerRectSize, rect.bottom() - cornerRectSize)),
@@ -645,15 +681,15 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     iconRect.setHeight(qMin(tab->iconSize.height(), tab->rect.height()));
                     iconRect.moveCenter(tab->rect.center());
 
-                    int offset = Constants::tabHorizontalPadding;
+                    int offset = config.tabHorizontalPadding;
                     if (tabIsHorizontal(tab->shape)) {
                         if (tab->leftButtonSize.isValid())
-                            offset += (tab->leftButtonSize.width() + Constants::tabElementSpacing);
+                            offset += (tab->leftButtonSize.width() + config.tabElementSpacing);
 
                         iconRect.moveLeft(tab->rect.left() + offset);
                     } else {
                         if (tab->leftButtonSize.isValid())
-                            offset += (tab->leftButtonSize.height() + Constants::tabElementSpacing);
+                            offset += (tab->leftButtonSize.height() + config.tabElementSpacing);
 
                         if (tab->shape == QTabBar::RoundedWest || tab->shape == QTabBar::TriangularWest) {
                             iconRect.moveBottom(tab->rect.bottom() - offset);
@@ -706,7 +742,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
         case CE_ScrollBarSlider: {
             QRect rect;
-            const int gapSize = (state.hovered && state.enabled) ? Constants::scrollBarSliderPaddingHover : Constants::scrollBarSliderPadding;
+            const int gapSize = (state.hovered && state.enabled) ? config.scrollBarSliderPaddingHover : config.scrollBarSliderPadding;
             if (opt->state & QStyle::State_Horizontal) {
                 rect = opt->rect.adjusted(0, gapSize + 1, 0, -gapSize);  // the +1 is for the separator line above the hovered separator width
             } else {
@@ -732,29 +768,29 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QStyleOptionMenuItem::SubMenu: {
                         state.hovered = menu->state & State_Selected;
 
-                        const QRect contentsRect = menu->rect.adjusted(Constants::menuItemHorizontalMargin + Constants::menuItemHorizontalPadding,
+                        const QRect contentsRect = menu->rect.adjusted(config.menuItemHorizontalMargin + config.menuItemHorizontalPadding,
                                                                        0,
-                                                                       -(Constants::menuItemHorizontalMargin + Constants::menuItemHorizontalPadding),
+                                                                       -(config.menuItemHorizontalMargin + config.menuItemHorizontalPadding),
                                                                        0);
 
                         // hover rect
                         if (state.hovered && state.enabled) {
-                            const QRect hoverRect = menu->rect.adjusted(Constants::menuItemHorizontalMargin,
+                            const QRect hoverRect = menu->rect.adjusted(config.menuItemHorizontalMargin,
                                                                         0,
-                                                                        -(Constants::menuItemHorizontalMargin),
+                                                                        -(config.menuItemHorizontalMargin),
                                                                         0);
                             p->save();
                             p->setRenderHints(QPainter::Antialiasing);
                             p->setPen(Qt::NoPen);
                             p->setBrush(getBrush(menu->palette, Color::menuItemHoverBg, state));
-                            p->drawRoundedRect(hoverRect, Constants::menuItemBorderRadius, Constants::menuItemBorderRadius);
+                            p->drawRoundedRect(hoverRect, config.menuItemBorderRadius, config.menuItemBorderRadius);
                             p->restore();
                         }
 
                         // checks
                         int checkSize = 0;
                         if (menu->menuHasCheckableItems || menu->checkType != QStyleOptionMenuItem::NotCheckable)
-                            checkSize = qMin(Constants::checkBoxSize, contentsRect.height());
+                            checkSize = qMin(config.checkBoxSize, contentsRect.height());
 
                         if (menu->checkType != QStyleOptionMenuItem::NotCheckable) {
                             QStyleOption checkOpt(*menu);
@@ -773,7 +809,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
                         // icon
                         if (!menu->icon.isNull()) {
-                            const QRect iconRect(checkSize > 0 ? contentsRect.left() + checkSize + Constants::menuHorizontalSpacing : contentsRect.left(),
+                            const QRect iconRect(checkSize > 0 ? contentsRect.left() + checkSize + config.menuHorizontalSpacing : contentsRect.left(),
                                                  contentsRect.top(),
                                                  menu->maxIconWidth,
                                                  contentsRect.height());
@@ -798,11 +834,11 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                             if (!text.label.isEmpty()) {
                                 const int rightElementSize = menu->menuItemType == QStyleOptionMenuItem::SubMenu ?
                                                                  (text.shortcut.isEmpty() ?
-                                                                      qMax(menu->reservedShortcutWidth, Constants::smallArrowSize) :
-                                                                      (menu->reservedShortcutWidth + Constants::smallArrowSize + Constants::menuHorizontalSpacing)) :
+                                                                      qMax(menu->reservedShortcutWidth, config.smallArrowSize) :
+                                                                      (menu->reservedShortcutWidth + config.smallArrowSize + config.menuHorizontalSpacing)) :
                                                                  menu->reservedShortcutWidth;
-                                int leftElementsSize = (menu->maxIconWidth > 0 ? menu->maxIconWidth + Constants::menuHorizontalSpacing : 0) +
-                                                       (checkSize > 0 ? checkSize + Constants::menuHorizontalSpacing : 0);
+                                int leftElementsSize = (menu->maxIconWidth > 0 ? menu->maxIconWidth + config.menuHorizontalSpacing : 0) +
+                                                       (checkSize > 0 ? checkSize + config.menuHorizontalSpacing : 0);
 
                                 const QRect labelRect(QPoint(contentsRect.left() + leftElementsSize, contentsRect.top()), QPoint(contentsRect.right() - rightElementSize, contentsRect.bottom()));
 
@@ -814,7 +850,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                             if (!text.shortcut.isEmpty()) {
                                 QRect shortcutRect(0, contentsRect.top(), menu->reservedShortcutWidth, contentsRect.height());
                                 if (menu->menuItemType == QStyleOptionMenuItem::SubMenu) {
-                                    shortcutRect.moveRight(contentsRect.right() - Constants::smallArrowSize - Constants::menuHorizontalSpacing);
+                                    shortcutRect.moveRight(contentsRect.right() - config.smallArrowSize - config.menuHorizontalSpacing);
                                 } else {
                                     shortcutRect.moveRight(contentsRect.right());
                                 }
@@ -827,7 +863,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                         // sub menu arrow
                         if (menu->menuItemType == QStyleOptionMenuItem::SubMenu) {
                             QStyleOption arrowOpt(*menu);
-                            arrowOpt.rect = QRect(0, contentsRect.top(), Constants::smallArrowSize, contentsRect.height());
+                            arrowOpt.rect = QRect(0, contentsRect.top(), config.smallArrowSize, contentsRect.height());
                             arrowOpt.rect.moveRight(contentsRect.right());
                             drawPrimitive(QStyle::PE_IndicatorArrowRight, &arrowOpt, p, widget);
                         }
@@ -839,16 +875,16 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
                         QRect lineRect;
                         if (text.label.isEmpty()) {
-                            lineRect = menu->rect.adjusted(Constants::menuItemHorizontalMargin, 0, -Constants::menuItemHorizontalMargin, 0);
+                            lineRect = menu->rect.adjusted(config.menuItemHorizontalMargin, 0, -config.menuItemHorizontalMargin, 0);
                         } else {
                             const QSize labelSize = menu->fontMetrics.size((Qt::TextShowMnemonic | Qt::AlignLeft | Qt::AlignVCenter), text.label);
-                            const QRect labelRect(menu->rect.left() + Constants::menuItemHorizontalMargin, menu->rect.top(), labelSize.width(), menu->rect.height());
+                            const QRect labelRect(menu->rect.left() + config.menuItemHorizontalMargin, menu->rect.top(), labelSize.width(), menu->rect.height());
                             p->setPen(getPen(menu->palette, Color::menuText));
                             p->setFont(menu->font);
                             p->drawText(labelRect, (getTextFlags(menu) | Qt::AlignLeft | Qt::AlignVCenter), menu->text);
 
-                            lineRect = QRect(QPoint(labelRect.right() + Constants::menuHorizontalSpacing, menu->rect.top()),
-                                             QPoint(menu->rect.right() - Constants::menuItemHorizontalMargin, menu->rect.bottom()));
+                            lineRect = QRect(QPoint(labelRect.right() + config.menuHorizontalSpacing, menu->rect.top()),
+                                             QPoint(menu->rect.right() - config.menuItemHorizontalMargin, menu->rect.bottom()));
                         }
 
                         p->setPen(getPen(menu->palette, Color::menuSeparator, state));
@@ -872,8 +908,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 state.hovered = bar->state & State_Selected;
 
                 QRect contentsRect(0, 0,
-                                   bar->rect.width() - (Constants::menuBarItemMargin * 2),
-                                   bar->rect.height() - (Constants::menuBarItemMargin * 2));
+                                   bar->rect.width() - (config.menuBarItemMargin * 2),
+                                   bar->rect.height() - (config.menuBarItemMargin * 2));
                 contentsRect.moveCenter(bar->rect.center());
 
                 int iconWidth = 0;
@@ -889,14 +925,14 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 if (state.hovered || state.pressed) {
                     p->setPen(Qt::NoPen);
                     p->setBrush(getBrush(bar->palette, Color::menuBarItemHoverBg, state));
-                    p->drawRoundedRect(contentsRect, Constants::menuBarItemBorderRadius, Constants::menuBarItemBorderRadius);
+                    p->drawRoundedRect(contentsRect, config.menuBarItemBorderRadius, config.menuBarItemBorderRadius);
                 }
 
                 p->setPen(getPen(bar->palette, Color::menuBarItemText));
                 p->setBrush(getBrush(bar->palette, Color::menuBarItemText));
 
                 if (iconWidth > 0) {
-                    const QRect iconRect(contentsRect.left() + Constants::menuItemHorizontalPadding,
+                    const QRect iconRect(contentsRect.left() + config.menuItemHorizontalPadding,
                                          contentsRect.top(),
                                          iconWidth,
                                          contentsRect.height());
@@ -913,9 +949,9 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 if (!bar->text.isEmpty()) {
                     QRect labelRect(0, contentsRect.top(), 0, contentsRect.height());
                     labelRect.setLeft(
-                        contentsRect.left() + Constants::menuItemHorizontalPadding + (iconWidth > 0 ? iconWidth + Constants::menuHorizontalSpacing : 0));
+                        contentsRect.left() + config.menuItemHorizontalPadding + (iconWidth > 0 ? iconWidth + config.menuHorizontalSpacing : 0));
                     labelRect.setRight(
-                        contentsRect.right() - Constants::menuItemHorizontalPadding);
+                        contentsRect.right() - config.menuItemHorizontalPadding);
                     p->drawText(labelRect, (Qt::AlignLeft | Qt::AlignVCenter | getTextFlags(bar) | Qt::TextSingleLine), bar->text);
                 }
                 p->restore();
@@ -933,7 +969,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
         case CE_ComboBoxLabel:
             if (const auto* combo = qstyleoption_cast<const QStyleOptionComboBox*>(opt)) {
-                const QRect labelRect = combo->rect.adjusted(Constants::comboTextLeftPadding, 0, -Constants::comboArrowWidth, 0);
+                const QRect labelRect = combo->rect.adjusted(config.comboTextLeftPadding, 0, -config.comboArrowWidth, 0);
                 const bool hasIcon = !combo->currentIcon.isNull() && combo->iconSize.isValid();
                 if (hasIcon) {
                     QRect iconRect(QPoint(0, 0), combo->iconSize);
@@ -947,7 +983,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
                 if (!combo->currentText.isEmpty() && !combo->editable) {
                     QRect textRect(labelRect);
-                    textRect.setLeft(labelRect.left() + (hasIcon ? combo->iconSize.width() + Constants::lineEditTextHorizontalPadding : 0));
+                    textRect.setLeft(labelRect.left() + (hasIcon ? combo->iconSize.width() + config.lineEditTextHorizontalPadding : 0));
 
                     p->save();
                     p->setPen(getPen(combo->palette, Lilac::comboBoxUneditableText));
@@ -983,11 +1019,11 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case Qt::ToolButtonTextBesideIcon:
                     case Qt::ToolButtonFollowStyle:
                         iconRect = QRect(btn->rect.left(), btn->rect.top(), btn->iconSize.width(), btn->rect.height());
-                        textRect = QRect(QPoint(iconRect.right() + Constants::toolbtnLabelSpacing, btn->rect.top()), btn->rect.bottomRight());
+                        textRect = QRect(QPoint(iconRect.right() + config.toolbtnLabelSpacing, btn->rect.top()), btn->rect.bottomRight());
                         break;
                     case Qt::ToolButtonTextUnderIcon:
                         iconRect = QRect(btn->rect.left(), btn->rect.top(), btn->rect.width(), btn->iconSize.height());
-                        textRect = QRect(QPoint(btn->rect.left(), iconRect.bottom() + Constants::toolbtnLabelSpacing), btn->rect.bottomRight());
+                        textRect = QRect(QPoint(btn->rect.left(), iconRect.bottom() + config.toolbtnLabelSpacing), btn->rect.bottomRight());
                         textHalign = Qt::AlignHCenter;
                         break;
                 }
@@ -1311,7 +1347,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                     p->setBrush(getBrush(btn->palette, Color::buttonBg, state));
                 }
 
-                p->drawRoundedRect(btn->rect, Constants::cornerRadius, Constants::cornerRadius);
+                p->drawRoundedRect(btn->rect, config.cornerRadius, config.cornerRadius);
                 p->restore();
                 return;
             }
@@ -1322,13 +1358,13 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->setRenderHints(QPainter::Antialiasing);
             p->setBrush(Qt::NoBrush);
             p->setPen(getPen(opt->palette, Color::focusRect, 2));
-            p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), Constants::cornerRadius, Constants::cornerRadius);
+            p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), config.cornerRadius, config.cornerRadius);
             p->restore();
             return;
 
         case PE_IndicatorCheckBox:
         case PE_IndicatorRadioButton: {
-            const int indicatorSize = qMin(Constants::checkBoxSize, qMin(opt->rect.height() - 1, opt->rect.width()) - 1);
+            const int indicatorSize = qMin(config.checkBoxSize, qMin(opt->rect.height() - 1, opt->rect.width()) - 1);
             QRect indicatorRect = QRect(0, 0, indicatorSize, indicatorSize);
             indicatorRect.moveCenter(opt->rect.center());
 
@@ -1336,7 +1372,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->setRenderHints(QPainter::Antialiasing);
 
             if (state.hovered && state.enabled) {
-                const int size = qMin(Constants::checkBoxHoverCircleSize, qMin(opt->rect.height(), opt->rect.width()));
+                const int size = qMin(config.checkBoxHoverCircleSize, qMin(opt->rect.height(), opt->rect.width()));
                 QRect hoverRect(0, 0, size, size);
                 hoverRect.moveCenter(opt->rect.center());
 
@@ -1398,7 +1434,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->setRenderHints(QPainter::Antialiasing);
             p->setBrush(getBrush(opt->palette, Color::tabWidgetPageArea));
             p->setPen(getPen(opt->palette, Color::tabCheckedOutline, 1));
-            p->drawRoundedRect(rect, Constants::tabWidgetPageAreaCornerRadius, Constants::tabWidgetPageAreaCornerRadius);
+            p->drawRoundedRect(rect, config.tabWidgetPageAreaCornerRadius, config.tabWidgetPageAreaCornerRadius);
             p->restore();
             return;
         }
@@ -1418,7 +1454,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             return;
 
         case PE_IndicatorTabClose: {
-            const int indicatorSize = qMin(Constants::tabCloseIndicatorSize, qMin(opt->rect.width(), opt->rect.height()));
+            const int indicatorSize = qMin(config.tabCloseIndicatorSize, qMin(opt->rect.width(), opt->rect.height()));
             QRectF indicatorRect(0, 0, indicatorSize, indicatorSize);
             indicatorRect.moveCenter(opt->rect.toRectF().center());
 
@@ -1445,7 +1481,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                     p->setRenderHints(QPainter::Antialiasing);
                     p->setPen(Qt::NoPen);
                     p->setBrush(getBrush(edit->palette, Color::lineEditBg, state));
-                    p->drawRoundedRect(opt->rect, Constants::cornerRadius, Constants::cornerRadius);
+                    p->drawRoundedRect(opt->rect, config.cornerRadius, config.cornerRadius);
                     p->restore();
                     this->drawPrimitive(PE_FrameLineEdit, edit, p, widget);
                 }
@@ -1458,7 +1494,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->setRenderHints(QPainter::Antialiasing);
             p->setPen(getPen(opt->palette, Color::lineEditOutline, state, 2));
             p->setBrush(Qt::NoBrush);
-            p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), Constants::cornerRadius, Constants::cornerRadius);
+            p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), config.cornerRadius, config.cornerRadius);
             p->restore();
             return;
 
@@ -1470,7 +1506,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                 if ((state.hovered || state.pressed) && state.enabled) {
                     const int outlineSize = qMin(
                         qMin(spin->rect.width(), spin->rect.height()),
-                        Constants::spinIndicatorHoverCircleSize);
+                        config.spinIndicatorHoverCircleSize);
 
                     p->save();
                     p->setRenderHints(QPainter::Antialiasing);
@@ -1481,7 +1517,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                 }
                 const int indicatorSize = qMin(
                     qMin(spin->rect.width(), spin->rect.height()),
-                    Constants::spinIndicatorIconSize);
+                    config.spinIndicatorIconSize);
                 QRect indicatorRect(0, 0, indicatorSize, indicatorSize);
                 indicatorRect.moveCenter(spin->rect.center());
 
@@ -1500,12 +1536,12 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->setRenderHints(QPainter::Antialiasing);
             p->setPen(Qt::NoPen);
             p->setBrush(getBrush(opt->palette, Color::menuBg, state));
-            p->drawRoundedRect(opt->rect.adjusted(Constants::menuMargin,
-                                                  Constants::menuMargin,
-                                                  -Constants::menuMargin,
-                                                  -Constants::menuMargin),
-                               Constants::menuBorderRadius,
-                               Constants::menuBorderRadius);
+            p->drawRoundedRect(opt->rect.adjusted(config.menuMargin,
+                                                  config.menuMargin,
+                                                  -config.menuMargin,
+                                                  -config.menuMargin),
+                               config.menuBorderRadius,
+                               config.menuBorderRadius);
             p->restore();
             return;
         }
@@ -1535,7 +1571,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             if ((opt->rect.width() == opt->rect.height()) && justIcon) {
                 p->drawEllipse(opt->rect.adjusted(1, 1, -1, -1));
             } else {
-                const qreal cornerRadius = qMin(qreal(Constants::cornerRadius), opt->rect.height() / 2.0);
+                const qreal cornerRadius = qMin(qreal(config.cornerRadius), opt->rect.height() / 2.0);
                 p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), cornerRadius, cornerRadius);
             }
             p->restore();
@@ -1546,7 +1582,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             if ((opt->state & State_AutoRaise) && ((!state.hovered && !state.pressed) || !state.enabled))
                 return;
 
-            const int padding = qMin(int(opt->rect.height() / 4.0), Constants::toolBtnMenuSeparatorVerticalPadding);
+            const int padding = qMin(int(opt->rect.height() / 4.0), config.toolBtnMenuSeparatorVerticalPadding);
             p->save();
             p->setPen(getPen(opt->palette, Color::toolBtnMenuSeparator, 1));
             p->drawLine(opt->rect.topLeft() + QPoint(0, padding),
@@ -1566,16 +1602,16 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                 if (bar->state & State_Horizontal) {
                     // 2 is 2*1 for the line widths
                     QRect linesRect = QRect(0, 0,
-                                            qMin(bar->rect.width(), 2 + Constants::toolBarHandleLineSpacing),
-                                            bar->rect.height() - qMin(Constants::toolBarHandleVerticalPadding * 2, bar->rect.height() / 2));
+                                            qMin(bar->rect.width(), 2 + config.toolBarHandleLineSpacing),
+                                            bar->rect.height() - qMin(config.toolBarHandleVerticalPadding * 2, bar->rect.height() / 2));
                     linesRect.moveCenter(bar->rect.center());
                     p->drawLine(linesRect.topLeft(), linesRect.bottomLeft());
                     p->drawLine(linesRect.topRight(), linesRect.bottomRight());
                 } else {
                     // 2 is 2*1 for the line widths
                     QRect linesRect = QRect(0, 0,
-                                            bar->rect.width() - qMin(Constants::toolBarHandleVerticalPadding * 2, bar->rect.width() / 2),
-                                            qMin(bar->rect.height(), 2 + Constants::toolBarHandleLineSpacing));
+                                            bar->rect.width() - qMin(config.toolBarHandleVerticalPadding * 2, bar->rect.width() / 2),
+                                            qMin(bar->rect.height(), 2 + config.toolBarHandleLineSpacing));
                     linesRect.moveCenter(bar->rect.center());
                     p->drawLine(linesRect.topLeft(), linesRect.topRight());
                     p->drawLine(linesRect.bottomLeft(), linesRect.bottomRight());
@@ -1589,13 +1625,13 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->setPen(getPen(opt->palette, Color::toolBarSeparator, 1));
             if (opt->state & State_Horizontal) {
                 // padding for the longer side (top and bottom, when toolbar is horizontal)
-                const int padding = qMin(Constants::toolBarSeparatorVerticalPadding * 2, opt->rect.height() / 2);
+                const int padding = qMin(config.toolBarSeparatorVerticalPadding * 2, opt->rect.height() / 2);
                 p->drawLine(opt->rect.center().x(),
                             opt->rect.top() + padding,
                             opt->rect.center().x(),
                             opt->rect.bottom() - padding);
             } else {
-                const int padding = qMin(Constants::toolBarSeparatorVerticalPadding * 2, opt->rect.width() / 2);
+                const int padding = qMin(config.toolBarSeparatorVerticalPadding * 2, opt->rect.width() / 2);
                 p->drawLine(opt->rect.left() + padding,
                             opt->rect.center().y(),
                             opt->rect.right() - padding,
@@ -1609,17 +1645,17 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->setPen(getPen(opt->palette, Color::branchIndicator, state, 1));
 
             if (opt->state & State_Children) {
-                const int arrowSize = qMin(Constants::treeIndicatorArrowSize, qMin(opt->rect.width(), opt->rect.height()));
+                const int arrowSize = qMin(config.treeIndicatorArrowSize, qMin(opt->rect.width(), opt->rect.height()));
                 QStyleOption arrowOpt = *opt;
                 arrowOpt.rect = QRect(0, 0, arrowSize, arrowSize);
                 arrowOpt.rect.moveCenter(opt->rect.center());
                 arrowOpt.state.setFlag(State_Enabled, true);
 
-                if (arrowOpt.rect.top() - Constants::treeIndicatorArrowLineMargin > opt->rect.top()) {
-                    p->drawLine(opt->rect.center().x(), opt->rect.top(), opt->rect.center().x(), arrowOpt.rect.top() - Constants::treeIndicatorArrowLineMargin);
+                if (arrowOpt.rect.top() - config.treeIndicatorArrowLineMargin > opt->rect.top()) {
+                    p->drawLine(opt->rect.center().x(), opt->rect.top(), opt->rect.center().x(), arrowOpt.rect.top() - config.treeIndicatorArrowLineMargin);
                 }
-                if ((opt->state & State_Sibling) && (arrowOpt.rect.bottom() + Constants::treeIndicatorArrowLineMargin < opt->rect.bottom())) {
-                    p->drawLine(opt->rect.center().x(), arrowOpt.rect.bottom() + Constants::treeIndicatorArrowLineMargin, opt->rect.center().x(), opt->rect.bottom());
+                if ((opt->state & State_Sibling) && (arrowOpt.rect.bottom() + config.treeIndicatorArrowLineMargin < opt->rect.bottom())) {
+                    p->drawLine(opt->rect.center().x(), arrowOpt.rect.bottom() + config.treeIndicatorArrowLineMargin, opt->rect.center().x(), opt->rect.bottom());
                 }
 
                 if (opt->state & State_Open) {
@@ -1641,7 +1677,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             }
 
             if (opt->state & State_Item) {
-                const int curveSize = qMin(Constants::treeIndicatorLastCornerRadius * 2, int(qMin(opt->rect.width(), opt->rect.height())));
+                const int curveSize = qMin(config.treeIndicatorLastCornerRadius * 2, int(qMin(opt->rect.width(), opt->rect.height())));
                 QRect curveRect(0, 0, curveSize, curveSize);
                 curveRect.moveBottomLeft(opt->rect.center());
 
@@ -1669,7 +1705,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                     p->drawLine(frame->rect.toRectF().topLeft() + QPointF(.5, .5),
                                 frame->rect.toRectF().topRight() + QPointF(-.5, .5));
                 } else {
-                    p->drawRoundedRect(frame->rect.toRectF().adjusted(.5, .5, -.5, -.5), Constants::cornerRadius, Constants::cornerRadius);
+                    p->drawRoundedRect(frame->rect.toRectF().adjusted(.5, .5, -.5, -.5), config.cornerRadius, config.cornerRadius);
                 }
                 p->restore();
                 return;
@@ -1775,8 +1811,8 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             auto dockWidget = qobject_cast<const QDockWidget*>(widget);
             if (dockWidget && dockWidget->isFloating()) {
                 p->drawRoundedRect(opt->rect.toRectF().adjusted(0.5, 0.5, -0.5, -0.5),
-                                   Constants::cornerRadius / 2,
-                                   Constants::cornerRadius / 2);
+                                   config.cornerRadius / 2,
+                                   config.cornerRadius / 2);
             } else {
                 p->drawRect(opt->rect.toRectF().adjusted(0.5, 0.5, -0.5, -0.5));
             }
@@ -1790,7 +1826,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->setRenderHints(QPainter::Antialiasing);
             p->setPen(Qt::NoPen);
             p->setBrush(getBrush(opt->palette, Color::tooltipBg));
-            p->drawRoundedRect(opt->rect, Constants::cornerRadius, Constants::cornerRadius);
+            p->drawRoundedRect(opt->rect, config.cornerRadius, config.cornerRadius);
             p->restore();
             return;
 
@@ -1826,7 +1862,7 @@ void Style::polish(QWidget* widget) {
             QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(menu);
             shadow->setOffset(0.3, 0.5);
             shadow->setColor(getColor(menu->palette(), Color::menuShadow));
-            shadow->setBlurRadius(Constants::menuShadowSize);
+            shadow->setBlurRadius(config.menuShadowSize);
             menu->setGraphicsEffect(shadow);
         }
     }
@@ -1871,7 +1907,7 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_ExclusiveIndicatorHeight:
             return 20;
         case PM_TabBarTabHSpace:  // unused in the impementation
-            return Constants::tabHorizontalPadding;
+            return config.tabHorizontalPadding;
         case PM_TabBarTabVSpace:  // vertical padding, for horizontal tabbar: top and bottom
             return 10;
         case PM_TabBarTabShiftHorizontal:
@@ -1890,15 +1926,15 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_SliderThickness:
         case PM_SliderControlThickness:
         case PM_SliderLength:
-            return Constants::sliderHandleHoverCircleDiameter;
+            return config.sliderHandleHoverCircleDiameter;
         case PM_SliderTickmarkOffset:
             return 3;
         case PM_ScrollBarSliderMin:
             return 40;
         case PM_MenuHMargin:
-            return 0 + Constants::menuMargin;
+            return 0 + config.menuMargin;
         case PM_MenuVMargin:
-            return 5 + Constants::menuMargin;
+            return 5 + config.menuMargin;
         case PM_SubMenuOverlap:
             return 3;
         case PM_MenuBarItemSpacing:
@@ -1910,7 +1946,7 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_MenuBarPanelWidth:
             return 0;
         case PM_ScrollView_ScrollBarOverlap:
-            return Constants::scrollBarThickness;
+            return config.scrollBarThickness;
         case PM_ToolBarFrameWidth:
             return 0;
         case PM_ToolBarItemMargin:
@@ -1919,7 +1955,7 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_ToolBarSeparatorExtent:
             return 3;
         case PM_ToolBarHandleExtent:
-            return (Constants::toolBarHandleHorizontalPadding * 2) + 2 + Constants::toolBarHandleLineSpacing;  // 2 is for the line thickness
+            return (config.toolBarHandleHorizontalPadding * 2) + 2 + config.toolBarHandleLineSpacing;  // 2 is for the line thickness
         case PM_ProgressBarChunkWidth:
             return 2;
         case PM_RadioButtonLabelSpacing:
@@ -1927,7 +1963,7 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
             /* here i add 1/2 of the check width as a workaround for qqc2-desktop-theme styled apps,
              * as they apparently count this distance from the center of the checkbox
              */
-            return Constants::checkBoxElementSpacing + Constants::checkBoxSize / 2;
+            return config.checkBoxElementSpacing + config.checkBoxSize / 2;
         case PM_DockWidgetTitleMargin:
             return 6;
         case PM_DockWidgetFrameWidth:
@@ -1997,16 +2033,16 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
             break;
         case SE_RadioButtonIndicator:
         case SE_CheckBoxIndicator: {
-            const int size = qMin(Constants::checkBoxHoverCircleSize, qMin(opt->rect.width(), opt->rect.height()));
+            const int size = qMin(config.checkBoxHoverCircleSize, qMin(opt->rect.width(), opt->rect.height()));
             QRect rect(0, 0, size, size);
             rect.moveTopLeft(opt->rect.topLeft());
             return rect;
         }
         case SE_RadioButtonContents:
         case SE_CheckBoxContents: {
-            constexpr int indicatorSize = (Constants::checkBoxSize + Constants::checkBoxHoverCircleSize) / 2;  // size of the indicator + the hover circle padding
+            const int indicatorSize = (config.checkBoxSize + config.checkBoxHoverCircleSize) / 2;  // size of the indicator + the hover circle padding
             QRect rect = opt->rect;
-            rect.setLeft(opt->rect.left() + indicatorSize + Constants::checkBoxElementSpacing);
+            rect.setLeft(opt->rect.left() + indicatorSize + config.checkBoxElementSpacing);
             return rect;
         }
         case SE_TabWidgetTabBar:
@@ -2082,19 +2118,19 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 rect.setSize(textSize);
                 rect.moveCenter(tab->rect.center());
 
-                int padding = Constants::tabHorizontalPadding;
+                int padding = config.tabHorizontalPadding;
                 if (tabIsHorizontal(tab->shape)) {
                     if (tab->leftButtonSize.isValid())
-                        padding += (tab->leftButtonSize.width() + Constants::tabElementSpacing);
+                        padding += (tab->leftButtonSize.width() + config.tabElementSpacing);
                     if (!tab->icon.isNull())
-                        padding += (tab->iconSize.width() + Constants::tabElementSpacing);
+                        padding += (tab->iconSize.width() + config.tabElementSpacing);
 
                     rect.moveLeft(tab->rect.left() + padding);
                 } else {
                     if (tab->leftButtonSize.isValid())
-                        padding += (tab->leftButtonSize.height() + Constants::tabElementSpacing);
+                        padding += (tab->leftButtonSize.height() + config.tabElementSpacing);
                     if (!tab->icon.isNull())
-                        padding += (tab->iconSize.height() + Constants::tabElementSpacing);
+                        padding += (tab->iconSize.height() + config.tabElementSpacing);
 
                     if (tab->shape == QTabBar::RoundedWest || tab->shape == QTabBar::TriangularWest) {
                         rect.moveBottom(tab->rect.bottom() - padding);
@@ -2117,11 +2153,11 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 rect.moveCenter(tabRect.center());
 
                 if (tabIsHorizontal(tab->shape)) {
-                    rect.moveLeft(tabRect.left() + Constants::tabHorizontalPadding);
+                    rect.moveLeft(tabRect.left() + config.tabHorizontalPadding);
                 } else if (tab->shape == QTabBar::RoundedWest || tab->shape == QTabBar::TriangularWest) {
-                    rect.moveBottom(tabRect.bottom() - Constants::tabHorizontalPadding);
+                    rect.moveBottom(tabRect.bottom() - config.tabHorizontalPadding);
                 } else {
-                    rect.moveTop(tabRect.top() + Constants::tabHorizontalPadding);
+                    rect.moveTop(tabRect.top() + config.tabHorizontalPadding);
                 }
                 return rect;
             }
@@ -2138,11 +2174,11 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 rect.moveCenter(tabRect.center());
 
                 if (tabIsHorizontal(tab->shape)) {
-                    rect.moveRight(tabRect.right() - Constants::tabHorizontalPadding);
+                    rect.moveRight(tabRect.right() - config.tabHorizontalPadding);
                 } else if (tab->shape == QTabBar::RoundedWest || tab->shape == QTabBar::TriangularWest) {
-                    rect.moveTop(tabRect.top() + Constants::tabHorizontalPadding);
+                    rect.moveTop(tabRect.top() + config.tabHorizontalPadding);
                 } else {
-                    rect.moveBottom(tabRect.bottom() - Constants::tabHorizontalPadding);
+                    rect.moveBottom(tabRect.bottom() - config.tabHorizontalPadding);
                 }
                 return rect;
             }
@@ -2153,9 +2189,9 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 if (edit->lineWidth <= 0) {
                     return edit->rect;
                 }
-                return edit->rect.adjusted(Constants::lineEditTextHorizontalPadding,
+                return edit->rect.adjusted(config.lineEditTextHorizontalPadding,
                                            edit->lineWidth,
-                                           -Constants::lineEditTextHorizontalPadding,
+                                           -config.lineEditTextHorizontalPadding,
                                            -edit->lineWidth);
             }
             break;
@@ -2184,9 +2220,9 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 if (!bar->textVisible) {
                     QRect contentsRect;
                     if (horizontal) {
-                        contentsRect = QRect(0, 0, bar->rect.width(), Constants::progressBarThickness);
+                        contentsRect = QRect(0, 0, bar->rect.width(), config.progressBarThickness);
                     } else {
-                        contentsRect = QRect(0, 0, Constants::progressBarThickness, bar->rect.height());
+                        contentsRect = QRect(0, 0, config.progressBarThickness, bar->rect.height());
                     }
                     contentsRect.moveCenter(bar->rect.center());
                     return contentsRect;
@@ -2194,14 +2230,14 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 if (horizontal) {
                     const int labelRectWidth = this->subElementRect(SE_ProgressBarLabel, bar, widget).width();
                     return QRect(bar->rect.left(),
-                                 (bar->rect.top() + bar->rect.height() / 2) - Constants::progressBarThickness / 2,
+                                 (bar->rect.top() + bar->rect.height() / 2) - config.progressBarThickness / 2,
                                  bar->rect.width() - labelRectWidth,
-                                 Constants::progressBarThickness);
+                                 config.progressBarThickness);
                 }
                 const int labelRectHeight = this->subElementRect(SE_ProgressBarLabel, bar, widget).height();
-                return QRect((bar->rect.left() + bar->rect.width() / 2) - Constants::progressBarThickness / 2,
+                return QRect((bar->rect.left() + bar->rect.width() / 2) - config.progressBarThickness / 2,
                              bar->rect.top(),
-                             Constants::progressBarThickness,
+                             config.progressBarThickness,
                              bar->rect.height() - labelRectHeight);
             }
             break;
@@ -2222,10 +2258,10 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 }
                 QRect rect;
                 if (horizontal) {
-                    rect = QRect(0, bar->rect.top(), qMin(textSize.width() + Constants::progressBarLabelHorizontalPadding * 2, bar->rect.width()), bar->rect.height());
+                    rect = QRect(0, bar->rect.top(), qMin(textSize.width() + config.progressBarLabelHorizontalPadding * 2, bar->rect.width()), bar->rect.height());
                     rect.moveRight(bar->rect.right());
                 } else {
-                    rect = QRect(bar->rect.left(), 0, bar->rect.width(), qMin(textSize.height() + Constants::progressBarLabelHorizontalPadding * 2, bar->rect.height()));
+                    rect = QRect(bar->rect.left(), 0, bar->rect.width(), qMin(textSize.height() + config.progressBarLabelHorizontalPadding * 2, bar->rect.height()));
                     rect.moveBottom(bar->rect.bottom());
                 }
                 return rect;
@@ -2264,11 +2300,11 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 } else if (dock->closable) {
                     right = subElementRect(SE_DockWidgetCloseButton, dock, widget).left();
                 } else {
-                    right = dock->rect.right() - Constants::dockHeaderLabelHorizontalPadding;
+                    right = dock->rect.right() - config.dockHeaderLabelHorizontalPadding;
                 }
 
                 QRect rect = dock->rect;
-                rect.setLeft(dock->rect.left() + Constants::dockHeaderLabelHorizontalPadding);
+                rect.setLeft(dock->rect.left() + config.dockHeaderLabelHorizontalPadding);
                 rect.setRight(right);
                 return rect;
             }
@@ -2336,11 +2372,11 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                     case SC_SliderTickmarks: {
                         const int grooveTicksGap = this->pixelMetric(PM_SliderTickmarkOffset, slider, widget);
                         const QRect grooveRect = this->subControlRect(CC_Slider, slider, SC_SliderGroove, widget);
-                        constexpr int handleRadius = Constants::sliderHandleCircleDiameter / 2;
+                        const int handleRadius = config.sliderHandleCircleDiameter / 2;
                         QRect rect(slider->rect);
                         // case QSlider::TicksBothSides returns the ticks below, the above ones are handled in DrawComplexControl where they are drawn
                         if (slider->orientation == Qt::Horizontal) {
-                            rect.setHeight(Constants::sliderTickmarksLen);
+                            rect.setHeight(config.sliderTickmarksLen);
                             switch (slider->tickPosition) {
                                 case QSlider::TicksAbove:
                                     rect.moveBottom(grooveRect.center().y() - handleRadius - grooveTicksGap);
@@ -2352,7 +2388,7 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                                     break;
                             }
                         } else {
-                            rect.setWidth(Constants::sliderTickmarksLen);
+                            rect.setWidth(config.sliderTickmarksLen);
                             switch (slider->tickPosition) {
                                 case QSlider::TicksLeft:
                                     rect.moveRight(grooveRect.center().x() - handleRadius - grooveTicksGap);
@@ -2378,22 +2414,22 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                     case SC_SpinBoxFrame:
                         return spin->rect;
                     case SC_SpinBoxUp: {
-                        const int width = qMin(spin->rect.width() / 3, Constants::spinIndicatorWidth);
+                        const int width = qMin(spin->rect.width() / 3, config.spinIndicatorWidth);
                         QRect rect(spin->rect);
                         rect.setWidth(width);
                         rect.moveRight(spin->rect.right());
                         return rect;
                     }
                     case SC_SpinBoxDown: {
-                        const int width = qMin(spin->rect.width() / 3, Constants::spinIndicatorWidth);
+                        const int width = qMin(spin->rect.width() / 3, config.spinIndicatorWidth);
                         QRect rect(spin->rect);
                         rect.setWidth(width);
                         rect.moveRight(spin->rect.right() - width);
                         return rect;
                     }
                     case SC_SpinBoxEditField: {
-                        const int indicatorWidth = qMin(spin->rect.width() / 3, Constants::spinIndicatorWidth);
-                        return spin->rect.adjusted(Constants::spinTextLeftPadding, 0, -(indicatorWidth * 2), 0);
+                        const int indicatorWidth = qMin(spin->rect.width() / 3, config.spinIndicatorWidth);
+                        return spin->rect.adjusted(config.spinTextLeftPadding, 0, -(indicatorWidth * 2), 0);
                     }
                     default:
                         break;
@@ -2404,12 +2440,12 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
             if (const auto* combo = qstyleoption_cast<const QStyleOptionComboBox*>(opt)) {
                 switch (element) {
                     case SC_ComboBoxArrow: {
-                        QRect rect(0, combo->rect.top(), Constants::comboArrowWidth, combo->rect.height());
+                        QRect rect(0, combo->rect.top(), config.comboArrowWidth, combo->rect.height());
                         rect.moveRight(combo->rect.right());
                         return rect;
                     }
                     case SC_ComboBoxEditField: {
-                        return combo->rect.adjusted(Constants::comboTextLeftPadding, 0, -Constants::comboArrowWidth, 0);
+                        return combo->rect.adjusted(config.comboTextLeftPadding, 0, -config.comboArrowWidth, 0);
                     }
                     case SC_ComboBoxFrame:
                         return combo->rect;
@@ -2490,13 +2526,13 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                 switch (element) {
                     case SC_ToolButton:
                         if (btn->subControls & SC_ToolButtonMenu) {
-                            return btn->rect.adjusted(0, 0, -Constants::toolbtnArrowSectionWidth, 0);
+                            return btn->rect.adjusted(0, 0, -config.toolbtnArrowSectionWidth, 0);
                         }
                         return btn->rect;
                     case SC_ToolButtonMenu:
                         if (btn->subControls & SC_ToolButtonMenu) {
                             QRect rect = btn->rect;
-                            rect.setLeft(btn->rect.right() - Constants::toolbtnArrowSectionWidth);
+                            rect.setLeft(btn->rect.right() - config.toolbtnArrowSectionWidth);
                             return rect;
                         }
                         return btn->rect;
@@ -2514,24 +2550,24 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
 
                         const QSize textSize = box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text);
 
-                        QRect rect(0, box->rect.top(), Constants::groupBoxCheckSize, qMax(Constants::groupBoxCheckSize, textSize.height()));
+                        QRect rect(0, box->rect.top(), config.groupBoxCheckSize, qMax(config.groupBoxCheckSize, textSize.height()));
 
                         if (box->textAlignment & Qt::AlignRight) {
                             if (textSize.width() > 0) {
-                                rect.moveRight(box->rect.right() - Constants::groupBoxLabelOffset - textSize.width() - Constants::groupBoxTextCheckSpacing);
+                                rect.moveRight(box->rect.right() - config.groupBoxLabelOffset - textSize.width() - config.groupBoxTextCheckSpacing);
                             } else {
-                                rect.moveRight(box->rect.right() - Constants::groupBoxLabelOffset);
+                                rect.moveRight(box->rect.right() - config.groupBoxLabelOffset);
                             }
 
                         } else if (box->textAlignment & Qt::AlignHCenter) {
                             if (textSize.width() > 0) {
-                                rect.moveLeft(box->rect.toRectF().center().x() - ((rect.width() + Constants::groupBoxTextCheckSpacing + textSize.width()) / 2.0));
+                                rect.moveLeft(box->rect.toRectF().center().x() - ((rect.width() + config.groupBoxTextCheckSpacing + textSize.width()) / 2.0));
                             } else {
                                 rect.moveLeft(box->rect.toRectF().center().x() - (rect.width() / 2.0));
                             }
 
                         } else {
-                            rect.moveLeft(box->rect.left() + Constants::groupBoxLabelOffset);
+                            rect.moveLeft(box->rect.left() + config.groupBoxLabelOffset);
                         }
                         return rect;
                     }
@@ -2542,24 +2578,24 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                         const bool hasCheck = box->subControls & SC_GroupBoxCheckBox;
                         const QSize textSize = box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text);
 
-                        QRect rect(0, box->rect.top(), textSize.width(), hasCheck ? qMax(Constants::groupBoxCheckSize, textSize.height()) : textSize.height());
+                        QRect rect(0, box->rect.top(), textSize.width(), hasCheck ? qMax(config.groupBoxCheckSize, textSize.height()) : textSize.height());
 
                         if (box->textAlignment & Qt::AlignRight) {
-                            rect.moveRight(box->rect.right() - Constants::groupBoxLabelOffset);
+                            rect.moveRight(box->rect.right() - config.groupBoxLabelOffset);
 
                         } else if (box->textAlignment & Qt::AlignHCenter) {
                             const int textWidth = box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text).width();
                             if (textWidth > 0) {
-                                rect.moveRight(box->rect.toRectF().center().x() + ((rect.width() + Constants::groupBoxTextCheckSpacing + Constants::groupBoxCheckSize) / 2.0));
+                                rect.moveRight(box->rect.toRectF().center().x() + ((rect.width() + config.groupBoxTextCheckSpacing + config.groupBoxCheckSize) / 2.0));
                             } else {
                                 rect.moveRight(box->rect.toRectF().center().x() + (rect.width() / 2.0));
                             }
 
                         } else {
                             if (hasCheck) {
-                                rect.moveLeft(box->rect.left() + Constants::groupBoxLabelOffset + Constants::groupBoxCheckSize + Constants::groupBoxTextCheckSpacing);
+                                rect.moveLeft(box->rect.left() + config.groupBoxLabelOffset + config.groupBoxCheckSize + config.groupBoxTextCheckSpacing);
                             } else {
-                                rect.moveLeft(box->rect.left() + Constants::groupBoxLabelOffset);
+                                rect.moveLeft(box->rect.left() + config.groupBoxLabelOffset);
                             }
                         }
                         return rect;
@@ -2568,7 +2604,7 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                         const int labelHeight = (box->subControls & SC_GroupBoxLabel) ?
                                                     box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text).height() :
                                                     0;
-                        const int checkHeight = (box->subControls & SC_GroupBoxCheckBox) ? Constants::groupBoxCheckSize : 0;
+                        const int checkHeight = (box->subControls & SC_GroupBoxCheckBox) ? config.groupBoxCheckSize : 0;
                         const int headerHeight = qMax(checkHeight, labelHeight);  // height of the label area
 
                         return QRect(QPoint(box->rect.left(), box->rect.top() + headerHeight / 2), box->rect.bottomRight());
@@ -2577,7 +2613,7 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                         const int labelHeight = (box->subControls & SC_GroupBoxLabel) ?
                                                     box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text).height() :
                                                     0;
-                        const int checkHeight = (box->subControls & SC_GroupBoxCheckBox) ? Constants::groupBoxCheckSize : 0;
+                        const int checkHeight = (box->subControls & SC_GroupBoxCheckBox) ? config.groupBoxCheckSize : 0;
                         const int headerHeight = qMax(checkHeight, labelHeight);  // height of the label area
 
                         return QRect(QPoint(box->rect.left() + box->lineWidth + 1, box->rect.top() + headerHeight),
@@ -2613,17 +2649,17 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
     switch (ct) {
         case CT_PushButton: {
             const QSize original = SuperStyle::sizeFromContents(ct, opt, contentsSize, widget);
-            const int heigth = qMax(opt->fontMetrics.height() + (2 * Constants::controlsTextVerticalPadding),
+            const int heigth = qMax(opt->fontMetrics.height() + (2 * config.controlsTextVerticalPadding),
                                     original.height());
             return QSize(original.width(), heigth);
         }
 
         case CT_LineEdit: {
-            const int width = (opt->fontMetrics.averageCharWidth() * Constants::lineEditMinWidthChars) +
+            const int width = (opt->fontMetrics.averageCharWidth() * config.lineEditMinWidthChars) +
                               this->pixelMetric(PM_LineEditIconSize, opt, widget) +
                               (pixelMetric(PM_LineEditIconMargin, opt, widget) * 2);
             const int height = qMax(
-                opt->fontMetrics.height() + (2 * Constants::controlsTextVerticalPadding),
+                opt->fontMetrics.height() + (2 * config.controlsTextVerticalPadding),
                 this->pixelMetric(PM_LineEditIconSize, opt, widget) + (pixelMetric(PM_LineEditIconMargin, opt, widget) * 2));
 
             return QSize(width, height);
@@ -2631,21 +2667,21 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
 
         case CT_SpinBox:
             if (const auto* spin = qstyleoption_cast<const QStyleOptionSpinBox*>(opt)) {
-                const int width = Constants::lineEditTextHorizontalPadding +
-                                  (spin->fontMetrics.averageCharWidth() * Constants::spinMinWidthChars) +
-                                  (Constants::spinIndicatorWidth * 2);
-                const int height = opt->fontMetrics.height() + (2 * Constants::controlsTextVerticalPadding);
+                const int width = config.lineEditTextHorizontalPadding +
+                                  (spin->fontMetrics.averageCharWidth() * config.spinMinWidthChars) +
+                                  (config.spinIndicatorWidth * 2);
+                const int height = opt->fontMetrics.height() + (2 * config.controlsTextVerticalPadding);
                 return QSize(width, height);
             }
             break;
 
         case CT_ComboBox:
             if (const auto* combo = qstyleoption_cast<const QStyleOptionComboBox*>(opt)) {
-                const int width = Constants::lineEditTextHorizontalPadding +
-                                  (combo->currentIcon.isNull() ? 0 : combo->iconSize.width() + Constants::lineEditTextHorizontalPadding) +
-                                  (combo->fontMetrics.averageCharWidth() * Constants::comboMinWidthChars) +
-                                  Constants::comboArrowWidth;
-                const int height = qMax(opt->fontMetrics.height() + (2 * Constants::controlsTextVerticalPadding),
+                const int width = config.lineEditTextHorizontalPadding +
+                                  (combo->currentIcon.isNull() ? 0 : combo->iconSize.width() + config.lineEditTextHorizontalPadding) +
+                                  (combo->fontMetrics.averageCharWidth() * config.comboMinWidthChars) +
+                                  config.comboArrowWidth;
+                const int height = qMax(opt->fontMetrics.height() + (2 * config.controlsTextVerticalPadding),
                                         combo->iconSize.height());
                 return QSize(width, height);
             }
@@ -2658,17 +2694,17 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                 const QSize iconSize = btn->icon.isNull() ? QSize() : btn->iconSize;
 
                 if (!textSize.isValid() && !iconSize.isValid()) {
-                    return QSize(Constants::checkBoxHoverCircleSize, Constants::checkBoxHoverCircleSize);
+                    return QSize(config.checkBoxHoverCircleSize, config.checkBoxHoverCircleSize);
                 }
 
-                const int height = qMax(Constants::checkBoxHoverCircleSize, qMax(textSize.height(), iconSize.height()));
+                const int height = qMax(config.checkBoxHoverCircleSize, qMax(textSize.height(), iconSize.height()));
 
-                int width = (Constants::checkBoxSize + Constants::checkBoxHoverCircleSize) / 2;
+                int width = (config.checkBoxSize + config.checkBoxHoverCircleSize) / 2;
                 if (iconSize.isValid()) {
-                    width += (Constants::checkBoxElementSpacing + iconSize.width());
+                    width += (config.checkBoxElementSpacing + iconSize.width());
                 }
                 if (textSize.isValid()) {
-                    width += (Constants::checkBoxElementSpacing + textSize.width());
+                    width += (config.checkBoxElementSpacing + textSize.width());
                 }
 
                 return QSize(width, height);
@@ -2694,28 +2730,28 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                         }
 
                         // width
-                        int width = (Constants::menuItemHorizontalMargin * 2);
+                        int width = (config.menuItemHorizontalMargin * 2);
                         if (menu->menuHasCheckableItems) {
-                            width += Constants::checkBoxHoverCircleSize;
-                            width += Constants::menuHorizontalSpacing;
+                            width += config.checkBoxHoverCircleSize;
+                            width += config.menuHorizontalSpacing;
                         }
                         if (menu->maxIconWidth > 0) {
                             width += menu->maxIconWidth;
-                            width += Constants::menuHorizontalSpacing;
+                            width += config.menuHorizontalSpacing;
                         }
                         if (labelSize.width() > 0) {
                             width += labelSize.width();
-                            width += Constants::menuHorizontalSpacing;
+                            width += config.menuHorizontalSpacing;
                         }
                         if (menu->reservedShortcutWidth > 0) {
                             width += menu->reservedShortcutWidth;
                         }
                         if (menu->menuItemType == QStyleOptionMenuItem::SubMenu) {
-                            width += Constants::smallArrowSize;
+                            width += config.smallArrowSize;
                         }
 
                         // height
-                        const int heigth = qMax(labelSize.height(), shortcutSize.height()) + (Constants::menuItemVerticalPadding * 2);
+                        const int heigth = qMax(labelSize.height(), shortcutSize.height()) + (config.menuItemVerticalPadding * 2);
 
                         return QSize(width, heigth);
                     }
@@ -2724,14 +2760,14 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                         const MenuItemText text = menuItemGetText(menu);
                         if (text.label.isEmpty()) {
                             // 1 is for the separator thickness
-                            return QSize(Constants::menuSeparatorMinLen, 1 + (Constants::menuSeparatorVerticalMargin * 2));
+                            return QSize(config.menuSeparatorMinLen, 1 + (config.menuSeparatorVerticalMargin * 2));
                         }
                         const QSize labelSize = menu->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), text.label);
-                        const int width = (Constants::menuSeparatorVerticalMargin * 2) +
+                        const int width = (config.menuSeparatorVerticalMargin * 2) +
                                           labelSize.width() +
-                                          (Constants::menuSeparatorMinLen > 0 ? Constants::menuSeparatorMinLen + Constants::menuHorizontalSpacing : 0);
+                                          (config.menuSeparatorMinLen > 0 ? config.menuSeparatorMinLen + config.menuHorizontalSpacing : 0);
 
-                        const int height = labelSize.height() + (Constants::menuItemVerticalPadding * 2);
+                        const int height = labelSize.height() + (config.menuItemVerticalPadding * 2);
 
                         return QSize(width, height % 2 == 1 ? height : height + 1);  // height will always be odd
                     }
@@ -2747,7 +2783,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                 if (!bar->text.isEmpty()) {
                     textSize = bar->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), bar->text);
                 }
-                const int height = qMax(textSize.height(), Constants::menuBarItemMinHeight) + (Constants::menuBarItemMargin * 2);
+                const int height = qMax(textSize.height(), config.menuBarItemMinHeight) + (config.menuBarItemMargin * 2);
 
                 int width = 0;
                 width += textSize.width();
@@ -2755,13 +2791,13 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                     const int iconWidth = qMin(this->pixelMetric(PM_SmallIconSize, bar, widget), height);
                     width += iconWidth;
                     if (!bar->text.isEmpty())
-                        width += Constants::menuHorizontalSpacing;
+                        width += config.menuHorizontalSpacing;
                 }
                 if (width < 1) {
                     return QSize(0, 0);
                 }
-                width += (Constants::menuItemVerticalPadding * 2);
-                width += (Constants::menuBarItemMargin * 2);
+                width += (config.menuItemVerticalPadding * 2);
+                width += (config.menuBarItemMargin * 2);
 
                 return QSize(width, height);
             }
@@ -2769,16 +2805,16 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
         case CT_ScrollBar:
             if (const auto* bar = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
                 if (bar->orientation == Qt::Horizontal) {
-                    return QSize(1, Constants::scrollBarThickness);
+                    return QSize(1, config.scrollBarThickness);
                 }
-                return QSize(Constants::scrollBarThickness, 1);
+                return QSize(config.scrollBarThickness, 1);
             }
             break;
 
         case CT_ToolButton:
             if (const auto* btn = qstyleoption_cast<const QStyleOptionToolButton*>(opt)) {
                 if (btn->iconSize.isValid() && widget && widget->inherits("KMultiTabBarTab")) {
-                    return btn->iconSize + QSize(Constants::toolBtnLabelHorizontalPadding * 2, Constants::toolBtnLabelVerticalPadding * 2);
+                    return btn->iconSize + QSize(config.toolBtnLabelHorizontalPadding * 2, config.toolBtnLabelVerticalPadding * 2);
                 }
 
                 QSize size(0, 0);
@@ -2796,19 +2832,19 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                     case Qt::ToolButtonTextBesideIcon:
                     case Qt::ToolButtonFollowStyle: {
                         const QSize textSize = btn->fontMetrics.size(Qt::TextShowMnemonic, btn->text);
-                        size.setWidth(btn->iconSize.width() + Constants::toolbtnLabelSpacing + textSize.width());
+                        size.setWidth(btn->iconSize.width() + config.toolbtnLabelSpacing + textSize.width());
                         size.setHeight(qMax(btn->iconSize.height(), textSize.height()));
                     } break;
                     case Qt::ToolButtonTextUnderIcon: {
                         const QSize textSize = btn->fontMetrics.size(Qt::TextShowMnemonic, btn->text);
                         size.setWidth(qMax(btn->iconSize.width(), textSize.width()));
-                        size.setHeight(btn->iconSize.height() + Constants::toolbtnLabelSpacing + textSize.height());
+                        size.setHeight(btn->iconSize.height() + config.toolbtnLabelSpacing + textSize.height());
                     } break;
                 }
-                size += QSize(Constants::toolBtnLabelHorizontalPadding * 2, Constants::toolBtnLabelVerticalPadding * 2);
+                size += QSize(config.toolBtnLabelHorizontalPadding * 2, config.toolBtnLabelVerticalPadding * 2);
 
                 if (btn->subControls & SC_ToolButtonMenu)
-                    size += QSize(Constants::toolbtnArrowSectionWidth, 0);
+                    size += QSize(config.toolbtnArrowSectionWidth, 0);
 
                 if (size.width() < size.height() && (btn->text.isEmpty() || btnStyle == Qt::ToolButtonIconOnly))
                     return QSize(size.height(), size.height());
@@ -2821,19 +2857,19 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
 
                 if (!bar->textVisible) {
                     if (horizontal) {
-                        return QSize(Constants::progressBarThickness * 4,
-                                     Constants::progressBarThickness);
+                        return QSize(config.progressBarThickness * 4,
+                                     config.progressBarThickness);
                     }
-                    return QSize(Constants::progressBarThickness,
-                                 Constants::progressBarThickness * 4);
+                    return QSize(config.progressBarThickness,
+                                 config.progressBarThickness * 4);
                 }
 
                 const QSize textSizeDefault = bar->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), "100%");
                 const QSize textSizeActual = bar->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), bar->text);
                 const QSize& textSize = textSizeDefault.width() > textSizeActual.width() ? textSizeDefault : textSizeActual;
 
-                const QSize size(Constants::progressBarThickness * 4 + Constants::progressBarLabelHorizontalPadding * 2 + textSize.width(),
-                                 qMax(Constants::progressBarThickness, textSize.height()));
+                const QSize size(config.progressBarThickness * 4 + config.progressBarLabelHorizontalPadding * 2 + textSize.width(),
+                                 qMax(config.progressBarThickness, textSize.height()));
                 if (horizontal) {
                     return size;
                 }
@@ -2845,10 +2881,10 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                 const QSize labelSize = (box->subControls & SC_GroupBoxLabel) ?
                                             box->fontMetrics.size((Qt::TextHideMnemonic | Qt::TextSingleLine), box->text) :
                                             QSize(0, 0);
-                const int checkSize = (box->subControls & SC_GroupBoxCheckBox) ? Constants::groupBoxCheckSize : 0;
+                const int checkSize = (box->subControls & SC_GroupBoxCheckBox) ? config.groupBoxCheckSize : 0;
                 const int headerHeight = qMax(checkSize, labelSize.height());  // height of the label area
 
-                const int minHeaderWidth = labelSize.width() + checkSize + ((labelSize.isValid() && checkSize > 0) ? Constants::groupBoxTextCheckSpacing : 0);
+                const int minHeaderWidth = labelSize.width() + checkSize + ((labelSize.isValid() && checkSize > 0) ? config.groupBoxTextCheckSpacing : 0);
 
                 const int lineThickness = (box->features & QStyleOptionFrame::Flat) ? 0 : box->lineWidth + 1;
 
@@ -2864,7 +2900,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                 }
                 if (tabIsHorizontal(tab->shape)) {
                     int elements = 0;
-                    int width = 2 * Constants::tabHorizontalPadding;
+                    int width = 2 * config.tabHorizontalPadding;
                     int maxHeight = 0;
 
                     if (tab->leftButtonSize.isValid()) {
@@ -2891,19 +2927,19 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                     }
 
                     if (tab->position == QStyleOptionTab::Beginning || tab->position == QStyleOptionTab::End) {
-                        width += Constants::tabBarStartMargin;
+                        width += config.tabBarStartMargin;
                     } else if (tab->position == QStyleOptionTab::OnlyOneTab) {
-                        width += 2 * Constants::tabBarStartMargin;
+                        width += 2 * config.tabBarStartMargin;
                     }
 
                     const int height = qMax(maxHeight,
                                             tab->fontMetrics.height() + 2 * pixelMetric(PM_TabBarTabVSpace));
-                    return QSize(width + Constants::tabElementSpacing * (elements - 1),
-                                 height + Constants::tabBarMarginAboveTabs);
+                    return QSize(width + config.tabElementSpacing * (elements - 1),
+                                 height + config.tabBarMarginAboveTabs);
                 }
 
                 int elements = 0;
-                int height = 2 * Constants::tabHorizontalPadding;
+                int height = 2 * config.tabHorizontalPadding;
                 int maxWidth = 0;
 
                 if (tab->leftButtonSize.isValid()) {
@@ -2930,16 +2966,16 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                 }
 
                 if (tab->position == QStyleOptionTab::Beginning || tab->position == QStyleOptionTab::End) {
-                    height += Constants::tabBarStartMargin;
+                    height += config.tabBarStartMargin;
                 } else if (tab->position == QStyleOptionTab::OnlyOneTab) {
-                    height += 2 * Constants::tabBarStartMargin;
+                    height += 2 * config.tabBarStartMargin;
                 }
 
                 const int width = qMax(maxWidth,
                                        tab->fontMetrics.height() + 2 * pixelMetric(PM_TabBarTabVSpace));
 
-                return QSize(width + Constants::tabBarMarginAboveTabs,
-                             height + Constants::tabElementSpacing * (elements - 1));
+                return QSize(width + config.tabBarMarginAboveTabs,
+                             height + config.tabElementSpacing * (elements - 1));
             }
             break;
         case CT_ItemViewItem:
@@ -2954,7 +2990,15 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
     return SuperStyle::sizeFromContents(ct, opt, contentsSize, widget);
 }
 
-const void Style::sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptionSlider* slider, const QRect& tickmarksRect, const int sliderLen, const int interval) {
+void Style::settingsChanged() {
+#if HAS_SETTINGS
+    auto settings = LilacSettings::self();
+    settings->load();
+    config.initFromSettings(settings);
+#endif
+}
+
+void Style::sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptionSlider* slider, const QRect& tickmarksRect, const int sliderLen, const int interval) {
     for (int val = slider->minimum; val < slider->maximum; val += interval) {
         if (slider->orientation == Qt::Horizontal) {
             int pos = sliderPositionFromValue(slider->minimum, slider->maximum, val, tickmarksRect.width() - sliderLen, slider->upsideDown) + (sliderLen / 2);
@@ -2966,7 +3010,7 @@ const void Style::sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptio
     }
 }
 
-const Style::MenuItemText Style::menuItemGetText(const QStyleOptionMenuItem* menu) {
+Style::MenuItemText Style::menuItemGetText(const QStyleOptionMenuItem* menu) {
     const auto tabPosition = menu->text.lastIndexOf('\t');
     Style::MenuItemText text;
     if (tabPosition >= 0) {
@@ -2979,7 +3023,7 @@ const Style::MenuItemText Style::menuItemGetText(const QStyleOptionMenuItem* men
     return text;
 }
 
-const int Style::scrollbarGetSliderLength(const QStyleOptionSlider* bar) const {
+int Style::scrollbarGetSliderLength(const QStyleOptionSlider* bar) const {
     const int barLen = bar->orientation == Qt::Horizontal ? bar->rect.width() : bar->rect.height();
     const int contentLen = bar->maximum - bar->minimum + bar->pageStep;
     const int minSliderLen = pixelMetric(PM_ScrollBarSliderMin, bar);
@@ -2990,41 +3034,41 @@ const int Style::scrollbarGetSliderLength(const QStyleOptionSlider* bar) const {
     return qMin(qMax(minSliderLen, sliderLen), barLen);
 }
 
-const int Style::getTextFlags(const QStyleOption* opt) const {
+int Style::getTextFlags(const QStyleOption* opt) const {
     int textFlags = Qt::TextShowMnemonic;
     if (!styleHint(SH_UnderlineShortcut, opt))
         textFlags |= Qt::TextHideMnemonic;
     return textFlags;
 }
 
-QRect Style::tabBarGetTabRect(const QStyleOptionTab* tab) {
+QRect Style::tabBarGetTabRect(const QStyleOptionTab* tab) const {
     const int startMargin = (tab->position == QStyleOptionTab::Beginning || tab->position == QStyleOptionTab::OnlyOneTab) ?
-                                Constants::tabBarStartMargin :
+                                config.tabBarStartMargin :
                                 0;
     const int endMargin = (tab->position == QStyleOptionTab::End || tab->position == QStyleOptionTab::OnlyOneTab) ?
-                              Constants::tabBarStartMargin :
+                              config.tabBarStartMargin :
                               0;
 
     switch (tab->shape) {
         case QTabBar::RoundedNorth:
         case QTabBar::TriangularNorth:
-            return tab->rect.adjusted(startMargin, Constants::tabBarMarginAboveTabs, -endMargin, 0);
+            return tab->rect.adjusted(startMargin, config.tabBarMarginAboveTabs, -endMargin, 0);
 
         case QTabBar::RoundedSouth:
         case QTabBar::TriangularSouth:
-            return tab->rect.adjusted(startMargin, 0, -endMargin, -Constants::tabBarMarginAboveTabs);
+            return tab->rect.adjusted(startMargin, 0, -endMargin, -config.tabBarMarginAboveTabs);
 
         case QTabBar::RoundedWest:
         case QTabBar::TriangularWest:
-            return tab->rect.adjusted(Constants::tabBarMarginAboveTabs, startMargin, 0, -endMargin);
+            return tab->rect.adjusted(config.tabBarMarginAboveTabs, startMargin, 0, -endMargin);
 
         case QTabBar::RoundedEast:
         case QTabBar::TriangularEast:
-            return tab->rect.adjusted(0, startMargin, -Constants::tabBarMarginAboveTabs, -endMargin);
+            return tab->rect.adjusted(0, startMargin, -config.tabBarMarginAboveTabs, -endMargin);
     }
     return tab->rect;
 }
-const bool Style::tabIsHorizontal(const QTabBar::Shape& tabShape) {
+bool Style::tabIsHorizontal(const QTabBar::Shape& tabShape) {
     switch (tabShape) {
         case QTabBar::RoundedNorth:
         case QTabBar::TriangularNorth:
