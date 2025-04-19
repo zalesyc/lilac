@@ -285,9 +285,11 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 state.pressed = (combo->state & State_On);
 
                 bool noBackground = false;
-                if (const QWidget* parent = widget->parentWidget()) {
-                    if (parent->inherits("DolphinUrlNavigator")) {
-                        noBackground = true;
+                if (widget) {
+                    if (const QWidget* parent = widget->parentWidget()) {
+                        if (parent->inherits("DolphinUrlNavigator")) {
+                            noBackground = true;
+                        }
                     }
                 }
 
