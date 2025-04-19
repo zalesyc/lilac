@@ -23,10 +23,14 @@ class SettingsApp : public QWidget {
     void changed(bool changed);
 
    private:
-    void initFromSettings();
+    void setFromSettings();
+
+   private slots:
+    void widgetChanged();
 
    private:
     Ui::lilacsettingsapp* ui;
     LilacSettings* settings;
+    bool alreadyChanged = false;
 };
 }  // namespace Lilac

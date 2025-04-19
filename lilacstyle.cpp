@@ -1377,6 +1377,8 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
         case PE_IndicatorCheckBox:
         case PE_IndicatorRadioButton: {
             const int indicatorSize = qMin(config.checkBoxSize, qMin(opt->rect.height() - 1, opt->rect.width()) - 1);
+            const int roundedCornerRaduis = (element == QStyle::PE_IndicatorCheckBox && !config.circleCheckBox) ? (config.cornerRadius / 2.0) : -1;  // the corner radius for checkboxes, if -1 then draw a circle
+
             QRect indicatorRect = QRect(0, 0, indicatorSize, indicatorSize);
             indicatorRect.moveCenter(opt->rect.center());
 
@@ -1398,14 +1400,22 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             if (opt->state & (QStyle::State_Off)) {
                 p->setPen(getPen(opt->palette, Color::checkBoxOutline, state, 2));
                 p->setBrush(Qt::NoBrush);
-                p->drawEllipse(indicatorRect.adjusted(1, 1, -1, -1));
+                if (roundedCornerRaduis >= 0) {
+                    p->drawRoundedRect(indicatorRect.adjusted(1, 1, -1, -1), qMax(roundedCornerRaduis - 1, 0), qMax(roundedCornerRaduis - 1, 0));
+                } else {
+                    p->drawEllipse(indicatorRect.adjusted(1, 1, -1, -1));
+                }
                 p->restore();
                 return;
             }
 
             p->setPen(Qt::NoPen);
             p->setBrush(getBrush(opt->palette, Color::checkBoxInside, state));
-            p->drawEllipse(indicatorRect);
+            if (roundedCornerRaduis >= 0) {
+                p->drawRoundedRect(indicatorRect, roundedCornerRaduis, roundedCornerRaduis);
+            } else {
+                p->drawEllipse(indicatorRect);
+            }
 
             if (element == QStyle::PE_IndicatorCheckBox) {
                 p->setPen(getPen(opt->palette, Color::checkBoxCheck, state, 2));

@@ -170,6 +170,7 @@ struct Config {
 
     // Configurable
     int cornerRadius = 12;
+    bool circleCheckBox = false;
 
     // Constants
     static constexpr int smallArrowSize = 10;

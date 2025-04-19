@@ -442,6 +442,7 @@ CGroup groupFromState(const State& state) {
 #if HAS_SETTINGS
 void Config::initFromSettings(LilacSettings* settings) {
     cornerRadius = settings->cornerRadius();
+    circleCheckBox = settings->circleCheckBox();
 }
 #endif
 

@@ -11,5 +11,9 @@
             <label>General corner radius of all widgets.</label>
             <default>12</default>
         </entry>
+        <entry name="CircleCheckBox" type="Bool">
+            <label>Whether to make checkboxes a circle or a rounded rectangle.</label>
+            <default>false</default>
+        </entry>
     </group>
 </kcfg>
