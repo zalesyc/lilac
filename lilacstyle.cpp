@@ -3,6 +3,7 @@
 
 #include "lilacstyle.h"
 #include "lilac.h"
+#include "lilacanimationmanager.h"
 
 #if HAS_SETTINGS
 #include "lilacsettings.h"
@@ -49,7 +50,12 @@ Style::Style() {
         this,
         SLOT(settingsChanged()));
 #endif
+    animationMgr = new Lilac::AnimationManager();
 };
+
+Style::~Style() {
+    // delete animationMgr;
+}
 
 void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget) const {
     Lilac::State state(opt->state);  // this had to be defined as Lilac::State because just State would conflict with State from QStyle
@@ -1144,9 +1150,12 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             break;
 
         case CE_ProgressBarContents:
-            // TODO: make the busy indicator animated
             if (const auto* bar = qstyleoption_cast<const QStyleOptionProgressBar*>(opt)) {
                 const bool horizontal = bar->state & State_Horizontal;
+                const bool busy = bar->maximum == 0 && bar->minimum == 0;
+                if (!busy) {
+                    animationMgr->remove(widget);
+                }
                 p->save();
                 p->setRenderHints(QPainter::Antialiasing);
                 p->setPen(Qt::NoPen);
@@ -1158,26 +1167,26 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 } else {
                     p->drawRoundedRect(bar->rect, bar->rect.width() / 2, bar->rect.width() / 2);
                 }
+
                 if (bar->progress <= 0 && bar->maximum > 0) {
                     p->restore();
                     return;
                 }
 
                 // busy indicator
-                if (bar->maximum == 0 && bar->minimum == 0) {
+                if (busy) {
                     p->setBrush(getBrush(bar->palette, Color::progressBarIndicator, state));
-                    const int dashLen = (horizontal ? bar->rect.height() : bar->rect.width()) * 2;
+
+                    const qreal dashLen = (horizontal ? bar->rect.width() : bar->rect.height()) / 4.0;
+                    const qreal progress = widget ? animationMgr->getCurrentValue(widget, 0.0, 2 * M_PI, true).toReal() : 0;
+                    const qreal position = (qCos((progress) + M_PI) + 1) / 2.0;
 
                     if (horizontal) {
-                        for (int position = bar->rect.left(); position <= (bar->rect.right() - dashLen); position += (dashLen * 2)) {
-                            p->drawRoundedRect(position, bar->rect.top(), dashLen, bar->rect.height(),
-                                               bar->rect.height() / 2.0, bar->rect.height() / 2.0);
-                        }
+                        p->drawRoundedRect(position * (bar->rect.width() - dashLen), bar->rect.top(), dashLen, bar->rect.height(),
+                                           bar->rect.height() / 2.0, bar->rect.height() / 2.0);
                     } else {
-                        for (int position = bar->rect.top(); position <= (bar->rect.bottom() - dashLen); position += (dashLen * 2)) {
-                            p->drawRoundedRect(bar->rect.left(), position, bar->rect.width(), dashLen,
-                                               bar->rect.width() / 2.0, bar->rect.width() / 2.0);
-                        }
+                        p->drawRoundedRect(bar->rect.left(), position * (bar->rect.height() - dashLen), bar->rect.width(), dashLen,
+                                           bar->rect.width() / 2.0, bar->rect.width() / 2.0);
                     }
 
                     p->restore();

@@ -38,6 +38,8 @@ add_library(LilacStyle SHARED
     lilacstyle.h
     lilac.cpp
     lilac.h
+    lilacanimationmanager.h
+    lilacanimationmanager.cpp
 )
 
 target_link_libraries(LilacStyle PRIVATE Qt6::Widgets)
