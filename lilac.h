@@ -270,6 +270,7 @@ struct Config {
      * the durations are only a default value,
      * in the end they may be faster/slower depending on the global animation speed
      */
+    static constexpr int defaultAnimationSpeed = 1;  // if >=0 then the animations are instant, if settings are enabled this value will be overriden
     static constexpr int progressBarBusyDuration = 1000;
     static constexpr int scrollBarShowDuration = 40;
 

@@ -21,6 +21,7 @@ SettingsApp::SettingsApp(QWidget* parent)
 
     connect(ui->radiusSpin, &QSpinBox::valueChanged, this, &SettingsApp::widgetChanged);
     connect(ui->circleCheckCheckBox, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
+    connect(ui->animationSpeedSlider, &QSlider::valueChanged, this, [this](int value) { ui->animationValue->setText(QString::number(value / 10.0)); });
 
     setFromSettings();
 }
@@ -34,6 +35,7 @@ void SettingsApp::defaults() {
 void SettingsApp::save() {
     settings->setCornerRadius(ui->radiusSpin->value());
     settings->setCircleCheckBox(ui->circleCheckCheckBox->isChecked());
+    settings->setAnimationSpeed(ui->animationSpeedSlider->value() / 10.0);
     settings->save();
 #if HAS_DBUS
     auto msg = QDBusMessage::createSignal(
@@ -48,6 +50,7 @@ void SettingsApp::setFromSettings() {
     settings->load();
     ui->radiusSpin->setValue(settings->cornerRadius());
     ui->circleCheckCheckBox->setChecked(settings->circleCheckBox());
+    ui->animationSpeedSlider->setValue(settings->animationSpeed() * 10.0);
 }
 
 SettingsApp::~SettingsApp() {

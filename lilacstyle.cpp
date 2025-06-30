@@ -25,6 +25,7 @@
 namespace Lilac {
 
 Style::Style() {
+    animationMgr = new Lilac::AnimationManager();
     settingsChanged();
 #if HAS_DBUS
     auto dbus = QDBusConnection::sessionBus();
@@ -50,7 +51,6 @@ Style::Style() {
         this,
         SLOT(settingsChanged()));
 #endif
-    animationMgr = new Lilac::AnimationManager();
 };
 
 Style::~Style() {
@@ -1206,7 +1206,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     p->setBrush(getBrush(bar->palette, Color::progressBarIndicator, state));
 
                     const qreal dashLen = (horizontal ? bar->rect.width() : bar->rect.height()) * Config::progressBarBusyIndicatorLen;
-                    const qreal progress = widget ? animationMgr->getCurrentValue<qreal>(widget, 0.0, 2 * M_PI, config.progressBarBusyDuration, QVariantAnimation::Forward, true) : 0;
+                    const qreal progress = widget ? animationMgr->getCurrentValue<qreal>(widget, 0.0, 2 * M_PI, config.progressBarBusyDuration, QVariantAnimation::Forward, true, true) : 0;
                     const qreal position = (qCos((progress) + M_PI) + 1) / 2.0;
 
                     if (horizontal) {
@@ -3054,6 +3054,7 @@ void Style::settingsChanged() {
     auto settings = LilacSettings::self();
     settings->load();
     config.initFromSettings(settings);
+    animationMgr->setAnimationSpeed(settings->animationSpeed());
 #endif
 }
 

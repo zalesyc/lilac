@@ -2,11 +2,14 @@
 // SPDX-FileCopyrightText: 2025 zalesyc and the lilac-qt contributors
 
 #include "lilacanimationmanager.h"
+#include "lilac.h"
 
 namespace Lilac {
 
 AnimationManager::AnimationManager() {
+    setAnimationSpeed(Config::defaultAnimationSpeed);
 }
+
 AnimationManager::~AnimationManager() {
     for (auto i = animations.begin(); i != animations.end(); i++) {
         if (i.value()) {
@@ -25,9 +28,17 @@ void AnimationManager::remove(const QWidget* w) {
     }
 }
 
-QVariantAnimation* AnimationManager::getOrCreateAnimation(const QWidget* w, const QVariant& start, const QVariant& end, const int duration, const QVariantAnimation::Direction direction, bool infinite) {
-    QWidget* widget = const_cast<QWidget*>(w);
+void AnimationManager::setAnimationSpeed(const double speed) {
+    if (speed <= 0) {
+        durationMultiplier = 0;
+        return;
+    }
 
+    durationMultiplier = 1.0 / speed;
+}
+
+QVariantAnimation* AnimationManager::getOrCreateAnimation(const QWidget* w, const QVariant& start, const QVariant& end, const int duration, const QVariantAnimation::Direction direction, bool infinite, bool independentOfAnimationSpeed) {
+    QWidget* widget = const_cast<QWidget*>(w);
     if (!animations.contains(widget)) {
         animations.insert(widget, QPointer<QVariantAnimation>(new QVariantAnimation(widget)));
     }
@@ -40,7 +51,7 @@ QVariantAnimation* AnimationManager::getOrCreateAnimation(const QWidget* w, cons
     animation->setStartValue(start);
     animation->setEndValue(end);
     animation->setLoopCount(infinite ? -1 : 1);
-    animation->setDuration(duration);
+    animation->setDuration(duration * (independentOfAnimationSpeed ? 1 : durationMultiplier));
     animation->setDirection(direction);
     if (animation->currentValue() != (direction == QVariantAnimation::Forward ? animation->endValue() : animation->startValue())) {
         animation->start();
