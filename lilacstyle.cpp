@@ -782,7 +782,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             const qreal animationProgress = animationMgr->getOnlyValue<qreal>(widget, state.enabled && state.hovered ? 1 : 0);
 
             QRect originalRect;
-            QRect rect;
+            QRectF rect;
             if (horizontal) {
                 originalRect = opt->rect.adjusted(0, 1, 0, 0);  // the +1 is for the separator line above the hovered separator width
                 rect = originalRect;

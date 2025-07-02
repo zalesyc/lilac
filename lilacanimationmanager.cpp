@@ -34,21 +34,31 @@ void AnimationManager::setGlobalAnimationSpeed(const double speed) {
 
 QVariantAnimation* AnimationManager::getOrCreateAnimation(const QWidget* w, const QVariant& start, const QVariant& end, const int duration, const QVariantAnimation::Direction direction, bool infinite, bool independentOfAnimationSpeed) {
     QWidget* widget = const_cast<QWidget*>(w);
+    bool isNew = false;
     if (!animations.contains(widget)) {
         animations.insert(widget, QPointer<QVariantAnimation>(new QVariantAnimation(this)));
+
+        isNew = true;
     }
     QVariantAnimation* animation;
     animation = animations[widget].get();
 
-    connect(widget, &QWidget::destroyed, this, [=]() { remove(widget); });
-    connect(animation, SIGNAL(valueChanged(QVariant)), widget, SLOT(update()));
+    if (isNew) {
+        connect(widget, &QWidget::destroyed, this, [=]() { remove(widget); });
+        connect(animation, SIGNAL(valueChanged(QVariant)), widget, SLOT(update()));
+    }
 
     animation->setStartValue(start);
     animation->setEndValue(end);
     animation->setLoopCount(infinite ? -1 : 1);
     animation->setDuration(duration * (independentOfAnimationSpeed ? 1 : durationMultiplier));
     animation->setDirection(direction);
-    if (animation->currentValue() != (direction == QVariantAnimation::Forward ? animation->endValue() : animation->startValue())) {
+
+    if (isNew) {
+        animation->setCurrentTime(0);
+    }
+
+    if (animation->currentValue() != (animation->direction() == QVariantAnimation::Forward ? animation->endValue() : animation->startValue())) {
         animation->start();
     }
 
