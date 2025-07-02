@@ -42,7 +42,7 @@ class AnimationManager : QObject {
 
     void remove(const QWidget* w);
 
-    void setAnimationSpeed(const double speed);
+    void setGlobalAnimationSpeed(const double speed);
 
    private:
     QVariantAnimation* getOrCreateAnimation(const QWidget* w, const QVariant& start, const QVariant& end, const int duration, const QVariantAnimation::Direction direction, bool infinite, bool independentOfAnimationSpeed);

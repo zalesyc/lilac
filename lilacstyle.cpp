@@ -25,7 +25,6 @@
 namespace Lilac {
 
 Style::Style() {
-    animationMgr = new Lilac::AnimationManager();
     settingsChanged();
 #if HAS_DBUS
     auto dbus = QDBusConnection::sessionBus();
@@ -54,7 +53,6 @@ Style::Style() {
 };
 
 Style::~Style() {
-    delete animationMgr;
 }
 
 void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget) const {
@@ -3054,7 +3052,7 @@ void Style::settingsChanged() {
     auto settings = LilacSettings::self();
     settings->load();
     config.initFromSettings(settings);
-    animationMgr->setAnimationSpeed(settings->animationSpeed());
+    animationMgr->setGlobalAnimationSpeed(settings->animationSpeed());
 #endif
 }
 

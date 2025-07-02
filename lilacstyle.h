@@ -7,6 +7,7 @@
 #include <QStyle>
 #include <QStyleOption>
 #include <QWidget>
+#include <memory>
 
 #include "lilac.h"
 #include "lilacanimationmanager.h"
@@ -35,7 +36,7 @@ class Style : public SuperStyle {
 
    protected:
     Lilac::Config config;
-    Lilac::AnimationManager* animationMgr;
+    std::unique_ptr<Lilac::AnimationManager> animationMgr = std::make_unique<AnimationManager>();
 
    public slots:
     void settingsChanged();

@@ -7,15 +7,10 @@
 namespace Lilac {
 
 AnimationManager::AnimationManager() {
-    setAnimationSpeed(Config::defaultAnimationSpeed);
+    setGlobalAnimationSpeed(Config::defaultAnimationSpeed);
 }
 
 AnimationManager::~AnimationManager() {
-    for (auto i = animations.begin(); i != animations.end(); i++) {
-        if (i.value()) {
-            delete i.value();
-        }
-    }
 }
 
 void AnimationManager::remove(const QWidget* w) {
@@ -28,7 +23,7 @@ void AnimationManager::remove(const QWidget* w) {
     }
 }
 
-void AnimationManager::setAnimationSpeed(const double speed) {
+void AnimationManager::setGlobalAnimationSpeed(const double speed) {
     if (speed <= 0) {
         durationMultiplier = 0;
         return;
@@ -40,12 +35,12 @@ void AnimationManager::setAnimationSpeed(const double speed) {
 QVariantAnimation* AnimationManager::getOrCreateAnimation(const QWidget* w, const QVariant& start, const QVariant& end, const int duration, const QVariantAnimation::Direction direction, bool infinite, bool independentOfAnimationSpeed) {
     QWidget* widget = const_cast<QWidget*>(w);
     if (!animations.contains(widget)) {
-        animations.insert(widget, QPointer<QVariantAnimation>(new QVariantAnimation(widget)));
+        animations.insert(widget, QPointer<QVariantAnimation>(new QVariantAnimation(this)));
     }
     QVariantAnimation* animation;
     animation = animations[widget].get();
 
-    connect(widget, &QVariantAnimation::destroyed, this, [=]() { remove(widget); });
+    connect(widget, &QWidget::destroyed, this, [=]() { remove(widget); });
     connect(animation, SIGNAL(valueChanged(QVariant)), widget, SLOT(update()));
 
     animation->setStartValue(start);
