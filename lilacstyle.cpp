@@ -59,11 +59,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
     Lilac::State state(opt->state);  // this had to be defined as Lilac::State because just State would conflict with State from QStyle
     switch (control) {
         case CC_ScrollBar:
-            if (qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
-                // i do this to create a non-const opt
-                QStyleOptionSlider barOpt = *qstyleoption_cast<const QStyleOptionSlider*>(opt);
-                auto* bar = &barOpt;
-
+            if (const auto* bar = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
                 const bool horizontal = bar->state & QStyle::State_Horizontal;
                 const bool showGroove = state.hovered && state.enabled;
                 const int defaultThickness = horizontal ? bar->rect.height() : bar->rect.width();
@@ -71,27 +67,29 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 const qreal progress = widget ?
                                            animationMgr->getCurrentValue<qreal>(widget, 0, 1, config.scrollBarShowDuration, showGroove ? QVariantAnimation::Forward : QVariantAnimation::Backward) :
                                            defaultThickness;
-
                 const qreal grooveThickness = progress * defaultThickness;
+
+                QRect rect = opt->rect;
+
                 if (horizontal) {
-                    bar->rect.setTop(bar->rect.bottom() - grooveThickness);
+                    rect.setTop(bar->rect.bottom() - grooveThickness);
                 } else {
-                    bar->rect.setLeft(bar->rect.right() - grooveThickness);
+                    rect.setLeft(bar->rect.right() - grooveThickness);
                 }
 
                 if (grooveThickness) {
                     p->save();
                     p->setPen(getPen(bar->palette, Color::scrollBarHoverOutline, 1));
                     p->setBrush(Qt::NoBrush);
-                    p->fillRect(bar->rect, getBrush(bar->palette, Color::scrollBarHoverBg));
+                    p->fillRect(rect, getBrush(bar->palette, Color::scrollBarHoverBg));
                     if (horizontal) {
-                        p->drawLine(bar->rect.topLeft(), bar->rect.topRight());
+                        p->drawLine(rect.topLeft(), rect.topRight());
                     } else {
-                        p->drawLine(bar->rect.topLeft(), bar->rect.bottomLeft());
+                        p->drawLine(rect.topLeft(), rect.bottomLeft());
                     }
                     p->restore();
                 }
-
+                QStyleOptionSlider barOpt = *bar;
                 barOpt.rect = subControlRect(control, opt, SC_ScrollBarSlider, widget);
                 drawControl(QStyle::CE_ScrollBarSlider, &barOpt, p, widget);
                 return;
@@ -797,8 +795,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             p->setRenderHints(QPainter::Antialiasing);
             p->setPen(Qt::NoPen);
             p->setBrush(getBrush(opt->palette, Color::scrollBarSlider, state));
-            const double rectSize = (horizontal) ? rect.height() / 2.0 : rect.width() / 2.0;
-            p->drawRoundedRect(rect, rectSize, rectSize);
+            const double cornerRadius = horizontal ? rect.height() / 2.0 : rect.width() / 2.0;
+            p->drawRoundedRect(rect, cornerRadius, cornerRadius);
             p->restore();
 
             return;
