@@ -243,6 +243,7 @@ struct Config {
 
     static constexpr int progressBarLabelHorizontalPadding = 3;  // around the label, horizontal when the progressbar is horizontal
     static constexpr int progressBarThickness = 6;
+    static constexpr qreal progressBarBusyIndicatorLen = 0.25;  // value between 0 and 1 setting how large part of the entire bar should be the indicator
 
     static constexpr int treeIndicatorArrowSize = 10;
     static constexpr int treeIndicatorArrowLineMargin = 4;   // the distance between the arrow and start of the line
@@ -262,6 +263,16 @@ struct Config {
     static constexpr int dockHeaderControlsHeight = 12;  // for the close and float buttons
 
     static constexpr int tooltipOpacity = 235;
+
+    // animation constants
+    /* durations are in miliseconds
+     *
+     * the durations are only a default value,
+     * in the end they may be faster/slower depending on the global animation speed
+     */
+    static constexpr int defaultAnimationSpeed = 1;  // if >=0 then the animations are instant, if settings are enabled this value will be overriden
+    static constexpr int progressBarBusyDuration = 1000;
+    static constexpr int scrollBarShowDuration = 40;
 
     // methods
 #if HAS_SETTINGS

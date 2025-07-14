@@ -7,8 +7,10 @@
 #include <QStyle>
 #include <QStyleOption>
 #include <QWidget>
+#include <memory>
 
 #include "lilac.h"
+#include "lilacanimationmanager.h"
 
 namespace Lilac {
 
@@ -18,6 +20,7 @@ class Style : public SuperStyle {
    public:
     QString name() const { return QStringLiteral("Lilac"); }
     Style();
+    ~Style();
     void drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget = nullptr) const override;
     void drawControl(QStyle::ControlElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget = nullptr) const override;
     void drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget = nullptr) const override;
@@ -33,6 +36,7 @@ class Style : public SuperStyle {
 
    protected:
     Lilac::Config config;
+    std::unique_ptr<Lilac::AnimationManager> animationMgr = std::make_unique<AnimationManager>();
 
    public slots:
     void settingsChanged();

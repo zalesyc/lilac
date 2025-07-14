@@ -3,6 +3,7 @@
 
 #include "lilacstyle.h"
 #include "lilac.h"
+#include "lilacanimationmanager.h"
 
 #if HAS_SETTINGS
 #include "lilacsettings.h"
@@ -51,28 +52,46 @@ Style::Style() {
 #endif
 };
 
+Style::~Style() {
+}
+
 void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget) const {
     Lilac::State state(opt->state);  // this had to be defined as Lilac::State because just State would conflict with State from QStyle
     switch (control) {
         case CC_ScrollBar:
-            if (const QStyleOptionSlider* bar = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
-                if (state.hovered && state.enabled) {
+            if (const auto* bar = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
+                const bool horizontal = bar->state & QStyle::State_Horizontal;
+                const bool showGroove = state.hovered && state.enabled;
+                const int defaultThickness = horizontal ? bar->rect.height() : bar->rect.width();
+
+                const qreal progress = widget ?
+                                           animationMgr->getCurrentValue<qreal>(widget, 0, 1, config.scrollBarShowDuration, showGroove ? QVariantAnimation::Forward : QVariantAnimation::Backward) :
+                                           defaultThickness;
+                const qreal grooveThickness = progress * defaultThickness;
+
+                QRect rect = opt->rect;
+
+                if (horizontal) {
+                    rect.setTop(bar->rect.bottom() - grooveThickness);
+                } else {
+                    rect.setLeft(bar->rect.right() - grooveThickness);
+                }
+
+                if (grooveThickness) {
                     p->save();
-                    p->setPen(getPen(opt->palette, Color::scrollBarHoverOutline, 1));
+                    p->setPen(getPen(bar->palette, Color::scrollBarHoverOutline, 1));
                     p->setBrush(Qt::NoBrush);
-                    p->fillRect(bar->rect, getBrush(opt->palette, Color::scrollBarHoverBg));
-                    if (opt->state & QStyle::State_Horizontal) {
-                        p->drawLine(bar->rect.topLeft(), bar->rect.topRight());
+                    p->fillRect(rect, getBrush(bar->palette, Color::scrollBarHoverBg));
+                    if (horizontal) {
+                        p->drawLine(rect.topLeft(), rect.topRight());
                     } else {
-                        p->drawLine(bar->rect.topLeft(), bar->rect.bottomLeft());
+                        p->drawLine(rect.topLeft(), rect.bottomLeft());
                     }
                     p->restore();
                 }
-
-                QStyleOptionSlider sliderOption(*bar);
-                sliderOption.rect = subControlRect(control, opt, SC_ScrollBarGroove, widget);
-                sliderOption.rect = subControlRect(control, &sliderOption, SC_ScrollBarSlider, widget);
-                drawControl(QStyle::CE_ScrollBarSlider, &sliderOption, p, widget);
+                QStyleOptionSlider barOpt = *bar;
+                barOpt.rect = subControlRect(control, opt, SC_ScrollBarSlider, widget);
+                drawControl(QStyle::CE_ScrollBarSlider, &barOpt, p, widget);
                 return;
             }
             break;
@@ -753,20 +772,31 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             return;
 
         case CE_ScrollBarSlider: {
-            QRect rect;
-            const int gapSize = (state.hovered && state.enabled) ? config.scrollBarSliderPaddingHover : config.scrollBarSliderPadding;
-            if (opt->state & QStyle::State_Horizontal) {
-                rect = opt->rect.adjusted(0, gapSize + 1, 0, -gapSize);  // the +1 is for the separator line above the hovered separator width
+            const bool horizontal = opt->state & QStyle::State_Horizontal;
+            const int defaultThickness = horizontal ? opt->rect.height() : opt->rect.width();
+
+            const int normalThickness = defaultThickness - 2 * config.scrollBarSliderPadding;
+            const int hoverThickness = defaultThickness - 2 * config.scrollBarSliderPaddingHover;
+            const qreal animationProgress = animationMgr->getOnlyValue<qreal>(widget, state.enabled && state.hovered ? 1 : 0);
+
+            QRect originalRect;
+            QRectF rect;
+            if (horizontal) {
+                originalRect = opt->rect.adjusted(0, 1, 0, 0);  // the +1 is for the separator line above the hovered separator width
+                rect = originalRect;
+                rect.setHeight((hoverThickness - normalThickness) * animationProgress + normalThickness);
             } else {
-                rect = opt->rect.adjusted(gapSize + 1, 0, -gapSize, 0);
+                originalRect = opt->rect.adjusted(1, 0, 0, 0);
+                rect = originalRect;
+                rect.setWidth((hoverThickness - normalThickness) * animationProgress + normalThickness);
             }
+            rect.moveCenter(originalRect.center());
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
             p->setPen(Qt::NoPen);
             p->setBrush(getBrush(opt->palette, Color::scrollBarSlider, state));
-
-            const double rectSize = (opt->state & QStyle::State_Horizontal) ? rect.height() / 2.0 : rect.width() / 2.0;
-            p->drawRoundedRect(rect, rectSize, rectSize);
+            const double cornerRadius = horizontal ? rect.height() / 2.0 : rect.width() / 2.0;
+            p->drawRoundedRect(rect, cornerRadius, cornerRadius);
             p->restore();
 
             return;
@@ -1144,9 +1174,12 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             break;
 
         case CE_ProgressBarContents:
-            // TODO: make the busy indicator animated
             if (const auto* bar = qstyleoption_cast<const QStyleOptionProgressBar*>(opt)) {
                 const bool horizontal = bar->state & State_Horizontal;
+                const bool busy = bar->maximum == 0 && bar->minimum == 0;
+                if (!busy) {
+                    animationMgr->remove(widget);
+                }
                 p->save();
                 p->setRenderHints(QPainter::Antialiasing);
                 p->setPen(Qt::NoPen);
@@ -1158,26 +1191,26 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 } else {
                     p->drawRoundedRect(bar->rect, bar->rect.width() / 2, bar->rect.width() / 2);
                 }
+
                 if (bar->progress <= 0 && bar->maximum > 0) {
                     p->restore();
                     return;
                 }
 
                 // busy indicator
-                if (bar->maximum == 0 && bar->minimum == 0) {
+                if (busy) {
                     p->setBrush(getBrush(bar->palette, Color::progressBarIndicator, state));
-                    const int dashLen = (horizontal ? bar->rect.height() : bar->rect.width()) * 2;
+
+                    const qreal dashLen = (horizontal ? bar->rect.width() : bar->rect.height()) * Config::progressBarBusyIndicatorLen;
+                    const qreal progress = widget ? animationMgr->getCurrentValue<qreal>(widget, 0.0, 2 * M_PI, config.progressBarBusyDuration, QVariantAnimation::Forward, true, true) : 0;
+                    const qreal position = (qCos((progress) + M_PI) + 1) / 2.0;
 
                     if (horizontal) {
-                        for (int position = bar->rect.left(); position <= (bar->rect.right() - dashLen); position += (dashLen * 2)) {
-                            p->drawRoundedRect(position, bar->rect.top(), dashLen, bar->rect.height(),
-                                               bar->rect.height() / 2.0, bar->rect.height() / 2.0);
-                        }
+                        p->drawRoundedRect(position * (bar->rect.width() - dashLen), bar->rect.top(), dashLen, bar->rect.height(),
+                                           bar->rect.height() / 2.0, bar->rect.height() / 2.0);
                     } else {
-                        for (int position = bar->rect.top(); position <= (bar->rect.bottom() - dashLen); position += (dashLen * 2)) {
-                            p->drawRoundedRect(bar->rect.left(), position, bar->rect.width(), dashLen,
-                                               bar->rect.width() / 2.0, bar->rect.width() / 2.0);
-                        }
+                        p->drawRoundedRect(bar->rect.left(), position * (bar->rect.height() - dashLen), bar->rect.width(), dashLen,
+                                           bar->rect.width() / 2.0, bar->rect.width() / 2.0);
                     }
 
                     p->restore();
@@ -3017,6 +3050,7 @@ void Style::settingsChanged() {
     auto settings = LilacSettings::self();
     settings->load();
     config.initFromSettings(settings);
+    animationMgr->setGlobalAnimationSpeed(settings->animationSpeed());
 #endif
 }
 

@@ -15,5 +15,9 @@
             <label>Whether to make checkboxes a circle or a rounded rectangle.</label>
             <default>false</default>
         </entry>
+        <entry name="AnimationSpeed" type="Double">
+            <label>Animation speed, if the the value is less or equal to 0 the animations are instant.</label>
+            <default>1</default>
+        </entry>
     </group>
 </kcfg>
