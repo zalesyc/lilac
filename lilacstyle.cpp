@@ -65,7 +65,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 const int defaultThickness = horizontal ? bar->rect.height() : bar->rect.width();
 
                 const qreal progress = widget ?
-                                           animationMgr->getCurrentValue<qreal>(widget, 0, 1, config.scrollBarShowDuration, showGroove ? QVariantAnimation::Forward : QVariantAnimation::Backward) :
+                                           animationMgr.getCurrentValue<qreal>(widget, 0, 1, config.scrollBarShowDuration, showGroove ? QVariantAnimation::Forward : QVariantAnimation::Backward) :
                                            defaultThickness;
                 const qreal grooveThickness = progress * defaultThickness;
 
@@ -777,7 +777,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
             const int normalThickness = defaultThickness - 2 * config.scrollBarSliderPadding;
             const int hoverThickness = defaultThickness - 2 * config.scrollBarSliderPaddingHover;
-            const qreal animationProgress = animationMgr->getOnlyValue<qreal>(widget, state.enabled && state.hovered ? 1 : 0);
+            const qreal animationProgress = animationMgr.getOnlyValue<qreal>(widget, state.enabled && state.hovered ? 1 : 0);
 
             QRect originalRect;
             QRectF rect;
@@ -1178,7 +1178,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 const bool horizontal = bar->state & State_Horizontal;
                 const bool busy = bar->maximum == 0 && bar->minimum == 0;
                 if (!busy) {
-                    animationMgr->remove(widget);
+                    animationMgr.remove(widget);
                 }
                 p->save();
                 p->setRenderHints(QPainter::Antialiasing);
@@ -1202,7 +1202,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     p->setBrush(getBrush(bar->palette, Color::progressBarIndicator, state));
 
                     const qreal dashLen = (horizontal ? bar->rect.width() : bar->rect.height()) * Config::progressBarBusyIndicatorLen;
-                    const qreal progress = widget ? animationMgr->getCurrentValue<qreal>(widget, 0.0, 2 * M_PI, config.progressBarBusyDuration, QVariantAnimation::Forward, true, true) : 0;
+                    const qreal progress = widget ? animationMgr.getCurrentValue<qreal>(widget, 0.0, 2 * M_PI, config.progressBarBusyDuration, QVariantAnimation::Forward, true, true) : 0;
                     const qreal position = (qCos((progress) + M_PI) + 1) / 2.0;
 
                     if (horizontal) {
@@ -3050,7 +3050,7 @@ void Style::settingsChanged() {
     auto settings = LilacSettings::self();
     settings->load();
     config.initFromSettings(settings);
-    animationMgr->setGlobalAnimationSpeed(settings->animationSpeed());
+    animationMgr.setGlobalAnimationSpeed(settings->animationSpeed());
 #endif
 }
 
