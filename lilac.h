@@ -130,6 +130,10 @@ enum Color {
     dockWidgetTitle,  // D
     dockWidgetFloatingBg,
 
+    itemViewItemBg,                  // DHP - drawn over the color provided by the widget, may be just a semi-transparent overlay; pressed: item is selected
+    itemViewItemDefaultAlternateBg,  // itemView background, where the widget says that it wants alternateBase
+    itemViewText,                    // DP - pressed: the item is selected
+
     tooltipBg,
 
 };
@@ -207,7 +211,7 @@ struct Config {
     static constexpr int spinMinWidthChars = lineEditMinWidthChars;
     static constexpr int spinTextLeftPadding = lineEditTextHorizontalPadding;
 
-    static constexpr int menuHorizontalSpacing = 8;
+    static constexpr int menuItemElementHorizontalSpacing = 8;
     static constexpr int menuItemBorderRadius = 5;
     static constexpr int menuItemHorizontalMargin = 5;
     static constexpr int menuItemHorizontalPadding = 5;
@@ -261,6 +265,12 @@ struct Config {
 
     static constexpr int dockHeaderLabelHorizontalPadding = 6;
     static constexpr int dockHeaderControlsHeight = 12;  // for the close and float buttons
+
+    static constexpr int itemViewItemHorizontalPadding = 5;
+    static constexpr int itemViewItemVerticalPadding = 5;
+    static constexpr int itemViewItemElementSpacing = 8;
+    static constexpr int listViewItemVerticalMargin = 2;    // if item->displayPosition is top or bottom, this is used for all sides
+    static constexpr int listViewItemHorizontalMargin = 5;  // only if item->displayPosition is left or right
 
     static constexpr int tooltipOpacity = 235;
 

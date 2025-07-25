@@ -244,6 +244,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case tabText:
         case checkBoxText:
         case dockWidgetTitle:
+        case itemViewText:
             return pal.color(groupFromState(state), CRole::Text);
 
         case menuShortcutText:
@@ -343,6 +344,21 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 
         case dockWidgetFloatingBg:
             return pal.color(CGroup::Inactive, CRole::Window);
+
+        case itemViewItemBg:
+            if (!state.enabled)
+                return pal.color(CGroup::Disabled, CRole::Base);
+            if (state.pressed) {
+                auto base = pal.color(CGroup::Normal, CRole::Accent);
+                base.setAlpha(200);
+                return base;
+            }
+            if (state.hovered)
+                return isDarkMode(pal) ? QColor(255, 255, 255, 15) : QColor(0, 0, 0, 15);
+            return QColor(Qt::transparent);
+
+        case itemViewItemDefaultAlternateBg:
+            return pal.color(CGroup::Normal, CRole::AlternateBase);
 
         case tooltipBg:
             return QColor(20, 20, 20, 235);

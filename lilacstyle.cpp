@@ -851,7 +851,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
                         // icon
                         if (!menu->icon.isNull()) {
-                            const QRect iconRect(checkSize > 0 ? contentsRect.left() + checkSize + config.menuHorizontalSpacing : contentsRect.left(),
+                            const QRect iconRect(checkSize > 0 ? contentsRect.left() + checkSize + config.menuItemElementHorizontalSpacing : contentsRect.left(),
                                                  contentsRect.top(),
                                                  menu->maxIconWidth,
                                                  contentsRect.height());
@@ -877,10 +877,10 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                                 const int rightElementSize = menu->menuItemType == QStyleOptionMenuItem::SubMenu ?
                                                                  (text.shortcut.isEmpty() ?
                                                                       qMax(menu->reservedShortcutWidth, config.smallArrowSize) :
-                                                                      (menu->reservedShortcutWidth + config.smallArrowSize + config.menuHorizontalSpacing)) :
+                                                                      (menu->reservedShortcutWidth + config.smallArrowSize + config.menuItemElementHorizontalSpacing)) :
                                                                  menu->reservedShortcutWidth;
-                                int leftElementsSize = (menu->maxIconWidth > 0 ? menu->maxIconWidth + config.menuHorizontalSpacing : 0) +
-                                                       (checkSize > 0 ? checkSize + config.menuHorizontalSpacing : 0);
+                                int leftElementsSize = (menu->maxIconWidth > 0 ? menu->maxIconWidth + config.menuItemElementHorizontalSpacing : 0) +
+                                                       (checkSize > 0 ? checkSize + config.menuItemElementHorizontalSpacing : 0);
 
                                 const QRect labelRect(QPoint(contentsRect.left() + leftElementsSize, contentsRect.top()), QPoint(contentsRect.right() - rightElementSize, contentsRect.bottom()));
 
@@ -892,7 +892,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                             if (!text.shortcut.isEmpty()) {
                                 QRect shortcutRect(0, contentsRect.top(), menu->reservedShortcutWidth, contentsRect.height());
                                 if (menu->menuItemType == QStyleOptionMenuItem::SubMenu) {
-                                    shortcutRect.moveRight(contentsRect.right() - config.smallArrowSize - config.menuHorizontalSpacing);
+                                    shortcutRect.moveRight(contentsRect.right() - config.smallArrowSize - config.menuItemElementHorizontalSpacing);
                                 } else {
                                     shortcutRect.moveRight(contentsRect.right());
                                 }
@@ -925,7 +925,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                             p->setFont(menu->font);
                             p->drawText(labelRect, (getTextFlags(menu) | Qt::AlignLeft | Qt::AlignVCenter), menu->text);
 
-                            lineRect = QRect(QPoint(labelRect.right() + config.menuHorizontalSpacing, menu->rect.top()),
+                            lineRect = QRect(QPoint(labelRect.right() + config.menuItemElementHorizontalSpacing, menu->rect.top()),
                                              QPoint(menu->rect.right() - config.menuItemHorizontalMargin, menu->rect.bottom()));
                         }
 
@@ -991,7 +991,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 if (!bar->text.isEmpty()) {
                     QRect labelRect(0, contentsRect.top(), 0, contentsRect.height());
                     labelRect.setLeft(
-                        contentsRect.left() + config.menuItemHorizontalPadding + (iconWidth > 0 ? iconWidth + config.menuHorizontalSpacing : 0));
+                        contentsRect.left() + config.menuItemHorizontalPadding + (iconWidth > 0 ? iconWidth + config.menuItemElementHorizontalSpacing : 0));
                     labelRect.setRight(
                         contentsRect.right() - config.menuItemHorizontalPadding);
                     p->drawText(labelRect, (Qt::AlignLeft | Qt::AlignVCenter | getTextFlags(bar) | Qt::TextSingleLine), bar->text);
@@ -1367,6 +1367,51 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             }
             break;
 
+        case CE_ItemViewItem:
+            if (const auto* item = qstyleoption_cast<const QStyleOptionViewItem*>(opt)) {
+                drawPrimitive(PE_PanelItemViewItem, opt, p, widget);
+
+                if (item->features & QStyleOptionViewItem::HasCheckIndicator) {
+                    QStyleOptionViewItem checkOpt = *item;
+                    checkOpt.rect = subElementRect(SE_ItemViewItemCheckIndicator, item, widget);
+                    switch (item->checkState) {
+                        case Qt::Unchecked:
+                            checkOpt.state |= State_Off;
+                            break;
+                        case Qt::Checked:
+                            checkOpt.state |= State_On;
+                            break;
+                        case Qt::PartiallyChecked:
+                            checkOpt.state |= State_NoChange;
+                            break;
+                    }
+                    drawPrimitive(PE_IndicatorCheckBox, &checkOpt, p, widget);
+                }
+
+                if (item->features & QStyleOptionViewItem::HasDecoration && !item->icon.isNull()) {
+                    const QRect iconRect = subElementRect(SE_ItemViewItemDecoration, opt, widget);
+                    QIcon::Mode iconMode = QIcon::Normal;
+                    if (!state.enabled) {
+                        iconMode = QIcon::Disabled;
+                    } else if (item->state & State_Selected) {
+                        iconMode = QIcon::Selected;
+                    }
+                    item->icon.paint(p, iconRect, item->decorationAlignment, iconMode);
+                }
+
+                if (!item->text.isEmpty()) {
+                    const QRect textRect = subElementRect(SE_ItemViewItemText, opt, widget);
+                    const QString elidedText = QFontMetrics(item->font).elidedText(item->text, item->textElideMode, textRect.width(), Qt::TextShowMnemonic);
+                    p->save();
+                    p->setFont(item->font);
+                    p->setPen(getPen(item->palette, Color::itemViewText, state));
+                    p->drawText(textRect, (getTextFlags(item) | item->displayAlignment), elidedText);
+                    p->restore();
+                }
+                return;
+            }
+            break;
+
         case CE_SizeGrip:
             return;
 
@@ -1377,7 +1422,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 }
 
 void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget) const {
-    const Lilac::State state(opt->state);
+    Lilac::State state(opt->state);
     switch (element) {
         case PE_PanelButtonCommand:
             if (const auto* btn = qstyleoption_cast<const QStyleOptionButton*>(opt)) {
@@ -1885,6 +1930,50 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->restore();
             return;
 
+        case PE_PanelItemViewRow:
+            if (const auto* item = qstyleoption_cast<const QStyleOptionViewItem*>(opt)) {
+                p->save();
+                p->setRenderHints(QPainter::Antialiasing);
+                if (item->backgroundBrush.style() != Qt::NoBrush || item->features & QStyleOptionViewItem::Alternate) {
+                    p->fillRect(item->rect, (item->backgroundBrush.style() == Qt::NoBrush) ? getBrush(item->palette, Color::itemViewItemDefaultAlternateBg, state) : item->backgroundBrush);
+                }
+                // this is to paint a background behind the branch indicators
+                if (item->widget && item->widget->inherits("QTreeView") && item->state & (State_Selected)) {
+                    state.pressed = item->state & State_Selected;
+                    p->fillRect(item->rect, getColor(item->palette, Color::itemViewItemBg, state));
+                }
+                p->restore();
+                return;
+            }
+            break;
+
+        case PE_PanelItemViewItem:
+            if (const auto* item = qstyleoption_cast<const QStyleOptionViewItem*>(opt)) {
+                state.pressed = item->state & State_Selected;
+                const bool isListView = item->widget && item->widget->inherits("QListView");
+                const qreal cornerRadius = isListView ? config.cornerRadius / 2.0 : 0;
+
+                QRect rect;
+                if (isListView) {
+                    if (item->decorationPosition == QStyleOptionViewItem::Top || item->decorationPosition == QStyleOptionViewItem::Bottom) {
+                        rect = item->rect.adjusted(config.listViewItemVerticalMargin, config.listViewItemVerticalMargin, -config.listViewItemVerticalMargin, -config.listViewItemVerticalMargin);
+                    } else {
+                        rect = item->rect.adjusted(config.listViewItemHorizontalMargin, config.listViewItemVerticalMargin, -config.listViewItemHorizontalMargin, -config.listViewItemVerticalMargin);
+                    }
+                } else {
+                    rect = item->rect;
+                }
+
+                p->save();
+                p->setRenderHints(QPainter::Antialiasing);
+                p->setPen(Qt::NoPen);
+                p->setBrush(getBrush(item->palette, Color::itemViewItemBg, state));
+                p->drawRoundedRect(rect, cornerRadius, cornerRadius);
+                p->restore();
+                return;
+            }
+            break;
+
         case PE_FrameButtonTool:
             return;
 
@@ -2365,6 +2454,88 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
             }
             break;
 
+        case SE_ItemViewItemCheckIndicator:
+            if (const auto* item = qstyleoption_cast<const QStyleOptionViewItem*>(opt)) {
+                const bool isListView = item->widget && item->widget->inherits("QListView");
+
+                QRect rect(QPoint(0, 0), QSize(config.checkBoxSize, config.checkBoxSize));
+                rect.moveCenter(item->rect.center());
+                rect.moveLeft(item->rect.left() +
+                              (isListView ? config.listViewItemHorizontalMargin : 0) +
+                              config.itemViewItemHorizontalPadding);
+                return rect;
+            }
+            break;
+
+        case SE_ItemViewItemDecoration:
+            if (const auto* item = qstyleoption_cast<const QStyleOptionViewItem*>(opt)) {
+                const bool isListView = item->widget && item->widget->inherits("QListView");
+
+                const int checkBoxWidth = (item->features & QStyleOptionViewItem::HasCheckIndicator) ?
+                                              config.checkBoxSize + config.itemViewItemElementSpacing :
+                                              0;
+                const QRect mainRect = item->rect.adjusted(checkBoxWidth, 0, 0, 0);
+                QRect rect(QPoint(0, 0), item->decorationSize);
+                rect.moveCenter(mainRect.center());
+
+                switch (item->decorationPosition) {
+                    case QStyleOptionViewItem::Left: {
+                        rect.moveLeft(mainRect.left() + config.itemViewItemHorizontalPadding + (isListView ? config.listViewItemHorizontalMargin : 0));
+                        break;
+                    }
+                    case QStyleOptionViewItem::Right:
+                        rect.moveRight(mainRect.right() - config.itemViewItemHorizontalPadding - (isListView ? config.listViewItemHorizontalMargin : 0));
+                        break;
+
+                    case QStyleOptionViewItem::Top:
+                        rect.moveTop(mainRect.top() + config.itemViewItemVerticalPadding + (isListView ? config.listViewItemVerticalMargin : 0));
+                        break;
+
+                    case QStyleOptionViewItem::Bottom:
+                        rect.moveBottom(mainRect.bottom() - config.itemViewItemVerticalPadding - (isListView ? config.listViewItemVerticalMargin : 0));
+                        break;
+                }
+
+                return rect;
+            }
+            break;
+
+        case SE_ItemViewItemText:
+            if (const auto* item = qstyleoption_cast<const QStyleOptionViewItem*>(opt)) {
+                const bool isListView = item->widget && item->widget->inherits("QListView");
+                const bool hasDecoration = item->features & QStyleOptionViewItem::HasDecoration && !item->icon.isNull();
+                const bool verticalLayout = item->decorationPosition == QStyleOptionViewItem::Top || item->decorationPosition == QStyleOptionViewItem::Bottom;
+
+                int left = item->rect.left() + config.itemViewItemHorizontalPadding;
+                if (isListView)
+                    left += verticalLayout ? config.listViewItemVerticalMargin : config.listViewItemHorizontalMargin;
+                if (item->features & QStyleOptionViewItem::HasCheckIndicator)
+                    left += config.checkBoxSize + config.itemViewItemElementSpacing;
+                if (hasDecoration && item->decorationPosition == QStyleOptionViewItem::Left)
+                    left += item->decorationSize.width() + config.itemViewItemElementSpacing;
+
+                int right = item->rect.right() - config.itemViewItemHorizontalPadding;
+                if (isListView)
+                    right -= verticalLayout ? config.listViewItemVerticalMargin : config.listViewItemHorizontalMargin;
+                if (hasDecoration && item->decorationPosition == QStyleOptionViewItem::Right)
+                    right -= item->decorationSize.width() + config.itemViewItemElementSpacing;
+
+                int top = item->rect.top() + config.itemViewItemVerticalPadding;
+                if (isListView)
+                    top += config.listViewItemVerticalMargin;
+                if (hasDecoration && item->decorationPosition == QStyleOptionViewItem::Top)
+                    top += item->decorationSize.height() + config.itemViewItemElementSpacing;
+
+                int bottom = item->rect.bottom() - config.itemViewItemVerticalPadding;
+                if (isListView)
+                    bottom -= config.listViewItemVerticalMargin;
+                if (hasDecoration && item->decorationPosition == QStyleOptionViewItem::Bottom)
+                    bottom += item->decorationSize.height() + config.itemViewItemElementSpacing;
+
+                return QRect(QPoint(left, top), QPoint(right, bottom));
+            }
+            break;
+
         default:
             break;
     }
@@ -2788,15 +2959,15 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                         int width = (config.menuItemHorizontalMargin * 2);
                         if (menu->menuHasCheckableItems) {
                             width += config.checkBoxHoverCircleSize;
-                            width += config.menuHorizontalSpacing;
+                            width += config.menuItemElementHorizontalSpacing;
                         }
                         if (menu->maxIconWidth > 0) {
                             width += menu->maxIconWidth;
-                            width += config.menuHorizontalSpacing;
+                            width += config.menuItemElementHorizontalSpacing;
                         }
                         if (labelSize.width() > 0) {
                             width += labelSize.width();
-                            width += config.menuHorizontalSpacing;
+                            width += config.menuItemElementHorizontalSpacing;
                         }
                         if (menu->reservedShortcutWidth > 0) {
                             width += menu->reservedShortcutWidth;
@@ -2820,7 +2991,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                         const QSize labelSize = menu->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), text.label);
                         const int width = (config.menuSeparatorVerticalMargin * 2) +
                                           labelSize.width() +
-                                          (config.menuSeparatorMinLen > 0 ? config.menuSeparatorMinLen + config.menuHorizontalSpacing : 0);
+                                          (config.menuSeparatorMinLen > 0 ? config.menuSeparatorMinLen + config.menuItemElementHorizontalSpacing : 0);
 
                         const int height = labelSize.height() + (config.menuItemVerticalPadding * 2);
 
@@ -2846,7 +3017,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                     const int iconWidth = qMin(this->pixelMetric(PM_SmallIconSize, bar, widget), height);
                     width += iconWidth;
                     if (!bar->text.isEmpty())
-                        width += config.menuHorizontalSpacing;
+                        width += config.menuItemElementHorizontalSpacing;
                 }
                 if (width < 1) {
                     return QSize(0, 0);
@@ -3033,8 +3204,76 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                              height + config.tabElementSpacing * (elements - 1));
             }
             break;
+
         case CT_ItemViewItem:
-            return SuperStyle::sizeFromContents(ct, opt, contentsSize, widget) + QSize(0, 8);
+            if (const auto* item = qstyleoption_cast<const QStyleOptionViewItem*>(opt)) {
+                const bool isListView = item->widget && item->widget->inherits("QListView");
+                const QSize textSize = item->text.isEmpty() ? QSize() : QFontMetrics(item->font).size(Qt::TextShowMnemonic, item->text);
+                const QSize iconSize = (item->features & QStyleOptionViewItem::HasDecoration && !item->icon.isNull()) ? item->decorationSize : QSize();
+
+                int height = 0;
+                int width = 0;
+                switch (item->decorationPosition) {
+                    case QStyleOptionViewItem::Left:
+                    case QStyleOptionViewItem::Right: {
+                        width += 2 * config.itemViewItemHorizontalPadding;
+                        height += 2 * config.itemViewItemVerticalPadding;
+
+                        int elements = 0;
+                        int maxInnerHeight = 0;
+                        if (isListView) {
+                            width += 2 * config.listViewItemHorizontalMargin;
+                            height += 2 * config.listViewItemVerticalMargin;
+                        }
+                        if (item->features & QStyleOptionViewItem::HasCheckIndicator) {
+                            width += config.checkBoxSize;
+                            maxInnerHeight = qMax(maxInnerHeight, config.checkBoxSize);
+                            elements++;
+                        }
+                        if (iconSize.isValid()) {
+                            width += iconSize.width();
+                            maxInnerHeight = qMax(maxInnerHeight, iconSize.height());
+                            elements++;
+                        }
+                        if (textSize.isValid()) {
+                            width += textSize.width();
+                            maxInnerHeight = qMax(maxInnerHeight, textSize.height());
+                            elements++;
+                        }
+                        width += qMax(0, elements) * config.itemViewItemElementSpacing;
+                        height += maxInnerHeight;
+                        break;
+                    }
+                    case QStyleOptionViewItem::Top:
+                    case QStyleOptionViewItem::Bottom:
+                        width += 2 * config.itemViewItemHorizontalPadding;
+                        height += 2 * config.itemViewItemVerticalPadding;
+
+                        int maxInnerHeight = 0;
+                        if (isListView) {
+                            width += 2 * config.listViewItemVerticalMargin;
+                            height += 2 * config.listViewItemVerticalMargin;
+                        }
+                        if (item->features & QStyleOptionViewItem::HasCheckIndicator) {
+                            width += config.checkBoxSize;
+                            maxInnerHeight = qMax(maxInnerHeight, config.checkBoxSize);
+                        }
+                        if (iconSize.isValid() || textSize.isValid()) {
+                            width += qMax(iconSize.width(), textSize.width());
+                            width += (item->features & QStyleOptionViewItem::HasCheckIndicator) ? config.itemViewItemElementSpacing : 0;
+
+                            if (iconSize.isValid() && textSize.isValid()) {
+                                maxInnerHeight = qMax(maxInnerHeight, iconSize.height() + config.itemViewItemElementSpacing + textSize.height());
+                            } else {
+                                maxInnerHeight = qMax(maxInnerHeight, qMax(iconSize.height(), textSize.height()));
+                            };
+                        }
+                        height += maxInnerHeight;
+                        break;
+                }
+                return QSize(width, height);
+            }
+            break;
 
         case CT_SizeGrip:
             return QSize();
