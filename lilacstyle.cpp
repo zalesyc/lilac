@@ -2534,6 +2534,14 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 if (hasDecoration && item->decorationPosition == QStyleOptionViewItem::Bottom)
                     bottom += item->decorationSize.height() + config.itemViewItemElementSpacing;
 
+                // This ensures the rectangle is always at least as large as the font, guaranteeing text visibility even if margins are disregarded
+                const int fontHeight = QFontMetrics(item->font).height();
+                const int rectHeight = bottom - top;
+                if (rectHeight < fontHeight) {
+                    bottom += qFloor((fontHeight - rectHeight) / 2.0);
+                    top -= qCeil((fontHeight - rectHeight) / 2.0);
+                }
+
                 return QRect(QPoint(left, top), QPoint(right, bottom));
             }
             break;
