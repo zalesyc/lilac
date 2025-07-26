@@ -1955,7 +1955,9 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
 
                 QRect rect;
                 if (isListView) {
-                    if (item->decorationPosition == QStyleOptionViewItem::Top || item->decorationPosition == QStyleOptionViewItem::Bottom) {
+                    if (item->widget && item->widget->inherits("KFilePlacesView")) {
+                        rect = item->rect.adjusted(config.kFilePlacesViewHorizontalMargin, 0, 0, -config.kFilePlacesViewHorizontalMargin);
+                    } else if (item->decorationPosition == QStyleOptionViewItem::Top || item->decorationPosition == QStyleOptionViewItem::Bottom) {
                         rect = item->rect.adjusted(config.listViewItemVerticalMargin, config.listViewItemVerticalMargin, -config.listViewItemVerticalMargin, -config.listViewItemVerticalMargin);
                     } else {
                         rect = item->rect.adjusted(config.listViewItemHorizontalMargin, config.listViewItemVerticalMargin, -config.listViewItemHorizontalMargin, -config.listViewItemVerticalMargin);

@@ -269,8 +269,9 @@ struct Config {
     static constexpr int itemViewItemHorizontalPadding = 5;
     static constexpr int itemViewItemVerticalPadding = 5;
     static constexpr int itemViewItemElementSpacing = 8;
-    static constexpr int listViewItemVerticalMargin = 2;    // if item->displayPosition is top or bottom, this is used for all sides
-    static constexpr int listViewItemHorizontalMargin = 5;  // only if item->displayPosition is left or right
+    static constexpr int listViewItemVerticalMargin = 2;       // if item->displayPosition is top or bottom, this is used for all sides
+    static constexpr int listViewItemHorizontalMargin = 5;     // only if item->displayPosition is left or right
+    static constexpr int kFilePlacesViewHorizontalMargin = 2;  // special case for QListView, if it's KFilePlacesView like in the left dolphin sidebar, where I dont draw vertical margin, because the list items are too small
 
     static constexpr int tooltipOpacity = 235;
 
