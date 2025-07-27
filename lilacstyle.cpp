@@ -1991,6 +1991,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
 }
 
 void Style::polish(QWidget* widget) {
+    SuperStyle::polish(widget);
     if (widget->inherits("QAbstractButton") ||
         widget->inherits("QTabBar") ||
         widget->inherits("QScrollBar") ||
@@ -2002,8 +2003,8 @@ void Style::polish(QWidget* widget) {
     }
     if (widget->inherits("QScrollBar")) {
         widget->setAttribute(Qt::WA_OpaquePaintEvent, false);
-    }
-    if (QMenu* menu = qobject_cast<QMenu*>(widget)) {
+
+    } else if (QMenu* menu = qobject_cast<QMenu*>(widget)) {
         menu->setAttribute(Qt::WA_TranslucentBackground);
         if (menu->graphicsEffect() == nullptr) {
             QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(menu);
@@ -2012,13 +2013,12 @@ void Style::polish(QWidget* widget) {
             shadow->setBlurRadius(config.menuShadowSize);
             menu->setGraphicsEffect(shadow);
         }
-    }
-    if (widget->inherits("QDockWidget") ||
-        widget->inherits("QTipLabel")) {
-        widget->setAttribute(Qt::WA_TranslucentBackground);
-    }
 
-    if (widget->inherits("QComboBoxPrivateContainer")) {
+    } else if (widget->inherits("QDockWidget") ||
+               widget->inherits("QTipLabel")) {
+        widget->setAttribute(Qt::WA_TranslucentBackground);
+
+    } else if (widget->inherits("QComboBoxPrivateContainer")) {
         if (auto popup = qobject_cast<QFrame*>(widget)) {
             popup->setLineWidth(config.comboPopupPadding + config.comboPopupMargin);
             popup->installEventFilter(this);
@@ -2032,16 +2032,13 @@ void Style::polish(QWidget* widget) {
                 popup->setGraphicsEffect(shadow);
             }
         }
-    }
 
-    if (widget->parent() && widget->parent()->inherits("QComboBoxListView")) {
+    } else if (widget->parent() && widget->parent()->inherits("QComboBoxListView")) {
         widget->setAutoFillBackground(false);
     }
-    SuperStyle::polish(widget);
 }
 
 void Style::unpolish(QWidget* widget) {
-    SuperStyle::unpolish(widget);
     if (widget->inherits("QAbstractButton") ||
         widget->inherits("QTabBar") ||
         widget->inherits("QScrollBar") ||
@@ -2053,15 +2050,26 @@ void Style::unpolish(QWidget* widget) {
     }
     if (widget->inherits("QScrollBar")) {
         widget->setAttribute(Qt::WA_OpaquePaintEvent, true);
-    }
-    if (QMenu* menu = qobject_cast<QMenu*>(widget)) {
+
+    } else if (QMenu* menu = qobject_cast<QMenu*>(widget)) {
         menu->setAttribute(Qt::WA_TranslucentBackground, false);
         menu->setGraphicsEffect(nullptr);
-    }
-    if (widget->inherits("QDockWidget") ||
-        widget->inherits("QTipLabel")) {
+
+    } else if (widget->inherits("QDockWidget") ||
+               widget->inherits("QTipLabel")) {
         widget->setAttribute(Qt::WA_TranslucentBackground, false);
+
+    } else if (widget->inherits("QComboBoxPrivateContainer")) {
+        if (auto popup = qobject_cast<QFrame*>(widget)) {
+            popup->setLineWidth(1);
+            popup->removeEventFilter(this);
+            popup->setAttribute(Qt::WA_TranslucentBackground, false);
+            popup->setGraphicsEffect(nullptr);
+        }
+    } else if (widget->parent() && widget->parent()->inherits("QComboBoxListView")) {
+        widget->setAutoFillBackground(true);
     }
+    SuperStyle::unpolish(widget);
 }
 
 int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWidget* widget) const {
