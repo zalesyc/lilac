@@ -200,7 +200,7 @@ struct Config {
     static constexpr int sliderHandleCircleDiameter = 12;
     static constexpr int sliderTickmarksLen = 8;
 
-    static constexpr int scrollBarThickness = 18;
+    static constexpr int scrollBarThickness = 16;
     static constexpr int scrollBarSliderPadding = 6;  // left and right of the slider -> sets the thickness
     static constexpr int scrollBarSliderPaddingHover = 4;
 

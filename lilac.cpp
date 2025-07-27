@@ -130,14 +130,17 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return getColor(pal, Color::line);
 
         case scrollBarSlider: {
-            const auto base = getColor(pal, Color::scrollBarHoverBg);
             if (!state.enabled)
-                return base;
+                return getColor(pal, Color::scrollBarHoverBg);
+
+            auto base = pal.color(CGroup::Normal, CRole::Text);
             if (state.pressed)
-                return isDarkMode(pal) ? base.lighter(250) : base.darker(250);
-            if (state.hovered)
-                return isDarkMode(pal) ? base.lighter(240) : base.darker(240);
-            return isDarkMode(pal) ? base.lighter(230) : base.darker(130);
+                base.setAlpha(120);
+            else if (state.hovered)
+                base.setAlpha(100);
+            else
+                base.setAlpha(80);
+            return base;
         }
 
         case sliderHandleHoverCircle:
