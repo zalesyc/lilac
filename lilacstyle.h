@@ -33,6 +33,8 @@ class Style : public SuperStyle {
     QRect subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex* opt, QStyle::SubControl element, const QWidget* widget = nullptr) const override;
     QSize sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, const QSize& contentsSize, const QWidget* widget = nullptr) const override;
 
+    bool eventFilter(QObject* object, QEvent* event) override;
+
    protected:
     Lilac::Config config;
     mutable Lilac::AnimationManager animationMgr;

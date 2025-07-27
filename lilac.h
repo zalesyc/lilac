@@ -81,6 +81,8 @@ enum Color {
     comboBoxOutline,           // DHPF
     comboBoxFramelessOutline,  // DHPF
     comboBoxUneditableText,    // D
+    comboBoxPopupBg,
+    comboBoxPopupShadow,
 
     menuText,          // D
     menuShortcutText,  // D
@@ -230,7 +232,9 @@ struct Config {
     static constexpr int comboArrowWidth = 30;  // the part that is clickable, the indicator is smaller
     static constexpr int comboMinWidthChars = lineEditMinWidthChars;
     static constexpr int comboTextLeftPadding = lineEditTextHorizontalPadding;  // used left of icon and left of text
-    static constexpr int comboPopupOffset = 4;
+    static constexpr int comboPopupPadding = 3;
+    static constexpr int comboPopupMargin = 3;
+    static constexpr int comboPopupShadowSize = 5;
 
     static constexpr int toolBtnMenuArrowSize = 8;              // the small arrow in the bottom left corner
     static constexpr QPoint toolBtnArrowOffset = QPoint(5, 5);  // offset from bottomRight of the widget, for the small arrow in the bottom left

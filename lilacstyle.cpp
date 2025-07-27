@@ -10,8 +10,10 @@
 #endif
 
 #include <QDockWidget>
+#include <QFocusFrame>
 #include <QGraphicsDropShadowEffect>
 #include <QMenu>
+#include <QPaintEvent>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPalette>
@@ -1989,7 +1991,6 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
 }
 
 void Style::polish(QWidget* widget) {
-    SuperStyle::polish(widget);
     if (widget->inherits("QAbstractButton") ||
         widget->inherits("QTabBar") ||
         widget->inherits("QScrollBar") ||
@@ -2016,6 +2017,27 @@ void Style::polish(QWidget* widget) {
         widget->inherits("QTipLabel")) {
         widget->setAttribute(Qt::WA_TranslucentBackground);
     }
+
+    if (widget->inherits("QComboBoxPrivateContainer")) {
+        if (auto popup = qobject_cast<QFrame*>(widget)) {
+            popup->setLineWidth(config.comboPopupPadding + config.comboPopupMargin);
+            popup->installEventFilter(this);
+            popup->setAttribute(Qt::WA_TranslucentBackground);
+
+            if (popup->graphicsEffect() == nullptr) {
+                QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(popup);
+                shadow->setOffset(0.3, 0.5);
+                shadow->setColor(getColor(popup->palette(), Color::comboBoxPopupShadow));
+                shadow->setBlurRadius(config.comboPopupShadowSize);
+                popup->setGraphicsEffect(shadow);
+            }
+        }
+    }
+
+    if (widget->parent() && widget->parent()->inherits("QComboBoxListView")) {
+        widget->setAutoFillBackground(false);
+    }
+    SuperStyle::polish(widget);
 }
 
 void Style::unpolish(QWidget* widget) {
@@ -3292,6 +3314,33 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
             break;
     }
     return SuperStyle::sizeFromContents(ct, opt, contentsSize, widget);
+}
+
+bool Style::eventFilter(QObject* object, QEvent* event) {
+    QWidget* widget = qobject_cast<QWidget*>(object);
+    if (!widget) {
+        return SuperStyle::eventFilter(object, event);
+    }
+
+    if (widget->inherits("QComboBoxPrivateContainer") && event->type() == QEvent::Paint) {
+        const QPaintEvent* paintEvent = static_cast<QPaintEvent*>(event);
+        QStyleOption opt;
+        opt.initFrom(widget);
+
+        const QRect rect = paintEvent->rect().adjusted(config.comboPopupMargin,
+                                                       config.comboPopupMargin,
+                                                       -config.comboPopupMargin,
+                                                       -config.comboPopupMargin);
+        QPainter p(widget);
+        p.setClipRegion(paintEvent->region());
+        p.setRenderHint(QPainter::Antialiasing);
+        p.setPen(getPen(opt.palette, Color::line, 1));
+        p.setBrush(getBrush(opt.palette, Color::comboBoxPopupBg));
+        p.drawRoundedRect(rect, config.cornerRadius, config.cornerRadius);
+        p.end();
+        return true;
+    }
+    return SuperStyle::eventFilter(object, event);
 }
 
 void Style::settingsChanged() {

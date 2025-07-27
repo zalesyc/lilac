@@ -252,6 +252,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
                 return getColor(pal, Color::menuText, state).darker(130);
             return getColor(pal, Color::menuText, state).lighter(130);
 
+        case comboBoxPopupBg:
         case menuBg: {
             QColor base = pal.color(CGroup::Normal, CRole::AlternateBase);
             base.setAlpha(Config::menuBgOpacity);
@@ -268,6 +269,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case menuBarBg:
             return pal.color(groupFromState(state), CRole::Base);
 
+        case comboBoxPopupShadow:
         case menuShadow:
             return QColor(0, 0, 0);
 
@@ -400,6 +402,7 @@ static QColor getColorFromKColorScheme(const QPalette& pal, const Color color, c
         case menuShortcutText:
             return KColorScheme(groupFromState(state), KCSet::Window).foreground(KFgRole::InactiveText).color();
 
+        case comboBoxPopupBg:
         case menuBg: {
             QColor base = KColorScheme(CGroup::Normal, KCSet::Window).background(KBgRole::AlternateBackground).color();
             base.setAlpha(Config::menuBgOpacity);
