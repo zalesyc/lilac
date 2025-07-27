@@ -30,38 +30,37 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 add_library(LilacStyle SHARED
-    lilacstyleplugin.cpp
-    lilacstyleplugin.h
-    lilacstyle.cpp
-    lilac.json
-    lilacstyle.cpp
-    lilacstyle.h
-    lilac.cpp
-    lilac.h
-    lilacanimationmanager.h
-    lilacanimationmanager.cpp
+    src/lilac.json
+    src/style_plugin.cpp
+    src/style_plugin.h
+    src/style.cpp
+    src/style.h
+    src/utils.cpp
+    src/utils.h
+    src/animation_manager.cpp
+    src/animation_manager.h
 )
 
 target_link_libraries(LilacStyle PRIVATE Qt6::Widgets)
 
 if (NOT NO_SETTINGS)
     add_library(LilacSettings SHARED
-        settings/lilacsettingsapp.h
-        settings/lilacsettingsapp.cpp
-        settings/lilacsettingsapp.ui
+        src/settings/settings_app.cpp
+        src/settings/settings_app.h
+        src/settings/settings_app.ui
     )
-    kconfig_add_kcfg_files(LilacSettings lilacsettings.kcfgc)
+    kconfig_add_kcfg_files(LilacSettings settings.kcfgc)
     target_link_libraries(LilacSettings PRIVATE Qt6::Widgets)
     target_link_libraries(LilacSettings PRIVATE KF6::ConfigCore KF6::ConfigGui)
 
 
     add_executable(LilacSettingsApp
-        settings/lilacsettingsapp.h
-        settings/lilacsettingsapp.cpp
-        settings/lilacsettingsapp.ui
-        settings/main.cpp
+        src/settings/settings_app.cpp
+        src/settings/settings_app.h
+        src/settings/settings_app.ui
+        src/settings/main.cpp
     )
-    kconfig_add_kcfg_files(LilacSettingsApp lilacsettings.kcfgc)
+    kconfig_add_kcfg_files(LilacSettingsApp settings.kcfgc)
     target_link_libraries(LilacSettingsApp PRIVATE Qt6::Widgets)
     target_link_libraries(LilacSettingsApp PRIVATE KF6::ConfigCore KF6::ConfigGui)
 
@@ -94,7 +93,7 @@ else()
 endif()
 
 if (NOT NO_SETTINGS)
-    kconfig_add_kcfg_files(LilacStyle lilacsettings.kcfgc)
+    kconfig_add_kcfg_files(LilacStyle settings.kcfgc)
     target_link_libraries(LilacStyle PRIVATE KF6::ConfigCore KF6::ConfigGui)
     target_compile_definitions(LilacStyle PRIVATE HAS_SETTINGS=1)
 
@@ -128,7 +127,7 @@ if (NOT NO_SETTINGS)
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/qt6/plugins/kstyle_config
     )
     install(
-        FILES settings/lilac.themerc
+        FILES src/settings/lilac.themerc
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/kstyle/themes
     )
     set_target_properties(LilacSettingsApp PROPERTIES

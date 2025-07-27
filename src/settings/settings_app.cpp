@@ -1,5 +1,5 @@
-#include "lilacsettingsapp.h"
-#include "ui_lilacsettingsapp.h"
+#include "settings_app.h"
+#include "ui_settings_app.h"
 
 #if HAS_DBUS
 #include <QDBusConnection>

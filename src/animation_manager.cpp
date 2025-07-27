@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025 zalesyc and the lilac-qt contributors
 
-#include "lilacanimationmanager.h"
-#include "lilac.h"
+#include "animation_manager.h"
+#include "utils.h"
 
 namespace Lilac {
 

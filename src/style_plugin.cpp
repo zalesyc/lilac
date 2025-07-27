@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025 zalesyc and the lilac-qt contributors
 
-#include "lilacstyleplugin.h"
 #include <QStringList>
 #include <QStringLiteral>
-#include "lilacstyle.h"
+
+#include "style.h"
+#include "style_plugin.h"
 
 namespace Lilac {
 QStyle* StylePlugin::create(const QString& key) {

@@ -3,7 +3,7 @@
 #include <QDialogButtonBox>
 #include <QVBoxLayout>
 
-#include "lilacsettingsapp.h"
+#include "settings_app.h"
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);

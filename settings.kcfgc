@@ -1,4 +1,4 @@
-File=lilac.kcfg
+File=src/settings.kcfg
 ClassName=LilacSettings
 NameSpace=Lilac
 Singleton=true

@@ -8,8 +8,8 @@
 #include <QStyleOption>
 #include <QWidget>
 
-#include "lilac.h"
-#include "lilacanimationmanager.h"
+#include "animation_manager.h"
+#include "utils.h"
 
 namespace Lilac {
 
