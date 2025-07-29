@@ -263,7 +263,7 @@ struct Config {
     static constexpr int groupBoxLabelOffset = groupBoxHeaderHorizontalPadding + 10;  // length between the side of the groupbox and the label/check
 
     static constexpr int dialHandleDiameter = 12;
-    static constexpr int dialHandleHoverCircleDiameter = 20;
+    static constexpr int dialHandleHoverCircleDiameter = 32;
 
     static constexpr int dialRangeNonWaraping = 300;  // degrees
 

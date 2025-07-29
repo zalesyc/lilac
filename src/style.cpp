@@ -9,6 +9,7 @@
 #include "lilacsettings.h"
 #endif
 
+#include <QDial>
 #include <QDockWidget>
 #include <QFocusFrame>
 #include <QGraphicsDropShadowEffect>
@@ -434,25 +435,15 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                  * all values are in degrees
                  * 0° is at the 6 o'clock position
                  * when upsideDown is false, value rises in counterclockwise direction
-                 *
-                 * It doesnt use subControlRect for handle positions, as that would result in duplicate calulations
                  */
                 const QRect groove = subControlRect(CC_Dial, dial, SC_DialGroove, widget);
 
                 const int arcLen = dial->dialWrapping ? 360 : config.dialRangeNonWaraping;  // length in degrees, of the line
                 const int startAngle = (360 - arcLen) / 2;
-                const qreal dialRadius = (groove.width() - config.dialHandleHoverCircleDiameter) / 2;
                 const int value = sliderPositionFromValue(dial->minimum, dial->maximum, dial->sliderPosition, arcLen, dial->upsideDown);
-                const qreal handleX = qSin(qDegreesToRadians(qreal(startAngle + value))) * dialRadius;  // this x and y is for a circle with
-                const qreal handleY = qCos(qDegreesToRadians(qreal(startAngle + value))) * dialRadius;  // the centre at 0,0 and radius radius
 
-                const QRectF handleHover(groove.left() + dialRadius + handleX,
-                                         groove.top() + dialRadius + handleY,
-                                         config.dialHandleHoverCircleDiameter,
-                                         config.dialHandleHoverCircleDiameter);
-
-                const QRect slider = groove.adjusted(config.dialHandleHoverCircleDiameter / 2, config.dialHandleHoverCircleDiameter / 2,
-                                                     -config.dialHandleHoverCircleDiameter / 2, -config.dialHandleHoverCircleDiameter / 2);
+                const QRect sliderRect = groove.adjusted(config.dialHandleDiameter / 2, config.dialHandleDiameter / 2,
+                                                         -config.dialHandleDiameter / 2, -config.dialHandleDiameter / 2);
 
                 p->save();
                 p->setRenderHint(QPainter::Antialiasing);
@@ -460,27 +451,21 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                 p->setBrush(Qt::NoBrush);
                 if (dial->upsideDown) {
                     p->setPen(getPen(dial->palette, Color::dialLineAfter, state, 2));
-                    p->drawArc(slider, -90 * 16 + startAngle * 16, value * 16);
+                    p->drawArc(sliderRect, -90 * 16 + startAngle * 16, value * 16);
                     p->setPen(getPen(dial->palette, Color::dialLineBefore, state, 2));
-                    p->drawArc(slider, 270 * 16 - startAngle * 16, (value - arcLen) * 16);
+                    p->drawArc(sliderRect, 270 * 16 - startAngle * 16, (value - arcLen) * 16);
                 } else {
                     p->setPen(getPen(dial->palette, Color::dialLineBefore, state, 2));
-                    p->drawArc(slider, 270 * 16 - startAngle * 16, (value - arcLen) * 16);
+                    p->drawArc(sliderRect, 270 * 16 - startAngle * 16, (value - arcLen) * 16);
                     p->setPen(getPen(dial->palette, Color::dialLineAfter, state, 2));
-                    p->drawArc(slider, -90 * 16 + startAngle * 16, value * 16);
+                    p->drawArc(sliderRect, -90 * 16 + startAngle * 16, value * 16);
                 }
+
+                QRect handleRect = subControlRect(CC_Dial, dial, SC_DialHandle, widget);
 
                 p->setPen(Qt::NoPen);
                 p->setBrush(getBrush(dial->palette, Color::dialHandle, state));
-                QRectF handle(0, 0, config.dialHandleDiameter, config.dialHandleDiameter);
-                handle.moveCenter(handleHover.center());
-                p->drawEllipse(handle);
-
-                if ((state.hovered || state.pressed) && state.enabled) {
-                    p->setBrush(getBrush(dial->palette, Color::sliderHandleHoverCircle, state));
-                    p->drawEllipse(handleHover);
-                }
-
+                p->drawEllipse(handleRect);
                 p->restore();
 
                 return;
@@ -1414,6 +1399,50 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
             }
             break;
 
+        case CE_FocusFrame: {
+            const auto* focusFrame = qobject_cast<const QFocusFrame*>(widget);
+            if (!focusFrame) {
+                break;
+            }
+            const QWidget* focusedWidget = focusFrame->widget();
+
+            // these margins are used to translate the painter, here the painter origin is
+            // top left of the focusFrame, but the widget expects this origin to be its top left
+            const int verticalMargin = pixelMetric(PM_FocusFrameVMargin, opt, widget);
+            const int horizontalMargin = pixelMetric(PM_FocusFrameHMargin, opt, widget);
+
+            if (const auto* dial = qobject_cast<const QDial*>(focusedWidget)) {
+                QStyleOptionSlider dialOpt;
+                dialOpt.initFrom(dial);
+
+                Lilac::State dialState(dialOpt.state);
+                if (!dialState.enabled || (!dialState.hovered && !dialState.pressed)) {
+                    return;
+                }
+
+                dialOpt.sliderPosition = dial->sliderPosition();
+                dialOpt.sliderValue = dial->value();
+                dialOpt.minimum = dial->minimum();
+                dialOpt.maximum = dial->maximum();
+                dialOpt.upsideDown = !dial->invertedAppearance();
+
+                const qreal hoverRectDifference = (config.dialHandleHoverCircleDiameter - config.dialHandleDiameter) / 2.0;
+                const QRect handleRect = subControlRect(CC_Dial, &dialOpt, SC_DialHandle, dial);
+                const QRectF handleHoverRect = handleRect.toRectF().adjusted(-hoverRectDifference, -hoverRectDifference, hoverRectDifference, hoverRectDifference);
+
+                p->save();
+                p->setRenderHint(QPainter::Antialiasing);
+                p->translate(horizontalMargin, verticalMargin);
+                p->setPen(Qt::NoPen);
+                p->setBrush(getBrush(dialOpt.palette, Color::dialHandleHoverCircle, dialState));
+                p->drawEllipse(handleHoverRect);
+                p->restore();
+                return;
+            }
+
+            break;
+        }
+
         case CE_SizeGrip:
             return;
 
@@ -2035,6 +2064,15 @@ void Style::polish(QWidget* widget) {
 
     } else if (widget->parent() && widget->parent()->inherits("QComboBoxListView")) {
         widget->setAutoFillBackground(false);
+
+    } else if (QDial* dial = qobject_cast<QDial*>(widget)) {
+        QFocusFrame* focusFrame = new QFocusFrame(dial);
+        focusFrame->setWidget(dial);
+
+        // Workaround: QFocusFrame doesn't automatically update outside focused widget bounds during drag operations
+        // Manually trigger repaint on value changes to ensure focus frame stays in sync
+        connect(dial, SIGNAL(sliderMoved(int)), focusFrame, SLOT(update()));
+        connect(dial, SIGNAL(valueChanged(int)), focusFrame, SLOT(update()));
     }
 }
 
@@ -2151,6 +2189,28 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
             return 3;
         case PM_ToolTipLabelFrameWidth:
             return 6;
+
+        case PM_FocusFrameVMargin:
+        case PM_FocusFrameHMargin: {
+            const auto* focusFrame = qobject_cast<const QFocusFrame*>(widget);
+            if (!focusFrame) {
+                break;
+            }
+            const bool isHorizontal = (m == PM_FocusFrameHMargin);
+            const QWidget* focusedWidget = focusFrame->widget();
+
+            if (const QDial* dial = qobject_cast<const QDial*>(focusedWidget)) {
+                const int diameterDifference = config.dialHandleHoverCircleDiameter - config.dialHandleDiameter;
+
+                QStyleOptionSlider dialOpt;
+                dialOpt.initFrom(dial);
+                const QRect grooveRect = subControlRect(CC_Dial, &dialOpt, SC_DialGroove, dial);
+                if (isHorizontal) {
+                    return qCeil((diameterDifference - (dialOpt.rect.width() - grooveRect.width())) / 2.0);
+                }
+                return qCeil((diameterDifference - (dialOpt.rect.height() - grooveRect.height())) / 2.0);
+            }
+        }
         default:
             break;
     }
@@ -2185,6 +2245,10 @@ int Style::styleHint(QStyle::StyleHint hint, const QStyleOption* option, const Q
             return QFrame::StyledPanel;
         case SH_ItemView_ShowDecorationSelected:
             return true;
+        case SH_FocusFrame_AboveWidget:
+            return true;
+        case SH_FocusFrame_Mask:
+            return false;
 
 #if !HAS_KSTYLE
         SH_Menu_SubMenuSloppyCloseTimeout:
@@ -2898,6 +2962,20 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                         QRect rect(0, 0, size, size);
                         rect.moveCenter(dial->rect.center());
                         return rect;
+                    }
+                    case SC_DialHandle: {
+                        const QRect groove = subControlRect(CC_Dial, dial, SC_DialGroove, widget);
+                        const int arcLen = dial->dialWrapping ? 360 : config.dialRangeNonWaraping;  // length in degrees, of the line
+                        const int startAngle = (360 - arcLen) / 2;
+                        const qreal handleRadius = (groove.width() - config.dialHandleDiameter) / 2;
+                        const int value = sliderPositionFromValue(dial->minimum, dial->maximum, dial->sliderPosition, arcLen, dial->upsideDown);
+                        const qreal handleX = qSin(qDegreesToRadians(qreal(startAngle + value))) * handleRadius;  // this x and y is for a circle with
+                        const qreal handleY = qCos(qDegreesToRadians(qreal(startAngle + value))) * handleRadius;  // the centre at 0,0 and radius radius
+
+                        return QRect(groove.left() + handleRadius + handleX,
+                                     groove.top() + handleRadius + handleY,
+                                     config.dialHandleDiameter,
+                                     config.dialHandleDiameter);
                     }
                     default:
                         break;
