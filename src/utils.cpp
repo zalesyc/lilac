@@ -3,6 +3,8 @@
 
 #include "utils.h"
 
+#include <QTimer>
+
 #if HAS_KCOLORSCHEME
 #include <KColorScheme>
 #endif
@@ -467,5 +469,15 @@ void Config::initFromSettings(LilacSettings* settings) {
     circleCheckBox = settings->circleCheckBox();
 }
 #endif
+
+SliderFocusFrame::~SliderFocusFrame() {}
+
+bool SliderFocusFrame::eventFilter(QObject* object, QEvent* event) {
+    if (object == widget() && event->type() == QEvent::Paint) {
+        QTimer::singleShot(0, [this]() { this->update(); });
+        return false;
+    }
+    return QFocusFrame::eventFilter(object, event);
+}
 
 }  // namespace Lilac

@@ -8,6 +8,7 @@
 #endif
 
 #include <QCommonStyle>
+#include <QFocusFrame>
 #include <QPainter>
 #include <QPair>
 #include <QPen>
@@ -197,7 +198,8 @@ struct Config {
     static constexpr int tabElementSpacing = 7;              // spacing between the inner elements of the tab
 
     static constexpr int sliderHandleHoverCircleDiameter = 32;
-    static constexpr int sliderHandleCircleDiameter = 12;
+    static constexpr int sliderHandleDiameter = 12;
+    static constexpr int sliderHandleThicknessMargin = 2;  // margin of the handle in the thickness direction, slider thickness is calculated like: handle + max(handleThicknessMargin, tickmarks)
     static constexpr int sliderTickmarksLen = 8;
 
     static constexpr int scrollBarThickness = 16;
@@ -293,6 +295,21 @@ struct Config {
 #if HAS_SETTINGS
     void initFromSettings(LilacSettings* settings);
 #endif
+};
+
+class SliderFocusFrame : public QFocusFrame {
+    /* This class is used as a workaround for using FocusFrames with sliders (including dials).
+     * By default QFocusFrame does not automatically update outside focused widget bounds during some operations,
+     * which is a problem for sliders.
+     */
+
+    Q_OBJECT
+   public:
+    using QFocusFrame::QFocusFrame;
+    ~SliderFocusFrame();
+
+   protected:
+    bool eventFilter(QObject* object, QEvent* event) override;
 };
 
 }  // namespace Lilac
