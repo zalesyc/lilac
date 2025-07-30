@@ -65,7 +65,7 @@ enum Color {
     scrollBarSlider,  // HPD
 
     sliderHandle,             // D
-    sliderHandleHoverCircle,  // P
+    sliderHandleHoverCircle,  // HPF - hover is the default
     sliderLineBefore,         // D, the colored part
     sliderLineAfter,          // D, the gray part
     sliderTickmarks,
@@ -123,7 +123,7 @@ enum Color {
     dialLineBefore,         // D
     dialLineAfter,          // D
     dialHandle,             // D
-    dialHandleHoverCircle,  // P
+    dialHandleHoverCircle,  // HPF - hover is the default
 
     rubberbandLine,  // when shape is line
     rubberBandRectOutline,

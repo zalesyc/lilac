@@ -148,11 +148,12 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case sliderHandleHoverCircle:
         case dialHandleHoverCircle: {
             auto base = pal.color(CGroup::Normal, CRole::Accent);
-            if (state.pressed) {
-                base.setAlpha(80);
-                return base;
-            }
-            base.setAlpha(50);
+            if (state.pressed)
+                base.setAlpha(100);
+            else if (state.hasFocus && !state.hovered)
+                base.setAlpha(30);
+            else
+                base.setAlpha(70);
             return base;
         }
 

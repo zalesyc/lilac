@@ -1406,7 +1406,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 dialOpt.initFrom(dial);
 
                 Lilac::State dialState(dialOpt.state);
-                if (!dialState.enabled || (!dialState.hovered && !dialState.pressed)) {
+                if (!dialState.enabled || (!dialState.hasFocus && (!dialState.hovered && !dialState.pressed))) {
                     return;
                 }
 
@@ -1452,8 +1452,11 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     mouseFocusRect.setRight(sliderOpt.rect.right());
                 }
                 // this is a workaround for not having access to QStyleOptionSlider::activeSubControls
-                const bool isHandleActive = mouseFocusRect.contains(slider->mapFromGlobal(QCursor::pos()));
-                if (!sliderState.enabled || !isHandleActive || (!sliderState.hovered && !sliderState.pressed)) {
+                const bool isHandleActive = mouseFocusRect.contains(slider->mapFromGlobal(QCursor::pos())) || slider->isSliderDown();
+                sliderState.hovered = sliderState.hovered && isHandleActive;
+                sliderState.pressed = sliderState.pressed && isHandleActive;
+
+                if (!sliderState.enabled || (!sliderState.hasFocus && (!sliderState.hovered && !sliderState.pressed))) {
                     return;
                 }
 
