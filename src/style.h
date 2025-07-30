@@ -8,10 +8,20 @@
 #include <QStyleOption>
 #include <QWidget>
 
+#if HAS_KSTYLE
+#include <KStyle>
+#endif
+
 #include "animation_manager.h"
-#include "utils.h"
+#include "config.h"
 
 namespace Lilac {
+
+#if HAS_KSTYLE
+using SuperStyle = KStyle;
+#else
+using SuperStyle = QCommonStyle;
+#endif
 
 class Style : public SuperStyle {
     Q_OBJECT

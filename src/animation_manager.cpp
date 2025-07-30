@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: 2025 zalesyc and the lilac-qt contributors
 
 #include "animation_manager.h"
-#include "utils.h"
+#include "config.h"
 
 namespace Lilac {
 

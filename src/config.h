@@ -3,160 +3,13 @@
 
 #pragma once
 
+#include <QPoint>
+
 #if HAS_SETTINGS
 #include "lilacsettings.h"
 #endif
 
-#include <QCommonStyle>
-#include <QFocusFrame>
-#include <QPainter>
-#include <QPair>
-#include <QPen>
-#include <QProxyStyle>
-#include <QStyle>
-#include <QStyleOption>
-#include <QWidget>
-
-#if HAS_KSTYLE
-#include <KStyle>
-#endif
-
 namespace Lilac {
-#if HAS_KSTYLE
-using SuperStyle = KStyle;
-#else
-using SuperStyle = QCommonStyle;
-#endif
-enum Color {
-    /*
-     * letters after elements are for their possible states, that should be handled
-     * D: disabled, H: hover, P: pressed, F: has focus
-     *
-     * shortcuts:
-     * Bg - background
-     * Btn - button
-     */
-    line,  // outline or separator line
-
-    focusRect,
-
-    indicatorArrow,  // D
-
-    buttonBg,  // DHP
-    toggleButtonChecked,
-
-    checkBoxInside,              // D all checkbox colors are also for radiobuttons
-    checkBoxCheck,               // D
-    checkBoxOutline,             // D
-    checkBoxHoverCircle,         // HP
-    checkBoxHoverCircleChecked,  // HP
-    checkBoxText,                // D
-
-    tabText,
-    tabCheckedOutline,
-    tabCheckedFill,
-    tabUncheckedHover,
-    tabWidgetPageArea,
-    tabCloseIndicator,             // DHP, just the x
-    tabCloseIndicatorHoverCircle,  // HP
-
-    scrollBarHoverBg,
-    scrollBarHoverOutline,
-    scrollBarSlider,  // HPD
-
-    sliderHandle,             // D
-    sliderHandleHoverCircle,  // HPF - hover is the default
-    sliderLineBefore,         // D, the colored part
-    sliderLineAfter,          // D, the gray part
-    sliderTickmarks,
-
-    lineEditBg,       // D
-    lineEditOutline,  // DFH
-
-    spinBoxBg,                    // D
-    spinBoxOutline,               // DFH
-    spinBoxIndicator,             // DHP
-    spinBoxIndicatorHoverCircle,  // HP
-
-    comboBoxBg,                // DHPF - pressed: menu is open
-    comboBoxOutline,           // DHPF
-    comboBoxFramelessOutline,  // DHPF
-    comboBoxUneditableText,    // D
-    comboBoxPopupBg,
-    comboBoxPopupShadow,
-
-    menuText,          // D
-    menuShortcutText,  // D
-    menuSeparator,     // D
-    menuItemHoverBg,
-    menuBg,
-    menuShadow,
-    menuBarItemHoverBg,  // HP - hover: hover without open menu, pressed: menu open
-    menuBarItemText,     // D
-    menuBarBg,           // D
-
-    toolBtnText,               // D
-    toolBtnBg,                 // DHP
-    toolBtnBgAutoRise,         // DHP
-    toolBtnBgChecked,          // DHP
-    toolBtnBgAutoRiseChecked,  // DHP
-    toolBtnMenuSeparator,      // D
-    toolBtnFocusOutline,
-
-    toolBarBgOther,    // D - all positions except for top
-    toolBarBgHeader,   // D - only if on top
-    toolBarHandle,     // D
-    toolBarSeparator,  // D
-
-    progressBarIndicatorBg,  // D
-    progressBarIndicator,    // D
-    progressBarText,         // D
-
-    branchIndicator,
-
-    groupBoxLine,  // D
-    groupBoxText,  // D
-
-    viewHeaderBg,           // DHP - when with table: pressed - the row/collumn is selected
-    viewHeaderEmptyAreaBg,  // D
-
-    dialLineBefore,         // D
-    dialLineAfter,          // D
-    dialHandle,             // D
-    dialHandleHoverCircle,  // HPF - hover is the default
-
-    rubberbandLine,  // when shape is line
-    rubberBandRectOutline,
-    rubberBandRectBg,
-    rubberBandRectBgOpaque,
-
-    dockWidgetTitle,  // D
-    dockWidgetFloatingBg,
-
-    itemViewItemBg,                  // DHP - drawn over the color provided by the widget, may be just a semi-transparent overlay; pressed: item is selected
-    itemViewItemDefaultAlternateBg,  // itemView background, where the widget says that it wants alternateBase
-    itemViewText,                    // DP - pressed: the item is selected
-
-    tooltipBg,
-
-};
-
-struct State {
-    State() {}
-    State(const QStyle::State& state);
-
-    bool enabled = true;    // QStyle::State_Enabled
-    bool hovered = false;   // QStyle::State_MouseOver
-    bool pressed = false;   // QStyle::State_Sunken
-    bool hasFocus = false;  // QStyle::State_HasFocus
-};
-
-const QColor getColor(const QPalette& pal, const Color color, const State& state = State());
-const QBrush getBrush(const QPalette& pal, const Color color, const State& state = State());
-const QPen getPen(const QPalette& pal, const Color color, const State& state, const qreal penWidth = 1);  // this needs to have an overload due to
-const QPen getPen(const QPalette& pal, const Color color, const qreal penWidth = 1);                      // the way optional parameters are handled
-
-bool isDarkMode(const QPalette& pal);
 
 struct Config {
     /*
@@ -293,23 +146,11 @@ struct Config {
 
     // methods
 #if HAS_SETTINGS
-    void initFromSettings(LilacSettings* settings);
+    void initFromSettings(LilacSettings* settings) {
+        cornerRadius = settings->cornerRadius();
+        circleCheckBox = settings->circleCheckBox();
+    }
 #endif
-};
-
-class SliderFocusFrame : public QFocusFrame {
-    /* This class is used as a workaround for using FocusFrames with sliders (including dials).
-     * By default QFocusFrame does not automatically update outside focused widget bounds during some operations,
-     * which is a problem for sliders.
-     */
-
-    Q_OBJECT
-   public:
-    using QFocusFrame::QFocusFrame;
-    ~SliderFocusFrame();
-
-   protected:
-    bool eventFilter(QObject* object, QEvent* event) override;
 };
 
 }  // namespace Lilac

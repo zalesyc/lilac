@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2025 zalesyc and the lilac-qt contributors
 
-#include "utils.h"
-
-#include <QTimer>
+#include "colors.h"
+#include "config.h"
 
 #if HAS_KCOLORSCHEME
 #include <KColorScheme>
@@ -24,6 +23,7 @@ using KShRole = KColorScheme::ShadeRole;
 
 static QColor getColorFromPallete(const QPalette& pal, const Color color, const State& state);
 static QColor getColorFromKColorScheme(const QPalette& pal, const Color color, const State& state);
+bool isDarkMode(const QPalette& pal);
 QColor lessContrastingBg(const QPalette& pal, const CGroup cgroup);
 CGroup groupFromState(const State& state);
 
@@ -440,13 +440,6 @@ static QColor getColorFromKColorScheme(const QPalette& pal, const Color color, c
 }
 #endif
 
-State::State(const QStyle::State& state) {
-    enabled = state & QStyle::State_Enabled;
-    hovered = state & QStyle::State_MouseOver;
-    pressed = state & QStyle::State_Sunken;
-    hasFocus = state & QStyle::State_HasFocus;
-}
-
 bool isDarkMode(const QPalette& pal) {
     return pal.color(QPalette::ColorRole::Window).lightness() < pal.color(QPalette::ColorRole::Text).lightness();
 }
@@ -462,23 +455,6 @@ QColor lessContrastingBg(const QPalette& pal, const CGroup cgroup) {
 
 CGroup groupFromState(const State& state) {
     return state.enabled ? CGroup::Active : CGroup::Disabled;
-}
-
-#if HAS_SETTINGS
-void Config::initFromSettings(LilacSettings* settings) {
-    cornerRadius = settings->cornerRadius();
-    circleCheckBox = settings->circleCheckBox();
-}
-#endif
-
-SliderFocusFrame::~SliderFocusFrame() {}
-
-bool SliderFocusFrame::eventFilter(QObject* object, QEvent* event) {
-    if (object == widget() && event->type() == QEvent::Paint) {
-        QTimer::singleShot(0, [this]() { this->update(); });
-        return false;
-    }
-    return QFocusFrame::eventFilter(object, event);
 }
 
 }  // namespace Lilac

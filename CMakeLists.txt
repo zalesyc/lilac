@@ -35,10 +35,14 @@ add_library(LilacStyle SHARED
     src/style_plugin.h
     src/style.cpp
     src/style.h
-    src/utils.cpp
-    src/utils.h
+    src/config.h
+    src/colors.cpp
+    src/colors.h
     src/animation_manager.cpp
     src/animation_manager.h
+    src/utils/state.h
+    src/utils/slider_focus_frame.cpp
+    src/utils/slider_focus_frame.h
 )
 
 target_link_libraries(LilacStyle PRIVATE Qt6::Widgets)
