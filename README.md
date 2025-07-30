@@ -8,7 +8,7 @@ A native Qt6 application style for KDE Plasma that provides modern widget stylin
 This is strictly an application style - it handles only the appearance of Qt widgets and interface elements. It does not include icons, color schemes, or window decorations. Users are encouraged to pair it with their preferred color scheme, icon theme, window decorations…
 
 
-![A screenshot showing Qt gallery using lilac-qt](./screenshot.png)
+![A screenshot showing Qt gallery using lilac](./screenshot.png)
 Screenshot: Icons: Fluent, ColorScheme: Breeze-Light/FluentDark
 
 ## Building:
@@ -53,7 +53,7 @@ When enabled, two aditional targets will be created, a standalone settings app a
 2. **Clone the repository** 
 
     ~~~ shell
-    git clone https://github.com/zalesyc/lilac-qt.git && cd lilac-qt
+    git clone https://github.com/zalesyc/lilac.git && cd lilac
     ~~~
 
 3. **Configure**

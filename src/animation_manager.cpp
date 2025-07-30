@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// SPDX-FileCopyrightText: 2025 zalesyc and the lilac-qt contributors
+// SPDX-FileCopyrightText: 2025 zalesyc and the lilac contributors
 
 #include "animation_manager.h"
 #include "config.h"
