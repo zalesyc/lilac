@@ -15,7 +15,7 @@ Screenshot: Icons: Fluent, ColorScheme: Breeze-Light/FluentDark
 ### Build Configuration
 #### KStyle Integration
 
-[KStyle](https://api.kde.org/frameworks/frameworkintegration/html/classKStyle.html) provides enhanced integration with KDE Plasma. If you dont use KStyle, QCommonStyle is used. You can configure its usage during build time:
+[KStyle](https://api.kde.org/frameworks/frameworkintegration/html/classKStyle.html) provides enhanced integration with KDE Plasma. If you dont use KStyle, QCommonStyle is used. KStyle is also used for styling some KDE frameworks widgets.
 
 - **Default behavior**: `OFF` (i.e. KStyle will be used)
 - **Available options**:  

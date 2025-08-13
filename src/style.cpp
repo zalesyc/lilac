@@ -54,6 +54,9 @@ Style::Style() {
         this,
         SLOT(settingsChanged()));
 #endif
+#if HAS_KSTYLE
+    kstyle_CE_CapacityBar = newControlElement("CE_CapacityBar");
+#endif
 };
 
 Style::~Style() {
@@ -470,6 +473,12 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
 
 void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget) const {
     Lilac::State state(opt->state);
+#if HAS_KSTYLE
+    // kstyle_CE_CapacityBar is not part of QStyle::ControlElement, but is acquired from kstyle, so it cannot be used in the switch
+    if (kstyle_CE_CapacityBar && element == kstyle_CE_CapacityBar) {
+        element = CE_ProgressBar;
+    }
+#endif
     switch (element) {
         case CE_PushButtonBevel:
             if (const auto* btn = qstyleoption_cast<const QStyleOptionButton*>(opt)) {

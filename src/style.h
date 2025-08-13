@@ -26,6 +26,10 @@ using SuperStyle = QCommonStyle;
 class Style : public SuperStyle {
     Q_OBJECT
 
+#if HAS_KSTYLE
+    Q_CLASSINFO("X-KDE-CustomElements", "true")
+#endif
+
    public:
     QString name() const { return QStringLiteral("Lilac"); }
     Style();
@@ -63,5 +67,8 @@ class Style : public SuperStyle {
     int getTextFlags(const QStyleOption* opt) const;
     QRect tabBarGetTabRect(const QStyleOptionTab* tab) const;
     static bool tabIsHorizontal(const QTabBar::Shape& tabShape);
+
+   private:
+    ControlElement kstyle_CE_CapacityBar;
 };
 }  // namespace Lilac
