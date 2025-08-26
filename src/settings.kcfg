@@ -19,5 +19,20 @@
             <label>Animation speed, if the the value is less or equal to 0 the animations are instant.</label>
             <default>1</default>
         </entry>
+        <entry name="MenuOpacity" type="Int">
+            <label>Opacity of the menu background; value between 0 and 255, 0: transparent; 255: opaque.</label>
+            <default>255</default>
+            <min>0</min>
+            <max>255</max>
+        </entry>
+        <entry name="MenuBlurBehind" type="Bool">
+            <label>Whether to blur behind the menu.</label>
+            <tooltip>
+            For blur to work, the menu opacity must be set to not fully opaque. It's also only supported on X11 and Wayland compositors that support the kde-blur or ext-background-effect-v1 protocols.
+
+            If your compositor doesn't support this, you might still be able to get a blurred background by creating custom window rule.
+            </tooltip>
+            <default>true</default>
+        </entry>
     </group>
 </kcfg>

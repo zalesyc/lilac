@@ -24,7 +24,12 @@ SettingsApp::SettingsApp(QWidget* parent)
 
     connect(ui->radiusSpin, &QSpinBox::valueChanged, this, &SettingsApp::widgetChanged);
     connect(ui->circleCheckCheckBox, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
+    connect(ui->animationSpeedSlider, &QSlider::valueChanged, this, &SettingsApp::widgetChanged);
+    connect(ui->menuOpacitySlider, &QSlider::valueChanged, this, &SettingsApp::widgetChanged);
+    connect(ui->blurBehindMenusCheck, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
+
     connect(ui->animationSpeedSlider, &QSlider::valueChanged, this, [this](int value) { ui->animationValue->setText(QString::number(value / 10.0)); });
+    connect(ui->menuOpacitySlider, &QSlider::valueChanged, this, [this](int value) { ui->blurBehindMenusCheck->setEnabled(HAS_KWINDOWSYSTEM && value < 255); });
 
     setFromSettings();
 }
@@ -39,6 +44,8 @@ void SettingsApp::save() {
     settings->setCornerRadius(ui->radiusSpin->value());
     settings->setCircleCheckBox(ui->circleCheckCheckBox->isChecked());
     settings->setAnimationSpeed(ui->animationSpeedSlider->value() / 10.0);
+    settings->setMenuOpacity(ui->menuOpacitySlider->value());
+    settings->setMenuBlurBehind(ui->blurBehindMenusCheck->isChecked());
     settings->save();
 #if HAS_DBUS
     auto msg = QDBusMessage::createSignal(
@@ -54,6 +61,8 @@ void SettingsApp::setFromSettings() {
     ui->radiusSpin->setValue(settings->cornerRadius());
     ui->circleCheckCheckBox->setChecked(settings->circleCheckBox());
     ui->animationSpeedSlider->setValue(settings->animationSpeed() * 10.0);
+    ui->menuOpacitySlider->setValue(settings->menuOpacity());
+    ui->blurBehindMenusCheck->setChecked(settings->menuBlurBehind());
 }
 
 SettingsApp::~SettingsApp() {

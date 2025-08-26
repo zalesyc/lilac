@@ -23,7 +23,6 @@ using KShRole = KColorScheme::ShadeRole;
 
 static QColor getColorFromPallete(const QPalette& pal, const Color color, const State& state);
 static QColor getColorFromKColorScheme(const QPalette& pal, const Color color, const State& state);
-bool isDarkMode(const QPalette& pal);
 QColor lessContrastingBg(const QPalette& pal, const CGroup cgroup);
 CGroup groupFromState(const State& state);
 
@@ -259,9 +258,11 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return getColor(pal, Color::menuText, state).lighter(130);
 
         case comboBoxPopupBg:
+            return pal.color(CGroup::Normal, CRole::AlternateBase);
+
         case menuBg: {
             QColor base = pal.color(CGroup::Normal, CRole::AlternateBase);
-            base.setAlpha(Config::menuBgOpacity);
+            base.setAlpha(Config::get().menuBgOpacity);
             return base;
         }
 
@@ -277,13 +278,16 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 
         case comboBoxPopupShadow:
         case menuShadow:
-            return QColor(0, 0, 0);
+            return isDarkMode(pal) ? QColor(0, 0, 0, 130) : QColor(0, 0, 0, 100);
 
         case toolBarHandle:
         case toolBarSeparator: {
             const QColor base = getColor(pal, Color::line, state);
             return isDarkMode(pal) ? base.lighter(140) : base.darker(140);
         }
+
+        case menuHighlight:
+            return QColor(255, 255, 255, 35);
 
         case toolBtnBgAutoRise:
             if (!state.enabled)
@@ -409,9 +413,11 @@ static QColor getColorFromKColorScheme(const QPalette& pal, const Color color, c
             return KColorScheme(groupFromState(state), KCSet::Window).foreground(KFgRole::InactiveText).color();
 
         case comboBoxPopupBg:
+            return KColorScheme(CGroup::Normal, KCSet::Window).background(KBgRole::AlternateBackground).color();
+
         case menuBg: {
             QColor base = KColorScheme(CGroup::Normal, KCSet::Window).background(KBgRole::AlternateBackground).color();
-            base.setAlpha(Config::menuBgOpacity);
+            base.setAlpha(Config::get().menuBgOpacity);
             return base;
         }
 
@@ -440,7 +446,7 @@ static QColor getColorFromKColorScheme(const QPalette& pal, const Color color, c
 }
 #endif
 
-bool isDarkMode(const QPalette& pal) {
+const bool isDarkMode(const QPalette& pal) {
     return pal.color(QPalette::ColorRole::Window).lightness() < pal.color(QPalette::ColorRole::Text).lightness();
 }
 

@@ -5,13 +5,24 @@
 
 #include <QPoint>
 
-#if HAS_SETTINGS
-#include "lilacsettings.h"
-#endif
-
 namespace Lilac {
 
-struct Config {
+// this class is a singleton
+class Config {
+   public:
+    Config(const Config&) = delete;
+    Config& operator=(const Config&) = delete;
+
+    static Config& get();
+
+   public slots:
+#if HAS_SETTINGS
+    void initFromSettings();
+#endif
+
+   private:
+    Config();
+
     /*
      * padding and margin are used acording to the css box model:
      *   padding: inside the border
@@ -27,12 +38,9 @@ struct Config {
      * Constexpr variables cannot be changed, other variables may
      * change trough the configuration system.
      */
-
-    // Configurable
+   public:
     int cornerRadius = 12;
-    bool circleCheckBox = false;
 
-    // Constants
     static constexpr int smallArrowSize = 10;
 
     static constexpr int controlsTextVerticalPadding = 10;  // buttons, lineEdits, spinBoxes, comboboxes
@@ -42,6 +50,7 @@ struct Config {
     static constexpr int checkBoxSize = 20;  // all checkbox values are also used for radio buttons
     static constexpr int checkBoxHoverCircleSize = 34;
     static constexpr int checkBoxElementSpacing = 6;  // between the indicator, icon and label; sets PM_CheckBoxLabelSpacing
+    bool circleCheckBox = false;
 
     static constexpr int tabCloseIndicatorSize = 6;          // size of the x, the hover rect size is defined in PM_TabCloseIndicatorWidth/Height
     static constexpr int tabBarStartMargin = 6;              // padding on the left/top side of the tabbar, if the tab alighnment is left, only for QTabWidget
@@ -68,17 +77,20 @@ struct Config {
     static constexpr int spinMinWidthChars = lineEditMinWidthChars;
     static constexpr int spinTextLeftPadding = lineEditTextHorizontalPadding;
 
+    static constexpr int menuMargin = 7;  // transparent margin added to the menu, this margin contains the shadow and creates spacing between submenus
+    static constexpr int menuBorderRadius = 10;
     static constexpr int menuItemElementHorizontalSpacing = 8;
     static constexpr int menuItemBorderRadius = 5;
     static constexpr int menuItemHorizontalMargin = 5;
     static constexpr int menuItemHorizontalPadding = 5;
     static constexpr int menuItemVerticalPadding = 5;
     static constexpr int menuSeparatorVerticalMargin = 3;
-    static constexpr int menuShadowSize = 6;  // the size of the shadow,the shadow is added in polish.
-    static constexpr int menuMargin = 7;      // transparent margin added to the menu, this margin contains the shadow and creates spacing between submenus
-    static constexpr int menuBorderRadius = 10;
-    static constexpr int menuBgOpacity = 255;  // value between 0 and 255, 0: transparent; 255: opaque
     static constexpr int menuSeparatorMinLen = 5;
+    static constexpr qreal menuShadowBlurRadius = 3.3;
+    static constexpr QPointF menuShadowOffset = QPointF(0.3, 0.8);
+    static constexpr QPointF menuHighlightDirection = QPointF(0.2, 15);  // the direction and size of the gradient creating the highlight, only used in dark mode
+    quint8 menuBgOpacity = 200;                                          // value between 0 and 255, 0: transparent; 255: opaque
+    bool menuBlurBehind = true;                                          // whether to blur behind the menu if menuBgOpacity < 255; only if compiled without NO_KWINDOWSYSTEM
 
     static constexpr int menuBarItemMinHeight = 24;  // without the margin
     static constexpr int menuBarItemBorderRadius = 4;
@@ -143,14 +155,6 @@ struct Config {
     static constexpr int defaultAnimationSpeed = 1;  // if >=0 then the animations are instant, if settings are enabled this value will be overriden
     static constexpr int progressBarBusyDuration = 1000;
     static constexpr int scrollBarShowDuration = 40;
-
-    // methods
-#if HAS_SETTINGS
-    void initFromSettings(LilacSettings* settings) {
-        cornerRadius = settings->cornerRadius();
-        circleCheckBox = settings->circleCheckBox();
-    }
-#endif
 };
 
 }  // namespace Lilac

@@ -76,6 +76,7 @@ enum Color {
     menuItemHoverBg,
     menuBg,
     menuShadow,
+    menuHighlight,       // small line on the top of the menu to improve contrast, only for dark mode
     menuBarItemHoverBg,  // HP - hover: hover without open menu, pressed: menu open
     menuBarItemText,     // D
     menuBarBg,           // D
@@ -130,5 +131,7 @@ const QColor getColor(const QPalette& pal, const Color color, const State& state
 const QBrush getBrush(const QPalette& pal, const Color color, const State& state = State());
 const QPen getPen(const QPalette& pal, const Color color, const State& state, const qreal penWidth = 1);  // this needs to have an overload due to
 const QPen getPen(const QPalette& pal, const Color color, const qreal penWidth = 1);                      // the way optional parameters are handled
+
+const bool isDarkMode(const QPalette& pal);
 
 }  // namespace Lilac

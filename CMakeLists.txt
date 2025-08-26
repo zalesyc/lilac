@@ -8,6 +8,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 option(NO_KSTYLE "Whether to not use KStyle" OFF)
 option(NO_KCOLORSCHEME "Whether to not use KColorScheme" OFF)
 option(NO_SETTINGS "Whether to not use KConfig and thus disabbling runtime settings" OFF)
+option(NO_KWINDOWSYSTEM "Whether to not use KWindowSystem and thus disabbling the ability to blur behind windows on supported platforms" OFF)
 
 find_package(QT NAMES Qt6 CONFIG REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
@@ -25,6 +26,10 @@ if(NOT NO_SETTINGS)
     find_package(Qt6 COMPONENTS DBus)
 endif()
 
+if(NOT NO_KWINDOWSYSTEM)
+    find_package(KF6WindowSystem  "6.5.0...<7.0.0" REQUIRED)
+endif()
+
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -35,6 +40,7 @@ add_library(LilacStyle SHARED
     src/style_plugin.h
     src/style.cpp
     src/style.h
+    src/config.cpp
     src/config.h
     src/colors.cpp
     src/colors.h
@@ -57,7 +63,6 @@ if (NOT NO_SETTINGS)
     target_link_libraries(LilacSettings PRIVATE Qt6::Widgets)
     target_link_libraries(LilacSettings PRIVATE KF6::ConfigCore KF6::ConfigGui)
 
-
     add_executable(LilacSettingsApp
         src/settings/settings_app.cpp
         src/settings/settings_app.h
@@ -77,9 +82,15 @@ if (NOT NO_SETTINGS)
         target_compile_definitions(LilacSettings PRIVATE HAS_DBUS=0)
         target_compile_definitions(LilacSettingsApp PRIVATE HAS_DBUS=0)
     endif()
-else()
-    target_compile_definitions(LilacSettings PRIVATE HAS_DBUS=0)
-    target_compile_definitions(LilacSettingsApp PRIVATE HAS_DBUS=0)
+
+    if (NOT NO_KWINDOWSYSTEM)
+        target_compile_definitions(LilacSettings PRIVATE HAS_KWINDOWSYSTEM=1)
+        target_compile_definitions(LilacSettingsApp PRIVATE HAS_KWINDOWSYSTEM=1)
+    else()
+        target_compile_definitions(LilacSettings PRIVATE HAS_KWINDOWSYSTEM=0)
+        target_compile_definitions(LilacSettingsApp PRIVATE HAS_KWINDOWSYSTEM=0)
+    endif()
+
 endif()
 
 if (NOT NO_KSTYLE)
@@ -110,6 +121,13 @@ if (NOT NO_SETTINGS)
 else()
     target_compile_definitions(LilacStyle PRIVATE HAS_SETTINGS=0)
     target_compile_definitions(LilacStyle PRIVATE HAS_DBUS=0)
+endif()
+
+if (NOT NO_KWINDOWSYSTEM)
+    target_link_libraries(LilacStyle PRIVATE KF6::WindowSystem)
+    target_compile_definitions(LilacStyle PRIVATE HAS_KWINDOWSYSTEM=1)
+else()
+    target_compile_definitions(LilacStyle PRIVATE HAS_KWINDOWSYSTEM=0)
 endif()
 
 target_compile_definitions(LilacStyle PRIVATE LILAC_LIBRARY)

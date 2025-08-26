@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <QCommonStyle>
 #include <QPainter>
 #include <QStyle>
 #include <QStyleOption>
@@ -47,10 +48,11 @@ class Style : public SuperStyle {
     QRect subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex* opt, QStyle::SubControl element, const QWidget* widget = nullptr) const override;
     QSize sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, const QSize& contentsSize, const QWidget* widget = nullptr) const override;
 
+   protected:
     bool eventFilter(QObject* object, QEvent* event) override;
 
    protected:
-    Lilac::Config config;
+    Lilac::Config& config;  // conveninece variable so Config::Get() does not have to be always called;
     mutable Lilac::AnimationManager animationMgr;
 
    public slots:
@@ -67,8 +69,15 @@ class Style : public SuperStyle {
     int getTextFlags(const QStyleOption* opt) const;
     QRect tabBarGetTabRect(const QStyleOptionTab* tab) const;
     static bool tabIsHorizontal(const QTabBar::Shape& tabShape);
+#if HAS_KWINDOWSYSTEM
+    static inline bool shouldBlurBehindWidget(QWidget* Widget);
+    QRegion getBlurRegion(QWidget* widget);
+#endif
+    static void drawDropShadow(QPainter* p, const QRectF& rect, const qreal cornerRadius, const qreal blurRadius, const QPointF offset, const QColor color);
 
    private:
+#if HAS_KSTYLE
     ControlElement kstyle_CE_CapacityBar;
+#endif
 };
 }  // namespace Lilac

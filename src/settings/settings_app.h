@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "lilacsettings.h"
+#include "settings.h"
 
 #include <QWidget>
 

@@ -17,19 +17,22 @@
 #include <QDBusConnection>
 #endif
 
+#if HAS_KWINDOWSYSTEM
+#include <KWindowEffects>
+#endif
+
+#if HAS_SETTINGS
+#include "settings.h"
+#endif
+
 #include "animation_manager.h"
 #include "colors.h"
 #include "style.h"
 #include "utils/slider_focus_frame.h"
 
-#if HAS_SETTINGS
-#include "lilacsettings.h"
-#endif
-
 namespace Lilac {
 
-Style::Style() {
-    settingsChanged();
+Style::Style() : config(Config::get()) {
 #if HAS_DBUS
     auto dbus = QDBusConnection::sessionBus();
     dbus.connect(
@@ -1706,17 +1709,48 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             }
             break;
         case PE_PanelMenu: {
+            const bool isQMenu = widget && widget->inherits("QMenu");
+            const QRect contentRect = opt->rect.adjusted(config.menuMargin,
+                                                         config.menuMargin,
+                                                         -config.menuMargin,
+                                                         -config.menuMargin);
+
+            if (isQMenu) {
+                p->save();
+                p->setCompositionMode(QPainter::CompositionMode_Clear);
+                p->fillRect(opt->rect, Qt::transparent);
+                p->restore();
+
+                drawDropShadow(p, contentRect, config.menuBorderRadius, config.menuShadowBlurRadius, config.menuShadowOffset, getColor(opt->palette, Color::menuShadow));
+            }
+
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
+            p->setCompositionMode(QPainter::CompositionMode_Source);
             p->setPen(Qt::NoPen);
             p->setBrush(getBrush(opt->palette, Color::menuBg, state));
-            p->drawRoundedRect(opt->rect.adjusted(config.menuMargin,
-                                                  config.menuMargin,
-                                                  -config.menuMargin,
-                                                  -config.menuMargin),
-                               config.menuBorderRadius,
-                               config.menuBorderRadius);
+            p->drawRoundedRect(contentRect, config.menuBorderRadius, config.menuBorderRadius);
             p->restore();
+
+            if (isQMenu && isDarkMode(opt->palette)) {
+                // the highlinght is visible only in dark mode, because in light mode
+                // white on white would not be visible and also
+                // in light mode the shadow creates enough contrant for the menu
+
+                p->save();
+                p->setRenderHints(QPainter::Antialiasing);
+
+                QLinearGradient highlightGradient;
+                highlightGradient.setColorAt(0, getColor(opt->palette, Color::menuHighlight));
+                highlightGradient.setColorAt(1, Qt::transparent);
+                highlightGradient.setStart(contentRect.topLeft());
+                highlightGradient.setFinalStop(contentRect.topLeft().toPointF() + config.menuHighlightDirection);
+                p->setBrush(Qt::NoBrush);
+                p->setPen(QPen(QBrush(highlightGradient), 1));
+                p->drawRoundedRect(contentRect, config.menuBorderRadius, config.menuBorderRadius);
+                p->restore();
+            }
+
             return;
         }
         case PE_PanelButtonTool: {
@@ -2078,13 +2112,6 @@ void Style::polish(QWidget* widget) {
 
     } else if (QMenu* menu = qobject_cast<QMenu*>(widget)) {
         menu->setAttribute(Qt::WA_TranslucentBackground);
-        if (menu->graphicsEffect() == nullptr) {
-            QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect(menu);
-            shadow->setOffset(0.3, 0.5);
-            shadow->setColor(getColor(menu->palette(), Color::menuShadow));
-            shadow->setBlurRadius(config.menuShadowSize);
-            menu->setGraphicsEffect(shadow);
-        }
 
     } else if (widget->inherits("QDockWidget") ||
                widget->inherits("QTipLabel")) {
@@ -2116,6 +2143,12 @@ void Style::polish(QWidget* widget) {
         SliderFocusFrame* focusFrame = new SliderFocusFrame(slider);
         focusFrame->setWidget(slider);
     }
+
+#if HAS_KWINDOWSYSTEM
+    if (shouldBlurBehindWidget(widget)) {
+        widget->installEventFilter(this);
+    }
+#endif
 }
 
 void Style::unpolish(QWidget* widget) {
@@ -2133,7 +2166,6 @@ void Style::unpolish(QWidget* widget) {
 
     } else if (QMenu* menu = qobject_cast<QMenu*>(widget)) {
         menu->setAttribute(Qt::WA_TranslucentBackground, false);
-        menu->setGraphicsEffect(nullptr);
 
     } else if (widget->inherits("QDockWidget") ||
                widget->inherits("QTipLabel")) {
@@ -2149,6 +2181,13 @@ void Style::unpolish(QWidget* widget) {
     } else if (widget->parent() && widget->parent()->inherits("QComboBoxListView")) {
         widget->setAutoFillBackground(true);
     }
+
+#if HAS_KWINDOWSYSTEM
+    if (shouldBlurBehindWidget(widget)) {
+        widget->removeEventFilter(this);
+    }
+#endif
+
     SuperStyle::unpolish(widget);
 }
 
@@ -3485,7 +3524,8 @@ bool Style::eventFilter(QObject* object, QEvent* event) {
         return SuperStyle::eventFilter(object, event);
     }
 
-    if (widget->inherits("QComboBoxPrivateContainer") && event->type() == QEvent::Paint) {
+    const QEvent::Type eventType = event->type();
+    if (widget->inherits("QComboBoxPrivateContainer") && eventType == QEvent::Paint) {
         const QPaintEvent* paintEvent = static_cast<QPaintEvent*>(event);
         QStyleOption opt;
         opt.initFrom(widget);
@@ -3503,6 +3543,21 @@ bool Style::eventFilter(QObject* object, QEvent* event) {
         p.end();
         return true;
     }
+#if HAS_KWINDOWSYSTEM
+    if (config.menuBlurBehind &&
+        config.menuBgOpacity != 255 &&
+        shouldBlurBehindWidget(widget) &&
+        (eventType == QEvent::Hide || eventType == QEvent::Show || eventType == QEvent::Resize) &&
+        (widget->testAttribute(Qt::WA_WState_Created) || widget->internalWinId())) {
+        widget->winId();
+        KWindowEffects::enableBlurBehind(widget->windowHandle(), true, getBlurRegion(widget));
+        if (widget->isVisible()) {
+            widget->update();
+        }
+
+        return false;
+    }
+#endif
     return SuperStyle::eventFilter(object, event);
 }
 
@@ -3510,7 +3565,7 @@ void Style::settingsChanged() {
 #if HAS_SETTINGS
     auto settings = LilacSettings::self();
     settings->load();
-    config.initFromSettings(settings);
+    config.initFromSettings();
     animationMgr.setGlobalAnimationSpeed(settings->animationSpeed());
 #endif
 }
@@ -3600,4 +3655,149 @@ bool Style::tabIsHorizontal(const QTabBar::Shape& tabShape) {
     }
     return true;
 }
+
+#if HAS_KWINDOWSYSTEM
+bool Style::shouldBlurBehindWidget(QWidget* widget) {
+    return widget->inherits("QMenu");
+}
+
+QRegion Style::getBlurRegion(QWidget* widget) {
+    if (widget->inherits("QMenu")) {
+        QRegion region;
+        const QRect innerRect = widget->rect().adjusted(Config::menuMargin, Config::menuMargin, -Config::menuMargin, -Config::menuMargin);
+        region += innerRect.adjusted(Config::menuBorderRadius, 0, -Config::menuBorderRadius, 0);
+        region += innerRect.adjusted(0, Config::menuBorderRadius, 0, -Config::menuBorderRadius);
+        region += QRegion(QRect(innerRect.topLeft(), QSize(Config::menuBorderRadius, Config::menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
+        region += QRegion(QRect(innerRect.bottomLeft(), QSize(Config::menuBorderRadius, -Config::menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
+        region += QRegion(QRect(innerRect.topRight(), QSize(-Config::menuBorderRadius, Config::menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
+        region += QRegion(QRect(innerRect.bottomRight(), QSize(-Config::menuBorderRadius, -Config::menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
+        return region;
+    }
+    return widget->rect();
+}
+#endif
+
+void Style::drawDropShadow(QPainter* p, const QRectF& rect, const qreal cornerRadius, const qreal blurRadius, const QPointF offset, const QColor color) {
+    if (rect.isNull() || blurRadius <= 0) {
+        return;
+    }
+
+    p->save();
+    p->setRenderHint(QPainter::Antialiasing);
+
+    QPainterPath clipPath(rect.topLeft() + QPoint(cornerRadius, 0));
+    // +1 because othervise there may be holes between the widget and the shadow
+    QRectF clipRect(0, 0, (cornerRadius * 2) + 1, (cornerRadius * 2) + 1);
+
+    clipRect.moveTopRight(rect.topRight());
+    clipPath.arcTo(clipRect, 90, -90);
+
+    clipRect.moveBottomRight(rect.bottomRight());
+    clipPath.arcTo(clipRect, 0, -90);
+
+    clipRect.moveBottomLeft(rect.bottomLeft());
+    clipPath.arcTo(clipRect, 270, -90);
+
+    clipRect.moveTopLeft(rect.topLeft());
+    clipPath.arcTo(clipRect, 180, -90);
+
+    // +- 2 because the rect needs to include all of the blur, so 2 is added just to make sure that nothing is cropped off
+    QRectF clipRectOutside = rect.adjusted(-blurRadius - 2, -blurRadius - 2, blurRadius + 2, blurRadius + 2);
+
+    clipPath.lineTo(clipRectOutside.topLeft());
+    clipPath.lineTo(clipRectOutside.bottomLeft());
+    clipPath.lineTo(clipRectOutside.bottomRight());
+    clipPath.lineTo(clipRectOutside.topRight());
+    clipPath.lineTo(clipRectOutside.topLeft());
+    clipPath.closeSubpath();
+
+    p->setClipPath(clipPath);
+    p->translate(offset);
+
+    // sides
+    QLinearGradient sideGradient;
+    sideGradient.setColorAt(0, color);
+    // The color transition's 2/3 point is being linked to the size's 1/3 point to more accurately imitate blur
+    sideGradient.setColorAt(0.33, QColor(color.red(), color.green(), color.blue(), color.alpha() / 3));
+    sideGradient.setColorAt(1, Qt::transparent);
+    QRectF drawingRect;
+
+    // top
+    drawingRect = QRectF(QPointF(rect.left() + cornerRadius, rect.top() - blurRadius),
+                         QPointF(rect.right() - cornerRadius, rect.top()));
+    sideGradient.setStart(drawingRect.bottomLeft());
+    sideGradient.setFinalStop(drawingRect.topLeft());
+    p->fillRect(drawingRect, QBrush(sideGradient));
+
+    // bottom
+    drawingRect = QRectF(QPointF(rect.left() + cornerRadius, rect.bottom()),
+                         QPointF(rect.right() - cornerRadius, rect.bottom() + blurRadius));
+    sideGradient.setStart(drawingRect.topLeft());
+    sideGradient.setFinalStop(drawingRect.bottomLeft());
+    p->fillRect(drawingRect, QBrush(sideGradient));
+
+    // left
+    drawingRect = QRectF(QPointF(rect.left() - blurRadius, rect.top() + cornerRadius),
+                         QPointF(rect.left(), rect.bottom() - cornerRadius));
+    sideGradient.setStart(drawingRect.topRight());
+    sideGradient.setFinalStop(drawingRect.topLeft());
+    p->fillRect(drawingRect, QBrush(sideGradient));
+
+    // right
+    drawingRect = QRectF(QPointF(rect.right(), rect.top() + cornerRadius),
+                         QPointF(rect.right() + blurRadius, rect.bottom() - cornerRadius));
+    sideGradient.setStart(drawingRect.topLeft());
+    sideGradient.setFinalStop(drawingRect.topRight());
+    p->fillRect(drawingRect, QBrush(sideGradient));
+
+    // corners
+    QRadialGradient cornerGradient;
+    const qreal startPosition = cornerRadius / (cornerRadius + blurRadius);
+    cornerGradient.setColorAt(0, color);
+    cornerGradient.setColorAt(startPosition, color);
+    cornerGradient.setColorAt(startPosition + 0.33 * (1 - startPosition), QColor(color.red(), color.green(), color.blue(), color.alpha() / 3));
+    cornerGradient.setColorAt(1, Qt::transparent);
+    cornerGradient.setRadius(blurRadius + cornerRadius);
+
+    // top left
+    drawingRect.setTopLeft(rect.topLeft() + QPointF(-blurRadius, -blurRadius));
+    drawingRect.setBottomRight(rect.topLeft() + QPointF(cornerRadius, cornerRadius));
+    cornerGradient.setFocalPoint(drawingRect.bottomRight());
+    cornerGradient.setCenter(drawingRect.bottomRight());
+    p->fillRect(drawingRect, QBrush(cornerGradient));
+
+    // top right
+    drawingRect.setTopRight(rect.topRight() + QPointF(blurRadius, -blurRadius));
+    drawingRect.setBottomLeft(rect.topRight() + QPointF(-cornerRadius, cornerRadius));
+    cornerGradient.setFocalPoint(drawingRect.bottomLeft());
+    cornerGradient.setCenter(drawingRect.bottomLeft());
+    p->fillRect(drawingRect, QBrush(cornerGradient));
+
+    // bottom left
+    drawingRect.setBottomLeft(rect.bottomLeft() + QPointF(-blurRadius, blurRadius));
+    drawingRect.setTopRight(rect.bottomLeft() + QPointF(cornerRadius, -cornerRadius));
+    cornerGradient.setFocalPoint(drawingRect.topRight());
+    cornerGradient.setCenter(drawingRect.topRight());
+    p->fillRect(drawingRect, QBrush(cornerGradient));
+
+    // bottom right
+    drawingRect.setBottomRight(rect.bottomRight() + QPointF(blurRadius, blurRadius));
+    drawingRect.setTopLeft(rect.bottomRight() + QPointF(-cornerRadius, -cornerRadius));
+    cornerGradient.setFocalPoint(drawingRect.topLeft());
+    cornerGradient.setCenter(drawingRect.topLeft());
+    p->fillRect(drawingRect, QBrush(cornerGradient));
+
+    // center
+    // the center has to be drawn, because othervise there would be holes when the shadow is offset,
+    // most of the center will be clipped by the painter
+    p->fillRect(rect.adjusted(0, cornerRadius, 0, -cornerRadius), color);
+    QRectF centerRect = rect.adjusted(cornerRadius, 0, -cornerRadius, 0);
+    centerRect.setHeight(cornerRadius);
+    p->fillRect(centerRect, color);
+    centerRect.moveBottom(rect.bottom());
+    p->fillRect(centerRect, color);
+
+    p->restore();
+}
+
 }  // namespace Lilac
