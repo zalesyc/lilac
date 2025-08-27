@@ -3,26 +3,34 @@
 
 #pragma once
 
+#include <QObject>
 #include <QPoint>
 
 namespace Lilac {
 
 // this class is a singleton
-class Config {
+class Config : public QObject {
+    Q_OBJECT
+
    public:
     Config(const Config&) = delete;
     Config& operator=(const Config&) = delete;
 
     static Config& get();
 
-   public slots:
-#if HAS_SETTINGS
-    void initFromSettings();
-#endif
+   signals:
+    void configChanged();
 
    private:
     Config();
 
+   private:
+    static Config instance;
+
+   private slots:
+#if HAS_SETTINGS
+    void onSettingsChanged();
+#endif
     /*
      * padding and margin are used acording to the css box model:
      *   padding: inside the border
@@ -152,7 +160,7 @@ class Config {
      * the durations are only a default value,
      * in the end they may be faster/slower depending on the global animation speed
      */
-    static constexpr int defaultAnimationSpeed = 1;  // if >=0 then the animations are instant, if settings are enabled this value will be overriden
+    double animationSpeed = 1;  // if <=0 then the animations are instant, if settings are enabled this value may be overriden
     static constexpr int progressBarBusyDuration = 1000;
     static constexpr int scrollBarShowDuration = 40;
 };

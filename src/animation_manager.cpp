@@ -7,7 +7,9 @@
 namespace Lilac {
 
 AnimationManager::AnimationManager() {
-    setGlobalAnimationSpeed(Config::defaultAnimationSpeed);
+    Config& config = Config::get();
+    setGlobalAnimationSpeed(config.animationSpeed);
+    connect(&config, &Config::configChanged, this, [this]() { setGlobalAnimationSpeed(Config::get().animationSpeed); });
 }
 
 AnimationManager::~AnimationManager() {

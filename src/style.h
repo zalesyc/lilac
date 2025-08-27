@@ -55,9 +55,6 @@ class Style : public SuperStyle {
     Lilac::Config& config;  // conveninece variable so Config::Get() does not have to be always called;
     mutable Lilac::AnimationManager animationMgr;
 
-   public slots:
-    void settingsChanged();
-
    private:
     struct MenuItemText {
         QString label = "";

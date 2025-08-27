@@ -13,16 +13,8 @@
 #include <QStyleFactory>
 #include <QtMath>
 
-#if HAS_DBUS
-#include <QDBusConnection>
-#endif
-
 #if HAS_KWINDOWSYSTEM
 #include <KWindowEffects>
-#endif
-
-#if HAS_SETTINGS
-#include "settings.h"
 #endif
 
 #include "animation_manager.h"
@@ -33,30 +25,6 @@
 namespace Lilac {
 
 Style::Style() : config(Config::get()) {
-#if HAS_DBUS
-    auto dbus = QDBusConnection::sessionBus();
-    dbus.connect(
-        "",
-        "/LilacStyle",
-        "com.github.zalesyc.lilacqt",
-        "settingsChanged",
-        this,
-        SLOT(settingsChanged()));
-    dbus.connect(
-        "",
-        "/KGlobalSettings",
-        "org.kde.KGlobalSettings",
-        "notifyChange",
-        this,
-        SLOT(settingsChanged()));
-    dbus.connect(
-        "",
-        "/KWin",
-        "org.kde.KWin",
-        "reloadConfig",
-        this,
-        SLOT(settingsChanged()));
-#endif
 #if HAS_KSTYLE
     kstyle_CE_CapacityBar = newControlElement("CE_CapacityBar");
 #endif
@@ -3559,15 +3527,6 @@ bool Style::eventFilter(QObject* object, QEvent* event) {
     }
 #endif
     return SuperStyle::eventFilter(object, event);
-}
-
-void Style::settingsChanged() {
-#if HAS_SETTINGS
-    auto settings = LilacSettings::self();
-    settings->load();
-    config.initFromSettings();
-    animationMgr.setGlobalAnimationSpeed(settings->animationSpeed());
-#endif
 }
 
 void Style::sliderGetTickmarks(QList<QLine>* returnList, const QStyleOptionSlider* slider, const QRect& tickmarksRect, const int sliderLen, const int interval) {

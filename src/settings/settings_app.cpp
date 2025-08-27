@@ -50,7 +50,7 @@ void SettingsApp::save() {
 #if HAS_DBUS
     auto msg = QDBusMessage::createSignal(
         "/LilacStyle",
-        "com.github.zalesyc.lilacqt",
+        "com.github.zalesyc.lilac",
         "settingsChanged");
     QDBusConnection::sessionBus().send(msg);
 #endif
