@@ -1474,9 +1474,9 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                 p->save();
                 p->setRenderHints(QPainter::Antialiasing);
                 p->setPen(Qt::NoPen);
-                if (btn->state & QStyle::State_On && state.enabled) {
-                    p->setBrush(getBrush(btn->palette, Color::toggleButtonChecked));
-                } else if (btn->features & QStyleOptionButton::Flat && !state.hovered && !state.hovered) {
+                if (btn->state & QStyle::State_On) {
+                    p->setBrush(getBrush(btn->palette, Color::toggleButtonChecked, state));
+                } else if (btn->features & QStyleOptionButton::Flat && !state.hovered && !state.pressed) {
                     p->setBrush(Qt::NoBrush);
                 } else {
                     p->setBrush(getBrush(btn->palette, Color::buttonBg, state));

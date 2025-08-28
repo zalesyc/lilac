@@ -27,8 +27,8 @@ enum Color {
 
     indicatorArrow,  // D
 
-    buttonBg,  // DHP
-    toggleButtonChecked,
+    buttonBg,             // DHP
+    toggleButtonChecked,  // D
 
     checkBoxInside,              // D all checkbox colors are also for radiobuttons
     checkBoxCheck,               // D
@@ -84,7 +84,7 @@ enum Color {
     toolBtnText,               // D
     toolBtnBg,                 // DHP
     toolBtnBgAutoRise,         // DHP
-    toolBtnBgChecked,          // DHP
+    toolBtnBgChecked,          // D
     toolBtnBgAutoRiseChecked,  // DHP
     toolBtnMenuSeparator,      // D
     toolBtnFocusOutline,

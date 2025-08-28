@@ -72,7 +72,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 
         case toolBtnBgChecked:
         case toggleButtonChecked:
-            return pal.color(CGroup::Normal, CRole::Accent);
+            return pal.color(groupFromState(state), CRole::Accent);
 
         case checkBoxCheck:
             return pal.color(CGroup::Normal, CRole::Window);
