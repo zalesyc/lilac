@@ -7,11 +7,10 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 option(NO_KSTYLE "Whether to not use KStyle" OFF)
 option(NO_KCOLORSCHEME "Whether to not use KColorScheme" OFF)
-option(NO_SETTINGS "Whether to not use KConfig and thus disabbling runtime settings" OFF)
-option(NO_KWINDOWSYSTEM "Whether to not use KWindowSystem and thus disabbling the ability to blur behind windows on supported platforms" OFF)
+option(NO_SETTINGS "Whether to not use KConfig and thus disabling runtime settings" OFF)
+option(NO_KWINDOWSYSTEM "Whether to not use KWindowSystem and thus disabling the ability to blur behind windows on supported platforms" OFF)
 
-find_package(QT NAMES Qt6 CONFIG REQUIRED COMPONENTS Widgets)
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Gui)
 
 if(NOT NO_KSTYLE)
     find_package(KF6FrameworkIntegration "6.5.0...<7.0.0" CONFIG REQUIRED)
