@@ -48,7 +48,6 @@ const QPen getPen(const QPalette& pal, const Color color, const qreal penWidth) 
 static QColor getColorFromPallete(const QPalette& pal, const Color color, const State& state) {
     switch (color) {
         case groupBoxLine:
-        case menuSeparator:
         case line: {
             const auto base = lessContrastingBg(pal, CGroup::Normal);
             return isDarkMode(pal) ? base.lighter(125) : base.darker(110);
@@ -269,6 +268,13 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case menuItemHoverBg:
         case menuBarItemHoverBg:
             return isDarkMode(pal) ? QColor(255, 255, 255, 26) : QColor(0, 0, 0, 26);
+
+        case menuSeparator: {
+            QColor base = getColor(pal, Color::menuText, state);
+
+            base.setAlpha(qMax<int>(100, 255 - Config::get().menuBgOpacity));
+            return isDarkMode(pal) ? base.darker(150) : base.lighter(150);
+        }
 
         case toolBarBgHeader:
         case toolBarBgOther:
