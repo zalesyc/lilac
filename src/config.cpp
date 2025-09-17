@@ -40,7 +40,7 @@ Config::Config() {
 #endif
 }
 
-Config& Config::get() {
+const Config& Config::get() {
     return instance;
 }
 
@@ -50,7 +50,15 @@ Config Config::instance;
 void Config::onSettingsChanged() {
     const auto settings = LilacSettings::self();
     settings->load();
-    cornerRadius = settings->cornerRadius();
+
+    int settingsCornerRadius = settings->cornerRadius();
+    this->cornerRadius = settingsCornerRadius;
+    this->menuBorderRadius = settingsCornerRadius;
+    this->menuItemBorderRadius = settingsCornerRadius / 2;
+    this->listViewItemBorderRadius = settingsCornerRadius / 2;
+    this->controlsCornerRadius = settingsCornerRadius;
+    this->tabCornerRadius = settingsCornerRadius;
+
     circleCheckBox = settings->circleCheckBox();
     animationSpeed = settings->animationSpeed();
     menuBgOpacity = settings->menuOpacity();

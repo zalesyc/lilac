@@ -127,7 +127,6 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
 
                 if (slider->subControls & SC_SliderTickmarks) {
                     // ------------ tickmarks
-                    const int tickOffset = this->pixelMetric(PM_SliderTickmarkOffset, slider, widget);
                     int interval = slider->tickInterval;
                     if (interval <= 0)
                         interval = 10;
@@ -164,7 +163,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                      * the point the tangent touches the handle circle.
                      * The tangens create the pointy part of the handle.
                      */
-                    const qreal tangentsAngle = qRadiansToDegrees(qAcos(handleRadius / (handleRadius + tickOffset)));
+                    const qreal tangentsAngle = qRadiansToDegrees(qAcos(handleRadius / (handleRadius + config.sliderTickmarksOffset)));
                     const qreal circleRestAngle = 360 - (2 * tangentsAngle);
                     const qreal circleBetweenTargentsAngle = 180 - (2 * tangentsAngle);
 
@@ -172,36 +171,36 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                     if (slider->orientation == Qt::Horizontal) {
                         switch (slider->tickPosition) {
                             case QSlider::TicksAbove:
-                                path.moveTo(handleRectF.center().x(), handleRectF.top() - tickOffset);
+                                path.moveTo(handleRectF.center().x(), handleRectF.top() - config.sliderTickmarksOffset);
                                 path.arcTo(handleRectF, 90 - tangentsAngle, -circleRestAngle);
                                 break;
                             case QSlider::TicksBothSides:
-                                path.moveTo(handleRectF.center().x(), handleRectF.top() - tickOffset);
+                                path.moveTo(handleRectF.center().x(), handleRectF.top() - config.sliderTickmarksOffset);
                                 path.arcTo(handleRectF, 90 - tangentsAngle, -circleBetweenTargentsAngle);
-                                path.lineTo(handleRectF.center().x(), handleRectF.bottom() + tickOffset);
+                                path.lineTo(handleRectF.center().x(), handleRectF.bottom() + config.sliderTickmarksOffset);
                                 path.arcTo(handleRectF, 270 - tangentsAngle, -circleBetweenTargentsAngle);
                                 break;
                             case QSlider::NoTicks:
                             case QSlider::TicksBelow:
-                                path.moveTo(handleRectF.center().x(), handleRectF.bottom() + tickOffset);
+                                path.moveTo(handleRectF.center().x(), handleRectF.bottom() + config.sliderTickmarksOffset);
                                 path.arcTo(handleRectF, 270 - tangentsAngle, -circleRestAngle);
                                 break;
                         }
                     } else {
                         switch (slider->tickPosition) {
                             case QSlider::TicksLeft:
-                                path.moveTo(handleRectF.left() - tickOffset, handleRectF.center().y());
+                                path.moveTo(handleRectF.left() - config.sliderTickmarksOffset, handleRectF.center().y());
                                 path.arcTo(handleRectF, 180 - tangentsAngle, -circleRestAngle);
                                 break;
                             case QSlider::TicksBothSides:
-                                path.moveTo(handleRectF.left() - tickOffset, handleRectF.center().y());
+                                path.moveTo(handleRectF.left() - config.sliderTickmarksOffset, handleRectF.center().y());
                                 path.arcTo(handleRectF, 180 - tangentsAngle, -circleBetweenTargentsAngle);
-                                path.lineTo(handleRectF.right() + tickOffset, handleRectF.center().y());
+                                path.lineTo(handleRectF.right() + config.sliderTickmarksOffset, handleRectF.center().y());
                                 path.arcTo(handleRectF, 360 - tangentsAngle, -circleBetweenTargentsAngle);
                                 break;
                             case QSlider::NoTicks:
                             case QSlider::TicksRight:
-                                path.moveTo(handleRectF.right() + tickOffset, handleRectF.center().y());
+                                path.moveTo(handleRectF.right() + config.sliderTickmarksOffset, handleRectF.center().y());
                                 path.arcTo(handleRectF, 360 - tangentsAngle, -circleRestAngle);
                                 break;
                         }
@@ -227,7 +226,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                     p->setRenderHint(QPainter::Antialiasing);
                     p->setPen(getPen(spin->palette, Color::spinBoxOutline, state, 2));
                     p->setBrush(getBrush(spin->palette, Color::spinBoxBg, state));
-                    p->drawRoundedRect(spin->rect.adjusted(1, 1, -1, -1), config.cornerRadius, config.cornerRadius);
+                    p->drawRoundedRect(spin->rect.adjusted(1, 1, -1, -1), config.controlsCornerRadius, config.controlsCornerRadius);
                     p->restore();
                 }
 
@@ -285,7 +284,7 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
                     p->setRenderHint(QPainter::Antialiasing);
                     p->setPen(getPen(combo->palette, combo->frame ? Color::comboBoxOutline : Color::comboBoxFramelessOutline, state, 2));
                     p->setBrush(combo->frame ? getBrush(combo->palette, Color::comboBoxBg, state) : Qt::NoBrush);
-                    p->drawRoundedRect(combo->rect.adjusted(1, 1, -1, -1), config.cornerRadius, config.cornerRadius);
+                    p->drawRoundedRect(combo->rect.adjusted(1, 1, -1, -1), config.controlsCornerRadius, config.controlsCornerRadius);
                     p->restore();
                 }
 
@@ -546,8 +545,8 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QTabBar::TriangularNorth:
                     case QTabBar::RoundedSouth:
                     case QTabBar::TriangularSouth:
-                        cornerRectSize = qMin(config.cornerRadius * 2.0,  // the corner radius is still btnRadius,
-                                              qMin(rect.width(),          // it has to be *2 due to implementation
+                        cornerRectSize = qMin(config.tabCornerRadius * 2.0,  // the corner radius is still cornerRadius,
+                                              qMin(rect.width(),             // it has to be *2 because this reqires the diameter
                                                    rect.height() * 2));
 
                         break;
@@ -556,7 +555,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     case QTabBar::TriangularEast:
                     case QTabBar::RoundedWest:
                     case QTabBar::TriangularWest:
-                        cornerRectSize = qMin(config.cornerRadius * 2.0,
+                        cornerRectSize = qMin(config.tabCornerRadius * 2.0,
                                               qMin(rect.height(),
                                                    rect.width() * 2));
                         break;
@@ -569,13 +568,13 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                         rect.adjust(0.5, 0.5, -0.5, isSelected ? 0 : -1.5);
 
                         path.moveTo(rect.bottomLeft());
-                        path.lineTo(rect.left(), rect.top() + config.cornerRadius);
+                        path.lineTo(rect.left(), rect.top() + config.tabCornerRadius);
                         path.arcTo(QRectF(
                                        rect.topLeft(),
                                        QPointF(rect.left() + cornerRectSize, rect.top() + cornerRectSize)),
                                    180,
                                    -90);
-                        path.lineTo(rect.right() - config.cornerRadius, rect.top());
+                        path.lineTo(rect.right() - config.tabCornerRadius, rect.top());
                         path.arcTo(QRectF(
                                        rect.topRight(),
                                        QPointF(rect.right() - cornerRectSize, rect.top() + cornerRectSize)),
@@ -589,13 +588,13 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                         rect.adjust(0.5, isSelected ? 0 : 1.5, -0.5, -0.5);
 
                         path.moveTo(rect.topLeft());
-                        path.lineTo(rect.left(), rect.bottom() - config.cornerRadius);
+                        path.lineTo(rect.left(), rect.bottom() - config.tabCornerRadius);
                         path.arcTo(QRectF(
                                        rect.bottomLeft(),
                                        QPointF(rect.left() + cornerRectSize, rect.bottom() - cornerRectSize)),
                                    180,
                                    -90);
-                        path.lineTo(rect.right() - config.cornerRadius, rect.bottom());
+                        path.lineTo(rect.right() - config.tabCornerRadius, rect.bottom());
                         path.arcTo(QRectF(
                                        rect.bottomRight(),
                                        QPointF(rect.right() - cornerRectSize, rect.bottom() - cornerRectSize)),
@@ -609,13 +608,13 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                         rect.adjust(0.5, 0.5, isSelected ? 0 : -1.5, -0.5);
 
                         path.moveTo(rect.topRight());
-                        path.lineTo(rect.left() + config.cornerRadius, rect.top());
+                        path.lineTo(rect.left() + config.tabCornerRadius, rect.top());
                         path.arcTo(QRectF(
                                        rect.topLeft(),
                                        QPointF(rect.left() + cornerRectSize, rect.top() + cornerRectSize)),
                                    90,
                                    90);
-                        path.lineTo(rect.left(), rect.bottom() - config.cornerRadius);
+                        path.lineTo(rect.left(), rect.bottom() - config.tabCornerRadius);
                         path.arcTo(QRectF(
                                        rect.bottomLeft(),
                                        QPointF(rect.left() + cornerRectSize, rect.bottom() - cornerRectSize)),
@@ -629,13 +628,13 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                         rect.adjust(isSelected ? 0 : 1.5, 0.5, -0.5, -0.5);
 
                         path.moveTo(rect.topLeft());
-                        path.lineTo(rect.right() - config.cornerRadius, rect.top());
+                        path.lineTo(rect.right() - config.tabCornerRadius, rect.top());
                         path.arcTo(QRectF(
                                        rect.topRight(),
                                        QPointF(rect.right() - cornerRectSize, rect.top() + cornerRectSize)),
                                    90,
                                    90);
-                        path.lineTo(rect.right(), rect.bottom() - config.cornerRadius);
+                        path.lineTo(rect.right(), rect.bottom() - config.tabCornerRadius);
                         path.arcTo(QRectF(
                                        rect.bottomRight(),
                                        QPointF(rect.right() - cornerRectSize, rect.bottom() - cornerRectSize)),
@@ -1482,7 +1481,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                     p->setBrush(getBrush(btn->palette, Color::buttonBg, state));
                 }
 
-                p->drawRoundedRect(btn->rect, config.cornerRadius, config.cornerRadius);
+                p->drawRoundedRect(btn->rect, config.controlsCornerRadius, config.controlsCornerRadius);
                 p->restore();
                 return;
             }
@@ -1500,7 +1499,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
         case PE_IndicatorCheckBox:
         case PE_IndicatorRadioButton: {
             const int indicatorSize = qMin(config.checkBoxSize, qMin(opt->rect.height() - 1, opt->rect.width()) - 1);
-            const int roundedCornerRaduis = (element == QStyle::PE_IndicatorCheckBox && !config.circleCheckBox) ? (config.cornerRadius / 2.0) : -1;  // the corner radius for checkboxes, if -1 then draw a circle
+            const int roundedCornerRaduis = (element == QStyle::PE_IndicatorCheckBox && !config.circleCheckBox) ? (config.checkBoxCornerRadius) : -1;  // the corner radius for checkboxes, if -1 then draw a circle
 
             QRect indicatorRect = QRect(0, 0, indicatorSize, indicatorSize);
             indicatorRect.moveCenter(opt->rect.center());
@@ -1626,7 +1625,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                     p->setRenderHints(QPainter::Antialiasing);
                     p->setPen(Qt::NoPen);
                     p->setBrush(getBrush(edit->palette, Color::lineEditBg, state));
-                    p->drawRoundedRect(opt->rect, config.cornerRadius, config.cornerRadius);
+                    p->drawRoundedRect(opt->rect, config.controlsCornerRadius, config.controlsCornerRadius);
                     p->restore();
                     this->drawPrimitive(PE_FrameLineEdit, edit, p, widget);
                 }
@@ -1639,7 +1638,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->setRenderHints(QPainter::Antialiasing);
             p->setPen(getPen(opt->palette, Color::lineEditOutline, state, 2));
             p->setBrush(Qt::NoBrush);
-            p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), config.cornerRadius, config.cornerRadius);
+            p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), config.controlsCornerRadius, config.controlsCornerRadius);
             p->restore();
             return;
 
@@ -1747,7 +1746,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             if ((opt->rect.width() == opt->rect.height()) && justIcon) {
                 p->drawEllipse(opt->rect.adjusted(1, 1, -1, -1));
             } else {
-                const qreal cornerRadius = qMin(qreal(config.cornerRadius), opt->rect.height() / 2.0);
+                const qreal cornerRadius = qMin(qreal(config.controlsCornerRadius), opt->rect.height() / 2.0);
                 p->drawRoundedRect(opt->rect.adjusted(1, 1, -1, -1), cornerRadius, cornerRadius);
             }
             p->restore();
@@ -2027,7 +2026,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             if (const auto* item = qstyleoption_cast<const QStyleOptionViewItem*>(opt)) {
                 state.pressed = item->state & State_Selected;
                 const bool isListView = item->widget && item->widget->inherits("QListView");
-                const qreal cornerRadius = isListView ? config.cornerRadius / 2.0 : 0;
+                const int cornerRadius = isListView ? config.listViewItemBorderRadius : 0;
 
                 QRect rect;
                 if (isListView) {
@@ -2168,11 +2167,11 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_IndicatorWidth:
         case PM_ExclusiveIndicatorWidth:
         case PM_ExclusiveIndicatorHeight:
-            return 20;
+            return config.checkBoxSize;
         case PM_TabBarTabHSpace:  // unused in the impementation
             return config.tabHorizontalPadding;
         case PM_TabBarTabVSpace:  // vertical padding, for horizontal tabbar: top and bottom
-            return 10;
+            return config.tabVerticalPadding;
         case PM_TabBarTabShiftHorizontal:
         case PM_TabBarTabShiftVertical:
             return 0;
@@ -2185,28 +2184,25 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
             return 1;
         case PM_TabCloseIndicatorWidth:
         case PM_TabCloseIndicatorHeight:
-            return 24;
-        // case PM_SliderThickness: // this is only used in QSLider to get size for CT_SLider
-        //  return ;
+            return config.tabCloseIndicatorHoverSize;
         case PM_SliderControlThickness:
         case PM_SliderLength:
             return config.sliderHandleDiameter;
         case PM_SliderTickmarkOffset:
-            return 3;
+            return config.sliderTickmarksOffset;
         case PM_ScrollBarSliderMin:
-            return 40;
+            return config.scrollbarSliderMinLen;
         case PM_MenuHMargin:
-            return 0 + config.menuMargin;
+            return config.menuMargin;
         case PM_MenuVMargin:
-            return 5 + config.menuMargin;
+            return config.menuVerticalPadding + config.menuMargin;
         case PM_SubMenuOverlap:
-            return 3;
+            return config.menuMargin * 2 - config.menuSubMenuSpacing;
         case PM_MenuBarItemSpacing:
             return 0;
         case PM_MenuBarHMargin:
-            return 2;
         case PM_MenuBarVMargin:
-            return 2;
+            return config.menuBarMargin;
         case PM_MenuBarPanelWidth:
             return 0;
         case PM_ScrollView_ScrollBarOverlap:
@@ -2214,12 +2210,13 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
         case PM_ToolBarFrameWidth:
             return 0;
         case PM_ToolBarItemMargin:
+            return config.toolBarPadding;
         case PM_ToolBarItemSpacing:
-            return 3;
+            return config.toolBarItemSpacing;
         case PM_ToolBarSeparatorExtent:
             return 3;
         case PM_ToolBarHandleExtent:
-            return (config.toolBarHandleHorizontalPadding * 2) + 2 + config.toolBarHandleLineSpacing;  // 2 is for the line thickness
+            return config.toolBarHandleHorizontalPadding * 2 + 2 + config.toolBarHandleLineSpacing;  // 2 is for the line thickness
         case PM_ProgressBarChunkWidth:
             return 2;
         case PM_RadioButtonLabelSpacing:
@@ -2229,16 +2226,16 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
              */
             return config.checkBoxElementSpacing + config.checkBoxSize / 2;
         case PM_DockWidgetTitleMargin:
-            return 6;
+            return config.dockHeaderLabelPadding;
         case PM_DockWidgetFrameWidth:
             return 0;
-        case PM_DockWidgetTitleBarButtonMargin:  // size of the doch header buttons
-            return 8;
+        case PM_DockWidgetTitleBarButtonMargin:  // size of the dock header buttons
+            return config.dockHeaderControlsHoverPadding;
         case PM_DockWidgetSeparatorExtent:
         case PM_DockWidgetHandleExtent:
             return 3;
         case PM_ToolTipLabelFrameWidth:
-            return 6;
+            return config.tooltipPadding;
 
         case PM_FocusFrameVMargin:
         case PM_FocusFrameHMargin: {
@@ -2596,11 +2593,11 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 } else if (dock->closable) {
                     right = subElementRect(SE_DockWidgetCloseButton, dock, widget).left();
                 } else {
-                    right = dock->rect.right() - config.dockHeaderLabelHorizontalPadding;
+                    right = dock->rect.right() - config.dockHeaderLabelPadding;
                 }
 
                 QRect rect = dock->rect;
-                rect.setLeft(dock->rect.left() + config.dockHeaderLabelHorizontalPadding);
+                rect.setLeft(dock->rect.left() + config.dockHeaderLabelPadding);
                 rect.setRight(right);
                 return rect;
             }
@@ -2762,7 +2759,6 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                         }
                     }
                     case SC_SliderTickmarks: {
-                        const int grooveTicksGap = this->pixelMetric(PM_SliderTickmarkOffset, slider, widget);
                         const QRect grooveRect = this->subControlRect(CC_Slider, slider, SC_SliderGroove, widget);
                         const int handleRadius = config.sliderHandleDiameter / 2;
                         QRect rect(slider->rect);
@@ -2771,24 +2767,24 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                             rect.setHeight(config.sliderTickmarksLen);
                             switch (slider->tickPosition) {
                                 case QSlider::TicksAbove:
-                                    rect.moveBottom(grooveRect.center().y() - handleRadius - grooveTicksGap);
+                                    rect.moveBottom(grooveRect.center().y() - handleRadius - config.sliderTickmarksOffset);
                                     break;
                                 case QSlider::TicksBothSides:
                                 case QSlider::TicksBelow:
                                 case QSlider::NoTicks:
-                                    rect.moveTop(grooveRect.center().y() + handleRadius + grooveTicksGap);
+                                    rect.moveTop(grooveRect.center().y() + handleRadius + config.sliderTickmarksOffset);
                                     break;
                             }
                         } else {
                             rect.setWidth(config.sliderTickmarksLen);
                             switch (slider->tickPosition) {
                                 case QSlider::TicksLeft:
-                                    rect.moveRight(grooveRect.center().x() - handleRadius - grooveTicksGap);
+                                    rect.moveRight(grooveRect.center().x() - handleRadius - config.sliderTickmarksOffset);
                                     break;
                                 case QSlider::TicksBothSides:
                                 case QSlider::TicksRight:
                                 case QSlider::NoTicks:
-                                    rect.moveLeft(grooveRect.center().x() + handleRadius + grooveTicksGap);
+                                    rect.moveLeft(grooveRect.center().x() + handleRadius + config.sliderTickmarksOffset);
                                     break;
                             }
                         }
@@ -3224,11 +3220,11 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                     case QSlider::TicksAbove:
                     case QSlider::TicksBelow:
                         thickness += config.sliderHandleThicknessMargin + qMax(config.sliderHandleThicknessMargin,
-                                                                               pixelMetric(PM_SliderTickmarkOffset, opt, widget) + config.sliderTickmarksLen);
+                                                                               config.sliderTickmarksOffset + config.sliderTickmarksLen);
                         break;
                     case QSlider::TicksBothSides:
-                        thickness += qMax(2 * config.sliderHandleThicknessMargin,
-                                          2 * (pixelMetric(PM_SliderTickmarkOffset, opt, widget) + config.sliderTickmarksLen));
+                        thickness += 2 * qMax(config.sliderHandleThicknessMargin,
+                                              (config.sliderTickmarksOffset + config.sliderTickmarksLen));
                         break;
                     case QSlider::NoTicks:
                         thickness += 2 * config.sliderHandleThicknessMargin;
@@ -3361,7 +3357,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                     }
 
                     const int height = qMax(maxHeight,
-                                            tab->fontMetrics.height() + 2 * pixelMetric(PM_TabBarTabVSpace));
+                                            tab->fontMetrics.height() + 2 * config.tabVerticalPadding);
                     return QSize(width + config.tabElementSpacing * (elements - 1),
                                  height + config.tabBarMarginAboveTabs);
                 }
@@ -3400,7 +3396,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                 }
 
                 const int width = qMax(maxWidth,
-                                       tab->fontMetrics.height() + 2 * pixelMetric(PM_TabBarTabVSpace));
+                                       tab->fontMetrics.height() + 2 * config.tabVerticalPadding);
 
                 return QSize(width + config.tabBarMarginAboveTabs,
                              height + config.tabElementSpacing * (elements - 1));
@@ -3507,7 +3503,7 @@ bool Style::eventFilter(QObject* object, QEvent* event) {
         p.setRenderHint(QPainter::Antialiasing);
         p.setPen(getPen(opt.palette, Color::line, 1));
         p.setBrush(getBrush(opt.palette, Color::comboBoxPopupBg));
-        p.drawRoundedRect(rect, config.cornerRadius, config.cornerRadius);
+        p.drawRoundedRect(rect, config.menuBorderRadius, config.menuBorderRadius);
         p.end();
         return true;
     }
@@ -3557,12 +3553,10 @@ Style::MenuItemText Style::menuItemGetText(const QStyleOptionMenuItem* menu) {
 int Style::scrollbarGetSliderLength(const QStyleOptionSlider* bar) const {
     const int barLen = bar->orientation == Qt::Horizontal ? bar->rect.width() : bar->rect.height();
     const int contentLen = bar->maximum - bar->minimum + bar->pageStep;
-    const int minSliderLen = pixelMetric(PM_ScrollBarSliderMin, bar);
     if (contentLen <= 0)  // to avoid division by 0
-        return minSliderLen;
+        return config.scrollbarSliderMinLen;
     const int sliderLen = qreal(bar->pageStep) / contentLen * barLen;
-
-    return qMin(qMax(minSliderLen, sliderLen), barLen);
+    return qBound(config.scrollbarSliderMinLen, sliderLen, barLen);
 }
 
 int Style::getTextFlags(const QStyleOption* opt) const {
@@ -3622,14 +3616,15 @@ bool Style::shouldBlurBehindWidget(QWidget* widget) {
 
 QRegion Style::getBlurRegion(QWidget* widget) {
     if (widget->inherits("QMenu")) {
+        const Config& config = Config::get();
         QRegion region;
         const QRect innerRect = widget->rect().adjusted(Config::menuMargin, Config::menuMargin, -Config::menuMargin, -Config::menuMargin);
-        region += innerRect.adjusted(Config::menuBorderRadius, 0, -Config::menuBorderRadius, 0);
-        region += innerRect.adjusted(0, Config::menuBorderRadius, 0, -Config::menuBorderRadius);
-        region += QRegion(QRect(innerRect.topLeft(), QSize(Config::menuBorderRadius, Config::menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
-        region += QRegion(QRect(innerRect.bottomLeft(), QSize(Config::menuBorderRadius, -Config::menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
-        region += QRegion(QRect(innerRect.topRight(), QSize(-Config::menuBorderRadius, Config::menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
-        region += QRegion(QRect(innerRect.bottomRight(), QSize(-Config::menuBorderRadius, -Config::menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
+        region += innerRect.adjusted(config.menuBorderRadius, 0, -config.menuBorderRadius, 0);
+        region += innerRect.adjusted(0, config.menuBorderRadius, 0, -config.menuBorderRadius);
+        region += QRegion(QRect(innerRect.topLeft(), QSize(config.menuBorderRadius, config.menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
+        region += QRegion(QRect(innerRect.bottomLeft(), QSize(config.menuBorderRadius, -config.menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
+        region += QRegion(QRect(innerRect.topRight(), QSize(-config.menuBorderRadius, config.menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
+        region += QRegion(QRect(innerRect.bottomRight(), QSize(-config.menuBorderRadius, -config.menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
         return region;
     }
     return widget->rect();

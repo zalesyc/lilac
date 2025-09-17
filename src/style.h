@@ -52,7 +52,7 @@ class Style : public SuperStyle {
     bool eventFilter(QObject* object, QEvent* event) override;
 
    protected:
-    Lilac::Config& config;  // conveninece variable so Config::Get() does not have to be always called;
+    const Lilac::Config& config;  // conveninece variable so Config::Get() does not have to be always called;
     mutable Lilac::AnimationManager animationMgr;
 
    private:

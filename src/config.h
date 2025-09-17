@@ -16,7 +16,7 @@ class Config : public QObject {
     Config(const Config&) = delete;
     Config& operator=(const Config&) = delete;
 
-    static Config& get();
+    static const Config& get();
 
    signals:
     void configChanged();
@@ -44,14 +44,15 @@ class Config : public QObject {
      *
      *
      * Constexpr variables cannot be changed, other variables may
-     * change trough the configuration system.
+     * change trough the configuration system, in Lilac::Config::onSettingsChanged()
      */
    public:
-    int cornerRadius = 12;
+    int cornerRadius = 12;  // for the elements that dont have their own corner radius
 
     static constexpr int smallArrowSize = 10;
 
-    static constexpr int controlsTextVerticalPadding = 10;  // buttons, lineEdits, spinBoxes, comboboxes
+    static constexpr int controlsTextVerticalPadding = 10;  // buttons, toolbuttons, lineEdits, spinBoxes, comboboxes
+    int controlsCornerRadius = 12;                          // buttons, toolbuttons, lineEdits, spinBoxes, comboboxes
 
     static constexpr int pushButtonMenuArrowPadding = 6;  // length between the menu arrow and the right side
 
@@ -59,22 +60,28 @@ class Config : public QObject {
     static constexpr int checkBoxHoverCircleSize = 34;
     static constexpr int checkBoxElementSpacing = 6;  // between the indicator, icon and label; sets PM_CheckBoxLabelSpacing
     bool circleCheckBox = false;
+    int checkBoxCornerRadius = 6;  // if circleCheckbox == false
 
     static constexpr int tabCloseIndicatorSize = 6;          // size of the x, the hover rect size is defined in PM_TabCloseIndicatorWidth/Height
+    static constexpr int tabCloseIndicatorHoverSize = 24;    // size of the hover circle
     static constexpr int tabBarStartMargin = 6;              // padding on the left/top side of the tabbar, if the tab alighnment is left, only for QTabWidget
     static constexpr int tabBarMarginAboveTabs = 4;          // there is no rect for the tab position for both QTabBar and QTabWidget so the implemention is not ideal
     static constexpr int tabWidgetPageAreaCornerRadius = 6;  // corner radius for the frame arount the contents of QTabWidget
     static constexpr int tabHorizontalPadding = 8;           // padding between the sides of the tab and the first/last element
+    static constexpr int tabVerticalPadding = 10;            // padding above and below the text
     static constexpr int tabElementSpacing = 7;              // spacing between the inner elements of the tab
+    int tabCornerRadius = 12;                                // corner radius for the rouded parts
 
     static constexpr int sliderHandleHoverCircleDiameter = 32;
     static constexpr int sliderHandleDiameter = 12;
     static constexpr int sliderHandleThicknessMargin = 2;  // margin of the handle in the thickness direction, slider thickness is calculated like: handle + max(handleThicknessMargin, tickmarks)
     static constexpr int sliderTickmarksLen = 8;
+    static constexpr int sliderTickmarksOffset = 3;  // distance between the handle side and the tickmarks
 
     static constexpr int scrollBarThickness = 16;
     static constexpr int scrollBarSliderPadding = 6;  // left and right of the slider -> sets the thickness
     static constexpr int scrollBarSliderPaddingHover = 4;
+    static constexpr int scrollbarSliderMinLen = 40;
 
     static constexpr int lineEditTextHorizontalPadding = 6;
     static constexpr int lineEditMinWidthChars = 14;  // minimal width of lineedit: lineEditMinWidthChars * averageCharWidth
@@ -86,9 +93,11 @@ class Config : public QObject {
     static constexpr int spinTextLeftPadding = lineEditTextHorizontalPadding;
 
     static constexpr int menuMargin = 7;  // transparent margin added to the menu, this margin contains the shadow and creates spacing between submenus
-    static constexpr int menuBorderRadius = 10;
+    static constexpr int menuVerticalPadding = 5;
+    static constexpr int menuSubMenuSpacing = 5;  // distance between a menu and its submenu
+    int menuBorderRadius = 12;
     static constexpr int menuItemElementHorizontalSpacing = 8;
-    static constexpr int menuItemBorderRadius = 5;
+    int menuItemBorderRadius = 6;
     static constexpr int menuItemHorizontalMargin = 5;
     static constexpr int menuItemHorizontalPadding = 5;
     static constexpr int menuItemVerticalPadding = 5;
@@ -103,6 +112,7 @@ class Config : public QObject {
     static constexpr int menuBarItemMinHeight = 24;  // without the margin
     static constexpr int menuBarItemBorderRadius = 4;
     static constexpr int menuBarItemMargin = 2;
+    static constexpr int menuBarMargin = 2;
 
     static constexpr int comboArrowWidth = 30;  // the part that is clickable, the indicator is smaller
     static constexpr int comboMinWidthChars = lineEditMinWidthChars;
@@ -119,6 +129,8 @@ class Config : public QObject {
     static constexpr int toolbtnArrowSectionWidth = 20;  // width of the separated arrow section on the right, poppupMode: MenuButtonPopup
     static constexpr int toolBtnMenuSeparatorVerticalPadding = 4;
 
+    static constexpr int toolBarItemSpacing = 3;
+    static constexpr int toolBarPadding = 3;
     static constexpr int toolBarHandleVerticalPadding = 6;     // vertical when toolbar is horizontal
     static constexpr int toolBarSeparatorVerticalPadding = 3;  // vertical when toolbar is horizontal
     static constexpr int toolBarHandleHorizontalPadding = 2;   // horizontal when toolbar is horizontal
@@ -142,17 +154,19 @@ class Config : public QObject {
 
     static constexpr int dialRangeNonWaraping = 300;  // degrees
 
-    static constexpr int dockHeaderLabelHorizontalPadding = 6;
-    static constexpr int dockHeaderControlsHeight = 12;  // for the close and float buttons
+    static constexpr int dockHeaderLabelPadding = 6;
+    static constexpr int dockHeaderControlsHoverPadding = 8;  // distance between the icon and the end of the button/hover circle
 
     static constexpr int itemViewItemHorizontalPadding = 5;
     static constexpr int itemViewItemVerticalPadding = 5;
     static constexpr int itemViewItemElementSpacing = 8;
     static constexpr int listViewItemVerticalMargin = 2;       // if item->displayPosition is top or bottom, this is used for all sides
     static constexpr int listViewItemHorizontalMargin = 5;     // only if item->displayPosition is left or right
+    int listViewItemBorderRadius = 6;                          // also for combo box popup itms
     static constexpr int kFilePlacesViewHorizontalMargin = 2;  // special case for QListView, if it's KFilePlacesView like in the left dolphin sidebar, where I dont draw vertical margin, because the list items are too small
 
     static constexpr int tooltipOpacity = 235;
+    static constexpr int tooltipPadding = 6;
 
     // animation constants
     /* durations are in miliseconds
