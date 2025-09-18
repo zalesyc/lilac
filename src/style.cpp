@@ -13,10 +13,6 @@
 #include <QStyleFactory>
 #include <QtMath>
 
-#if HAS_KWINDOWSYSTEM
-#include <KWindowEffects>
-#endif
-
 #include "animation_manager.h"
 #include "colors.h"
 #include "style.h"
@@ -2112,8 +2108,8 @@ void Style::polish(QWidget* widget) {
     }
 
 #if HAS_KWINDOWSYSTEM
-    if (shouldBlurBehindWidget(widget)) {
-        widget->installEventFilter(this);
+    if (BlurManager::shouldBlurBehindWidget(widget)) {
+        blurMgr.registerWidget(widget);
     }
 #endif
 }
@@ -2150,8 +2146,8 @@ void Style::unpolish(QWidget* widget) {
     }
 
 #if HAS_KWINDOWSYSTEM
-    if (shouldBlurBehindWidget(widget)) {
-        widget->removeEventFilter(this);
+    if (BlurManager::shouldBlurBehindWidget(widget)) {
+        blurMgr.unregisterWidget(widget);
     }
 #endif
 
@@ -3507,21 +3503,6 @@ bool Style::eventFilter(QObject* object, QEvent* event) {
         p.end();
         return true;
     }
-#if HAS_KWINDOWSYSTEM
-    if (config.menuBlurBehind &&
-        config.menuBgOpacity != 255 &&
-        shouldBlurBehindWidget(widget) &&
-        (eventType == QEvent::Hide || eventType == QEvent::Show || eventType == QEvent::Resize) &&
-        (widget->testAttribute(Qt::WA_WState_Created) || widget->internalWinId())) {
-        widget->winId();
-        KWindowEffects::enableBlurBehind(widget->windowHandle(), true, getBlurRegion(widget));
-        if (widget->isVisible()) {
-            widget->update();
-        }
-
-        return false;
-    }
-#endif
     return SuperStyle::eventFilter(object, event);
 }
 
@@ -3608,28 +3589,6 @@ bool Style::tabIsHorizontal(const QTabBar::Shape& tabShape) {
     }
     return true;
 }
-
-#if HAS_KWINDOWSYSTEM
-bool Style::shouldBlurBehindWidget(QWidget* widget) {
-    return widget->inherits("QMenu");
-}
-
-QRegion Style::getBlurRegion(QWidget* widget) {
-    if (widget->inherits("QMenu")) {
-        const Config& config = Config::get();
-        QRegion region;
-        const QRect innerRect = widget->rect().adjusted(Config::menuMargin, Config::menuMargin, -Config::menuMargin, -Config::menuMargin);
-        region += innerRect.adjusted(config.menuBorderRadius, 0, -config.menuBorderRadius, 0);
-        region += innerRect.adjusted(0, config.menuBorderRadius, 0, -config.menuBorderRadius);
-        region += QRegion(QRect(innerRect.topLeft(), QSize(config.menuBorderRadius, config.menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
-        region += QRegion(QRect(innerRect.bottomLeft(), QSize(config.menuBorderRadius, -config.menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
-        region += QRegion(QRect(innerRect.topRight(), QSize(-config.menuBorderRadius, config.menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
-        region += QRegion(QRect(innerRect.bottomRight(), QSize(-config.menuBorderRadius, -config.menuBorderRadius) * 2).normalized(), QRegion::Ellipse);
-        return region;
-    }
-    return widget->rect();
-}
-#endif
 
 void Style::drawDropShadow(QPainter* p, const QRectF& rect, const qreal cornerRadius, const qreal blurRadius, const QPointF offset, const QColor color) {
     if (rect.isNull() || blurRadius <= 0) {

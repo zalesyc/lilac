@@ -43,6 +43,8 @@ add_library(LilacStyle SHARED
     src/config.h
     src/colors.cpp
     src/colors.h
+    src/blur_manager.h
+    src/blur_manager.cpp
     src/animation_manager.cpp
     src/animation_manager.h
     src/utils/state.h

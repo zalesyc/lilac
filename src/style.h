@@ -14,6 +14,7 @@
 #endif
 
 #include "animation_manager.h"
+#include "blur_manager.h"
 #include "config.h"
 
 namespace Lilac {
@@ -54,6 +55,9 @@ class Style : public SuperStyle {
    protected:
     const Lilac::Config& config;  // conveninece variable so Config::Get() does not have to be always called;
     mutable Lilac::AnimationManager animationMgr;
+#if HAS_KWINDOWSYSTEM
+    mutable Lilac::BlurManager blurMgr;
+#endif
 
    private:
     struct MenuItemText {
@@ -66,10 +70,6 @@ class Style : public SuperStyle {
     int getTextFlags(const QStyleOption* opt) const;
     QRect tabBarGetTabRect(const QStyleOptionTab* tab) const;
     static bool tabIsHorizontal(const QTabBar::Shape& tabShape);
-#if HAS_KWINDOWSYSTEM
-    static inline bool shouldBlurBehindWidget(QWidget* Widget);
-    QRegion getBlurRegion(QWidget* widget);
-#endif
     static void drawDropShadow(QPainter* p, const QRectF& rect, const qreal cornerRadius, const qreal blurRadius, const QPointF offset, const QColor color);
 
    private:
