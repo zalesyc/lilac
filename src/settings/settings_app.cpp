@@ -28,7 +28,6 @@ SettingsApp::SettingsApp(QWidget* parent)
     connect(ui->menuOpacitySlider, &QSlider::valueChanged, this, &SettingsApp::widgetChanged);
     connect(ui->blurBehindMenusCheck, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
 
-    connect(ui->animationSpeedSlider, &QSlider::valueChanged, this, [this](int value) { ui->animationValue->setText(QString::number(value / 10.0)); });
     connect(ui->menuOpacitySlider, &QSlider::valueChanged, this, [this](int value) { ui->blurBehindMenusCheck->setEnabled(HAS_KWINDOWSYSTEM && value < 255); });
 
     setFromSettings();
@@ -43,7 +42,8 @@ void SettingsApp::defaults() {
 void SettingsApp::save() {
     settings->setCornerRadius(ui->radiusSpin->value());
     settings->setCircleCheckBox(ui->circleCheckCheckBox->isChecked());
-    settings->setAnimationSpeed(ui->animationSpeedSlider->value() / 10.0);
+    const int animationSpeed = ui->animationSpeedSlider->value();
+    settings->setAnimationSpeed(animationSpeed > 99 ? 0 : qMax(animationSpeed, 1) / 10.0);
     settings->setMenuOpacity(ui->menuOpacitySlider->value());
     settings->setMenuBlurBehind(ui->blurBehindMenusCheck->isChecked());
     settings->save();
@@ -60,7 +60,8 @@ void SettingsApp::setFromSettings() {
     settings->load();
     ui->radiusSpin->setValue(settings->cornerRadius());
     ui->circleCheckCheckBox->setChecked(settings->circleCheckBox());
-    ui->animationSpeedSlider->setValue(settings->animationSpeed() * 10.0);
+    const qreal animationSpeed = settings->animationSpeed();
+    ui->animationSpeedSlider->setValue(animationSpeed <= 0 ? 100 : (animationSpeed * 10.0));
     ui->menuOpacitySlider->setValue(settings->menuOpacity());
     ui->blurBehindMenusCheck->setChecked(settings->menuBlurBehind());
 }
