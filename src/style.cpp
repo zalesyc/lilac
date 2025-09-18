@@ -3537,7 +3537,7 @@ int Style::scrollbarGetSliderLength(const QStyleOptionSlider* bar) const {
     if (contentLen <= 0)  // to avoid division by 0
         return config.scrollbarSliderMinLen;
     const int sliderLen = qreal(bar->pageStep) / contentLen * barLen;
-    return qBound(config.scrollbarSliderMinLen, sliderLen, barLen);
+    return qMin(qMax(config.scrollbarSliderMinLen, sliderLen), barLen);  // this cannot be qBound because barLen may be less than minLen
 }
 
 int Style::getTextFlags(const QStyleOption* opt) const {
