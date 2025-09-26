@@ -127,6 +127,8 @@ When enabled, two additional targets will be created, a standalone settings app 
 
 The style can now be selected from system settings
 
+> [!NOTE]
+> Written in C++, the theme may contain bugs that could cause an application using it to crash. If you find such a crash, test with a different theme and please report it here.
 ## Issues / TODO:
 
 - Right-to-left language support
