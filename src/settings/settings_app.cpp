@@ -24,6 +24,7 @@ SettingsApp::SettingsApp(QWidget* parent)
 
     connect(ui->radiusSpin, &QSpinBox::valueChanged, this, &SettingsApp::widgetChanged);
     connect(ui->circleCheckCheckBox, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
+    connect(ui->spinVerticalControlsCheck, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
     connect(ui->animationSpeedSlider, &QSlider::valueChanged, this, &SettingsApp::widgetChanged);
     connect(ui->menuOpacitySlider, &QSlider::valueChanged, this, &SettingsApp::widgetChanged);
     connect(ui->blurBehindMenusCheck, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
@@ -46,6 +47,7 @@ void SettingsApp::save() {
     settings->setAnimationSpeed(animationSpeed > 99 ? 0 : qMax(animationSpeed, 1) / 10.0);
     settings->setMenuOpacity(ui->menuOpacitySlider->value());
     settings->setMenuBlurBehind(ui->blurBehindMenusCheck->isChecked());
+    settings->setSpinBoxVerticalControls(ui->spinVerticalControlsCheck->isChecked());
     settings->save();
 #if HAS_DBUS
     auto msg = QDBusMessage::createSignal(
@@ -60,6 +62,7 @@ void SettingsApp::setFromSettings() {
     settings->load();
     ui->radiusSpin->setValue(settings->cornerRadius());
     ui->circleCheckCheckBox->setChecked(settings->circleCheckBox());
+    ui->spinVerticalControlsCheck->setChecked(settings->spinBoxVerticalControls());
     const qreal animationSpeed = settings->animationSpeed();
     ui->animationSpeedSlider->setValue(animationSpeed <= 0 ? 100 : (animationSpeed * 10.0));
     ui->menuOpacitySlider->setValue(settings->menuOpacity());

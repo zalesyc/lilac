@@ -2794,26 +2794,34 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
             break;
         case CC_SpinBox:
             if (const auto spin = qstyleoption_cast<const QStyleOptionSpinBox*>(opt)) {
+                bool useVerticalButtons = widget == nullptr && config.spinVerticalControlsForNullWidgets;
                 switch (element) {
                     case SC_SpinBoxFrame:
                         return spin->rect;
                     case SC_SpinBoxUp: {
-                        const int width = qMin(spin->rect.width() / 3, config.spinIndicatorWidth);
+                        const int width = qMin(spin->rect.width() / 3, useVerticalButtons ? config.spinVeticalControlsIndicatorWidth : config.spinIndicatorWidth);
                         QRect rect(spin->rect);
                         rect.setWidth(width);
+                        if (useVerticalButtons) {
+                            rect.setHeight(rect.height() / 2.0);
+                        }
                         rect.moveRight(spin->rect.right());
                         return rect;
                     }
                     case SC_SpinBoxDown: {
-                        const int width = qMin(spin->rect.width() / 3, config.spinIndicatorWidth);
+                        const int width = qMin(spin->rect.width() / 3, useVerticalButtons ? config.spinVeticalControlsIndicatorWidth : config.spinIndicatorWidth);
                         QRect rect(spin->rect);
                         rect.setWidth(width);
-                        rect.moveRight(spin->rect.right() - width);
+                        if (useVerticalButtons) {
+                            rect.setHeight(rect.height() / 2.0);
+                            rect.moveBottom(spin->rect.bottom());
+                        }
+                        rect.moveRight(spin->rect.right() - (useVerticalButtons ? 0 : width));
                         return rect;
                     }
                     case SC_SpinBoxEditField: {
-                        const int indicatorWidth = qMin(spin->rect.width() / 3, config.spinIndicatorWidth);
-                        return spin->rect.adjusted(config.spinTextLeftPadding, 0, -(indicatorWidth * 2), 0);
+                        const int indicatorWidth = qMin(spin->rect.width() / 3, useVerticalButtons ? config.spinVeticalControlsIndicatorWidth : config.spinIndicatorWidth);
+                        return spin->rect.adjusted(config.spinTextLeftPadding, 0, -(indicatorWidth * (useVerticalButtons ? 1 : 2)), 0);
                     }
                     default:
                         break;

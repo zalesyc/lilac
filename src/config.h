@@ -91,6 +91,8 @@ class Config : public QObject {
     static constexpr int spinIndicatorHoverCircleSize = 24;
     static constexpr int spinMinWidthChars = lineEditMinWidthChars;
     static constexpr int spinTextLeftPadding = lineEditTextHorizontalPadding;
+    static constexpr int spinVeticalControlsIndicatorWidth = 20;  // spinIndicatorWidth if the controls are layed out vertically
+    bool spinVerticalControlsForNullWidgets = false;              // a workaround for an issue in qqc2-desktop-style, fixed in 6.19, which caused the label to overlap the controls, vertical controls only used when widget==nullptr
 
     static constexpr int menuMargin = 7;  // transparent margin added to the menu, this margin contains the shadow and creates spacing between submenus
     static constexpr int menuVerticalPadding = 5;

@@ -34,5 +34,15 @@
             </tooltip>
             <default>true</default>
         </entry>
+        <entry name="SpinBoxVerticalControls" type="Bool">
+            <label>Workaround: Whether to use vertical controls for SpinBoxes.</label>
+            <tooltip>
+            Whether to use vertically positioned controls on spinboxes, when the widget parameter is nullptr.
+
+            This is a workaround for an issue in qqc2-desktop-style, which causes the edit field to overlap the decrement button, making the text small and unreadable and making the button unclickable.
+            The bug was fixed in KDE Frameworks 6.19.
+            </tooltip>
+            <default>false</default>
+        </entry>
     </group>
 </kcfg>

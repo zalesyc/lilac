@@ -63,6 +63,7 @@ void Config::onSettingsChanged() {
     animationSpeed = settings->animationSpeed();
     menuBgOpacity = settings->menuOpacity();
     menuBlurBehind = settings->menuBlurBehind();
+    spinVerticalControlsForNullWidgets = settings->spinBoxVerticalControls();
     emit configChanged();
 }
 #endif
