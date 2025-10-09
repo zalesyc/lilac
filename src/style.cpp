@@ -1902,7 +1902,11 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
         case PE_IndicatorArrowDown:
         case PE_IndicatorArrowLeft:
         case PE_IndicatorArrowRight: {
-            const int size = qMin(opt->rect.width(), opt->rect.height());
+            int size = qMin(opt->rect.width(), opt->rect.height());
+            // size of the top naviagtion arrows in dolphin
+            if (widget && widget->inherits("KDEPrivate::KUrlNavigatorButtonBase")) {
+                size = qMin(config.dolphinUrlNavigatorArrowSize, size);
+            }
             const int tipOffset = size % 2;
             /* tipOffset: is so for odd size rect the arrow is is still symetrical
              * e.g for the down arrow:
@@ -2616,28 +2620,32 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
             if (const auto* item = qstyleoption_cast<const QStyleOptionViewItem*>(opt)) {
                 const bool isListView = item->widget && item->widget->inherits("QListView");
 
+                // this is a workaround for an issue in kate, where the text in top bread crumbs was cut away
+                const bool isBreadCrumbView = item->widget && item->widget->inherits("BreadCrumbView");
+
                 const int checkBoxWidth = (item->features & QStyleOptionViewItem::HasCheckIndicator) ?
                                               config.checkBoxSize + config.itemViewItemElementSpacing :
                                               0;
+
                 const QRect mainRect = item->rect.adjusted(checkBoxWidth, 0, 0, 0);
                 QRect rect(QPoint(0, 0), item->decorationSize);
                 rect.moveCenter(mainRect.center());
 
                 switch (item->decorationPosition) {
                     case QStyleOptionViewItem::Left: {
-                        rect.moveLeft(mainRect.left() + config.itemViewItemHorizontalPadding + (isListView ? config.listViewItemHorizontalMargin : 0));
+                        rect.moveLeft(mainRect.left() + (isBreadCrumbView ? 0 : config.itemViewItemHorizontalPadding) + (isListView && !isBreadCrumbView ? config.listViewItemHorizontalMargin : 0));
                         break;
                     }
                     case QStyleOptionViewItem::Right:
-                        rect.moveRight(mainRect.right() - config.itemViewItemHorizontalPadding - (isListView ? config.listViewItemHorizontalMargin : 0));
+                        rect.moveRight(mainRect.right() - (isBreadCrumbView ? 0 : config.itemViewItemHorizontalPadding) - (isListView && !isBreadCrumbView ? config.listViewItemHorizontalMargin : 0));
                         break;
 
                     case QStyleOptionViewItem::Top:
-                        rect.moveTop(mainRect.top() + config.itemViewItemVerticalPadding + (isListView ? config.listViewItemVerticalMargin : 0));
+                        rect.moveTop(mainRect.top() + (isBreadCrumbView ? 0 : config.itemViewItemHorizontalPadding) + (isListView && !isBreadCrumbView ? config.listViewItemVerticalMargin : 0));
                         break;
 
                     case QStyleOptionViewItem::Bottom:
-                        rect.moveBottom(mainRect.bottom() - config.itemViewItemVerticalPadding - (isListView ? config.listViewItemVerticalMargin : 0));
+                        rect.moveBottom(mainRect.bottom() - (isBreadCrumbView ? 0 : config.itemViewItemHorizontalPadding) - (isListView && !isBreadCrumbView ? config.listViewItemVerticalMargin : 0));
                         break;
                 }
 
@@ -2651,31 +2659,42 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                 const bool hasDecoration = item->features & QStyleOptionViewItem::HasDecoration && !item->icon.isNull();
                 const bool verticalLayout = item->decorationPosition == QStyleOptionViewItem::Top || item->decorationPosition == QStyleOptionViewItem::Bottom;
 
-                int left = item->rect.left() + config.itemViewItemHorizontalPadding;
-                if (isListView)
-                    left += verticalLayout ? config.listViewItemVerticalMargin : config.listViewItemHorizontalMargin;
-                if (item->features & QStyleOptionViewItem::HasCheckIndicator)
-                    left += config.checkBoxSize + config.itemViewItemElementSpacing;
-                if (hasDecoration && item->decorationPosition == QStyleOptionViewItem::Left)
-                    left += item->decorationSize.width() + config.itemViewItemElementSpacing;
+                int listViewItemHorizontalMargin = config.listViewItemHorizontalMargin;
+                int elementSpacing = config.itemViewItemElementSpacing;
+                int itemViewItemHorizontalPadding = config.itemViewItemHorizontalPadding;
 
-                int right = item->rect.right() - config.itemViewItemHorizontalPadding;
+                // this is a workaround for an issue in kate, where the text in top bread crumbs was cut away
+                if (item->widget && item->widget->inherits("BreadCrumbView")) {
+                    listViewItemHorizontalMargin = 0;
+                    elementSpacing = 0;
+                    itemViewItemHorizontalPadding = 0;
+                }
+
+                int left = item->rect.left() + itemViewItemHorizontalPadding;
                 if (isListView)
-                    right -= verticalLayout ? config.listViewItemVerticalMargin : config.listViewItemHorizontalMargin;
+                    left += verticalLayout ? config.listViewItemVerticalMargin : listViewItemHorizontalMargin;
+                if (item->features & QStyleOptionViewItem::HasCheckIndicator)
+                    left += config.checkBoxSize + elementSpacing;
+                if (hasDecoration && item->decorationPosition == QStyleOptionViewItem::Left)
+                    left += item->decorationSize.width() + elementSpacing;
+
+                int right = item->rect.right() - itemViewItemHorizontalPadding;
+                if (isListView)
+                    right -= verticalLayout ? config.listViewItemVerticalMargin : listViewItemHorizontalMargin;
                 if (hasDecoration && item->decorationPosition == QStyleOptionViewItem::Right)
-                    right -= item->decorationSize.width() + config.itemViewItemElementSpacing;
+                    right -= item->decorationSize.width() + elementSpacing;
 
                 int top = item->rect.top() + config.itemViewItemVerticalPadding;
                 if (isListView)
                     top += config.listViewItemVerticalMargin;
                 if (hasDecoration && item->decorationPosition == QStyleOptionViewItem::Top)
-                    top += item->decorationSize.height() + config.itemViewItemElementSpacing;
+                    top += item->decorationSize.height() + elementSpacing;
 
                 int bottom = item->rect.bottom() - config.itemViewItemVerticalPadding;
                 if (isListView)
                     bottom -= config.listViewItemVerticalMargin;
                 if (hasDecoration && item->decorationPosition == QStyleOptionViewItem::Bottom)
-                    bottom += item->decorationSize.height() + config.itemViewItemElementSpacing;
+                    bottom += item->decorationSize.height() + elementSpacing;
 
                 // This ensures the rectangle is always at least as large as the font, guaranteeing text visibility even if margins are disregarded
                 const int fontHeight = QFontMetrics(item->font).height();
