@@ -50,6 +50,7 @@ class Config : public QObject {
     int cornerRadius = 12;  // for the elements that dont have their own corner radius
 
     static constexpr int smallArrowSize = 10;
+    static constexpr int dolphinUrlNavigatorArrowSize = 12;  // the maximal size of the arrows in the dolphin url navigator bar, at the top, workaround - beacuse without this limit, they were too big
 
     static constexpr int controlsTextVerticalPadding = 10;  // buttons, toolbuttons, lineEdits, spinBoxes, comboboxes
     int controlsCornerRadius = 12;                          // buttons, toolbuttons, lineEdits, spinBoxes, comboboxes
