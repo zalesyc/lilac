@@ -13,6 +13,11 @@ class Config : public QObject {
     Q_OBJECT
 
    public:
+    enum TabContentAlignment { Start,
+                               IconStartTextCenter,
+                               Center };
+
+   public:
     Config(const Config&) = delete;
     Config& operator=(const Config&) = delete;
 
@@ -72,6 +77,7 @@ class Config : public QObject {
     static constexpr int tabVerticalPadding = 10;            // padding above and below the text
     static constexpr int tabElementSpacing = 7;              // spacing between the inner elements of the tab
     int tabCornerRadius = 12;                                // corner radius for the rouded parts
+    TabContentAlignment tabContentAlignment = Center;        // how to align the label and the icon in a tab
 
     static constexpr int sliderHandleHoverCircleDiameter = 32;
     static constexpr int sliderHandleDiameter = 12;

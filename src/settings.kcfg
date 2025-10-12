@@ -44,5 +44,22 @@
             </tooltip>
             <default>false</default>
         </entry>
+         <entry name="TabBarTabContentAlignment" type="Enum">
+            <label>How to align the contents of a tab.</label>
+            <tooltip>
+            How to align the icon and the text in a tab.
+
+            Options:
+                Start: Both are aligned left
+                IconStartTextCenter: Icon is aligned left and the text is centered
+                Center: Both are centered
+            </tooltip>
+            <choices>
+                <choice name="Start"/>
+                <choice name="IconStartTextCenter"/>
+                <choice name="Center"/>
+            </choices>
+            <default>2</default> <!-- Center -->
+        </entry>
     </group>
 </kcfg>

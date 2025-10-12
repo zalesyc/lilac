@@ -64,6 +64,8 @@ void Config::onSettingsChanged() {
     menuBgOpacity = settings->menuOpacity();
     menuBlurBehind = settings->menuBlurBehind();
     spinVerticalControlsForNullWidgets = settings->spinBoxVerticalControls();
+    tabContentAlignment = (TabContentAlignment)settings->tabBarTabContentAlignment();
+
     emit configChanged();
 }
 #endif

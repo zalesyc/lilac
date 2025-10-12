@@ -16,6 +16,7 @@
 #include "animation_manager.h"
 #include "blur_manager.h"
 #include "config.h"
+#include "utils/state.h"
 
 namespace Lilac {
 
@@ -70,6 +71,7 @@ class Style : public SuperStyle {
     int getTextFlags(const QStyleOption* opt) const;
     QRect tabBarGetTabRect(const QStyleOptionTab* tab) const;
     static bool tabIsHorizontal(const QTabBar::Shape& tabShape);
+    QRect tabBarTabIconRect(const QStyleOptionTab* tab, const Lilac::State& state, const QRect& textRect) const;
     static void drawDropShadow(QPainter* p, const QRectF& rect, const qreal cornerRadius, const qreal blurRadius, const QPointF offset, const QColor color);
 
    private:
