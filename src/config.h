@@ -91,12 +91,11 @@ class Config : public QObject {
     static constexpr int scrollbarSliderMinLen = 40;
 
     static constexpr int lineEditTextHorizontalPadding = 6;
-    static constexpr int lineEditMinWidthChars = 14;  // minimal width of lineedit: lineEditMinWidthChars * averageCharWidth
 
     static constexpr int spinIndicatorWidth = 30;  // the width of the clickable space
     static constexpr int spinIndicatorIconSize = 10;
     static constexpr int spinIndicatorHoverCircleSize = 24;
-    static constexpr int spinMinWidthChars = lineEditMinWidthChars;
+    static constexpr int spinMinWidthChars = 8;  // minimal width of the spin contents: spinMinWidthChars * averageCharWidth
     static constexpr int spinTextLeftPadding = lineEditTextHorizontalPadding;
     static constexpr int spinVeticalControlsIndicatorWidth = 20;  // spinIndicatorWidth if the controls are layed out vertically
     bool spinVerticalControlsForNullWidgets = false;              // a workaround for an issue in qqc2-desktop-style, fixed in 6.19, which caused the label to overlap the controls, vertical controls only used when widget==nullptr
@@ -124,7 +123,7 @@ class Config : public QObject {
     static constexpr int menuBarMargin = 2;
 
     static constexpr int comboArrowWidth = 30;  // the part that is clickable, the indicator is smaller
-    static constexpr int comboMinWidthChars = lineEditMinWidthChars;
+    static constexpr int comboMinWidthChars = spinMinWidthChars;
     static constexpr int comboTextLeftPadding = lineEditTextHorizontalPadding;  // used left of icon and left of text
     static constexpr int comboPopupPadding = 3;
     static constexpr int comboPopupMargin = 3;

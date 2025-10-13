@@ -1610,7 +1610,12 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                     p->drawRoundedRect(opt->rect, config.controlsCornerRadius, config.controlsCornerRadius);
                     p->restore();
                     this->drawPrimitive(PE_FrameLineEdit, edit, p, widget);
+                    return;
                 }
+                if (widget && widget->parentWidget() && (widget->parentWidget()->inherits("QComboBox") || widget->parentWidget()->inherits("QAbstractSpinBox"))) {
+                    return;
+                }
+                SuperStyle::drawPrimitive(PE_PanelLineEdit, opt, p);
                 return;
             }
             break;
@@ -2247,6 +2252,7 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
                 // This is not an exact value, the required value may be smaller, but htat would require calcualtions which are unnesesary in the end
                 return qCeil((config.sliderHandleHoverCircleDiameter - config.sliderHandleDiameter) / 2.0);
             }
+            return SuperStyle::pixelMetric(m, opt, widget);
         }
         default:
             break;
@@ -3091,7 +3097,7 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
         }
 
         case CT_LineEdit: {
-            const int width = (opt->fontMetrics.averageCharWidth() * config.lineEditMinWidthChars) +
+            const int width = contentsSize.width() +
                               this->pixelMetric(PM_LineEditIconSize, opt, widget) +
                               (pixelMetric(PM_LineEditIconMargin, opt, widget) * 2);
             const int height = qMax(
