@@ -3454,9 +3454,6 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                 switch (item->decorationPosition) {
                     case QStyleOptionViewItem::Left:
                     case QStyleOptionViewItem::Right: {
-                        width += 2 * config.itemViewItemHorizontalPadding;
-                        height += 2 * config.itemViewItemVerticalPadding;
-
                         int elements = 0;
                         int maxInnerHeight = 0;
                         if (isListView) {
@@ -3480,13 +3477,17 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                         }
                         width += qMax(0, elements) * config.itemViewItemElementSpacing;
                         height += maxInnerHeight;
-                        break;
-                    }
-                    case QStyleOptionViewItem::Top:
-                    case QStyleOptionViewItem::Bottom:
+
+                        width = qMax(width, item->fontMetrics.averageCharWidth() * config.itemViewItemMinWidthChars);
+                        height = qMax(height, item->fontMetrics.height());
+
                         width += 2 * config.itemViewItemHorizontalPadding;
                         height += 2 * config.itemViewItemVerticalPadding;
+                        return QSize(width, height);
+                    }
 
+                    case QStyleOptionViewItem::Top:
+                    case QStyleOptionViewItem::Bottom: {
                         int maxInnerHeight = 0;
                         if (isListView) {
                             width += 2 * config.listViewItemVerticalMargin;
@@ -3507,9 +3508,15 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                             };
                         }
                         height += maxInnerHeight;
-                        break;
+
+                        width = qMax(width, item->fontMetrics.averageCharWidth() * config.itemViewItemMinWidthChars);
+                        height = qMax(height, item->fontMetrics.height());
+
+                        width += 2 * config.itemViewItemHorizontalPadding;
+                        height += 2 * config.itemViewItemVerticalPadding;
+                        return QSize(width, height);
+                    }
                 }
-                return QSize(width, height);
             }
             break;
 

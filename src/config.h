@@ -168,6 +168,7 @@ class Config : public QObject {
     static constexpr int itemViewItemHorizontalPadding = 5;
     static constexpr int itemViewItemVerticalPadding = 5;
     static constexpr int itemViewItemElementSpacing = 8;
+    static constexpr int itemViewItemMinWidthChars = 2;        // the minimal width of the contents: itemViewItemMinWidthChars * averageCharWidth
     static constexpr int listViewItemVerticalMargin = 2;       // if item->displayPosition is top or bottom, this is used for all sides
     static constexpr int listViewItemHorizontalMargin = 5;     // only if item->displayPosition is left or right
     int listViewItemBorderRadius = 6;                          // also for combo box popup itms
