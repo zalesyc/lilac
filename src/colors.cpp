@@ -25,6 +25,7 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 static QColor getColorFromKColorScheme(const QPalette& pal, const Color color, const State& state);
 QColor lessContrastingBg(const QPalette& pal, const CGroup cgroup);
 CGroup groupFromState(const State& state);
+QColor mixAtContrast(const QColor& background, const QColor& foreground, const qreal contrast);
 
 const QColor getColor(const QPalette& pal, const Color color, const State& state) {
 #if HAS_KCOLORSCHEME
@@ -49,8 +50,9 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
     switch (color) {
         case groupBoxLine:
         case line: {
-            const auto base = lessContrastingBg(pal, CGroup::Normal);
-            return isDarkMode(pal) ? base.lighter(125) : base.darker(110);
+            return mixAtContrast(pal.color(CGroup::Normal, CRole::Window),
+                                 pal.color(CGroup::Normal, CRole::Text),
+                                 0.1);
         }
 
         case focusRect:
@@ -270,10 +272,9 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return isDarkMode(pal) ? QColor(255, 255, 255, 26) : QColor(0, 0, 0, 26);
 
         case menuSeparator: {
-            QColor base = getColor(pal, Color::menuText, state);
-
-            base.setAlpha(qMax<int>(100, 255 - Config::get().menuBgOpacity));
-            return isDarkMode(pal) ? base.darker(150) : base.lighter(150);
+            QColor base = getColor(pal, Color::line, state);
+            base.setAlpha(qMax<int>(140, 255 - Config::get().menuBgOpacity));
+            return isDarkMode(pal) ? base.lighter(120) : base.darker(120);
         }
 
         case toolBarBgHeader:
@@ -390,6 +391,14 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
 #if HAS_KCOLORSCHEME
 static QColor getColorFromKColorScheme(const QPalette& pal, const Color color, const State& state) {
     switch (color) {
+#if KCOLORSCHEME_FRAME_CONTRAST
+        case groupBoxLine:
+        case line: {
+            return mixAtContrast(pal.color(CGroup::Normal, CRole::Window),
+                                 pal.color(CGroup::Normal, CRole::Text),
+                                 KColorScheme::frameContrast());
+        }
+#endif
         case toolBtnBg:
         case buttonBg: {
             const auto base = KColorScheme(groupFromState(state), KCSet::Button).background(KBgRole::NormalBackground).color();
@@ -467,6 +476,14 @@ QColor lessContrastingBg(const QPalette& pal, const CGroup cgroup) {
 
 CGroup groupFromState(const State& state) {
     return state.enabled ? CGroup::Active : CGroup::Disabled;
+}
+
+QColor mixAtContrast(const QColor& background, const QColor& foreground, const qreal contrast) {
+    const qreal bgContrast = 1 - bgContrast;
+    return QColor(qBound(0, qRound(background.red() * bgContrast + foreground.red() * contrast), 255),
+                  qBound(0, qRound(background.green() * bgContrast + foreground.green() * contrast), 255),
+                  qBound(0, qRound(background.blue() * bgContrast + foreground.blue() * contrast), 255),
+                  qBound(0, qRound(background.alpha() * bgContrast + foreground.alphaF() * contrast), 255));
 }
 
 }  // namespace Lilac
