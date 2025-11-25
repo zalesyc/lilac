@@ -664,42 +664,25 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     textRect = subElementRect(SE_TabBarTabText, tab, widget);
                 }
 
+                p->save();
+                if (!tabIsHorizontal(tab->shape)) {
+                    const int west = tab->shape == QTabBar::RoundedWest || tab->shape == QTabBar::TriangularWest;
+                    p->translate(west ? tab->rect.bottomLeft() : tab->rect.topRight());
+                    p->rotate(west ? -90 : 90);
+                }
+
                 // Icon
                 if (!tab->icon.isNull() && tab->iconSize.isValid()) {
                     const QRect iconRect = tabBarTabIconRect(tab, state, textRect);
-
-                    if (tabIsHorizontal(tab->shape)) {
-                        tab->icon.paint(p, iconRect, Qt::AlignCenter, state.enabled ? QIcon::Normal : QIcon::Disabled);
-                    } else {
-                        const int orientation = (tab->shape == QTabBar::RoundedWest || tab->shape == QTabBar::TriangularWest) ? -90 : 90;
-                        p->save();
-                        p->translate(iconRect.topLeft());
-                        p->rotate(orientation);
-                        QRect rotatedIconRect(QPoint(orientation < 0 ? -iconRect.width() : 0,
-                                                     orientation > 0 ? -iconRect.height() : 0),
-                                              iconRect.size());
-                        tab->icon.paint(p, rotatedIconRect, Qt::AlignCenter, state.enabled ? QIcon::Normal : QIcon::Disabled);
-                        p->restore();
-                    }
+                    tab->icon.paint(p, iconRect, Qt::AlignCenter, state.enabled ? QIcon::Normal : QIcon::Disabled);
                 }
 
                 // Text
                 if (!tab->text.isEmpty()) {
-                    p->save();
                     p->setPen(getPen(tab->palette, Color::tabText, state));
-                    if (tabIsHorizontal(tab->shape)) {
-                        p->drawText(textRect, (getTextFlags(tab) | Qt::AlignLeft | Qt::AlignVCenter), tab->text);
-                    } else {
-                        const int orientation = (tab->shape == QTabBar::RoundedWest || tab->shape == QTabBar::TriangularWest) ? -90 : 90;
-                        p->translate(textRect.topLeft());
-                        p->rotate(orientation);
-                        QRect rotatedTextRect(QPoint(orientation < 0 ? -textRect.height() : 0,
-                                                     orientation > 0 ? -textRect.width() : 0),
-                                              textRect.size().transposed());
-                        p->drawText(rotatedTextRect, (getTextFlags(tab) | Qt::AlignLeft | Qt::AlignVCenter), tab->text);
-                    }
-                    p->restore();
+                    p->drawText(textRect, (getTextFlags(tab) | Qt::AlignLeft | Qt::AlignVCenter), tab->text);
                 }
+                p->restore();
                 return;
             }
             break;
@@ -2396,57 +2379,49 @@ QRect Style::subElementRect(QStyle::SubElement element, const QStyleOption* opt,
                     return QRect();
                 }
                 const bool horizontal = tabIsHorizontal(tab->shape);
-                const bool west = tab->shape == QTabBar::RoundedWest || tab->shape == QTabBar::TriangularWest;
                 const bool centerText = config.tabContentAlignment == Config::IconStartTextCenter ||
                                         config.tabContentAlignment == Config::Center;
                 const QSize textSize = tab->fontMetrics.size((Qt::TextSingleLine | Qt::TextShowMnemonic), tab->text);
 
-                const int tabLen = horizontal ? tab->rect.width() : tab->rect.height();
-                const int textLen = textSize.width();
-                const int iconLen = horizontal ? tab->iconSize.width() : tab->iconSize.height();
+                const QRect tabRect = horizontal ? tab->rect : QRect(0, 0, tab->rect.height(), tab->rect.width());
+                const int tabLen = tabRect.width();
+                const QSize iconSize = tab->icon.actualSize(QSize(tab->iconSize.width(),
+                                                                  qMin(tab->iconSize.height(), tab->rect.height())));
+                const int iconLen = iconSize.width();
                 const int leftBtnLen = horizontal ? tab->leftButtonSize.width() : tab->leftButtonSize.height();
                 const int rightBtnLen = horizontal ? tab->rightButtonSize.width() : tab->rightButtonSize.height();
-
-                QRect rect;
-                rect.setSize(horizontal ? textSize : textSize.transposed());
-                rect.moveCenter(tab->rect.center());
 
                 int startPadding = config.tabHorizontalPadding;
                 if (tab->leftButtonSize.isValid())
                     startPadding += (leftBtnLen + config.tabElementSpacing);
-
-                if (!centerText) {
-                    if (!tab->icon.isNull())
-                        startPadding += (iconLen + config.tabElementSpacing);
-
-                    if (horizontal) {
-                        rect.moveLeft(tab->rect.left() + startPadding);
-                    } else if (west) {
-                        rect.moveBottom(tab->rect.bottom() - startPadding);
-                    } else {
-                        rect.moveTop(tab->rect.top() + startPadding);
-                    }
-                    return rect;
-                }
-
-                int centerWidth = textLen;
                 if (!tab->icon.isNull())
-                    (config.tabContentAlignment == Config::Center ? centerWidth : startPadding) += (iconLen + config.tabElementSpacing);
-
-                const int centerPadding = (tabLen - centerWidth) / 2;
+                    startPadding += (iconLen + config.tabElementSpacing);
 
                 int endPadding = config.tabHorizontalPadding;
                 if (tab->rightButtonSize.isValid())
                     endPadding += (rightBtnLen + config.tabElementSpacing);
 
-                const int endOffset = qMin(tabLen - centerWidth - startPadding, qMax(centerPadding, endPadding));
-                if (horizontal) {
-                    rect.moveRight(tab->rect.right() - endOffset);
-                } else if (west) {
-                    rect.moveTop(tab->rect.top() + endOffset);
-                } else {
-                    rect.moveBottom(tab->rect.bottom() - endOffset);
+                const int textLen = qMin(textSize.width(), tabLen - startPadding - endPadding);
+
+                QRect rect;
+                rect.setSize(QSize(textLen, textSize.height()));
+                rect.moveCenter(tabRect.center());
+
+                // TabContentAlignment::Start
+                if (!centerText) {
+                    rect.moveLeft(tabRect.left() + startPadding);
+                    return rect;
                 }
+
+                // TabContentAlignment::IconStartTextCenter and TabContentAlignment::Center
+                int centerWidth = textLen;
+                if (!tab->icon.isNull() && config.tabContentAlignment == Config::Center) {
+                    centerWidth += (iconLen + config.tabElementSpacing);
+                    startPadding -= (iconLen + config.tabElementSpacing);
+                }
+                const int centerPadding = (tabLen - centerWidth) / 2;
+                const int endOffset = qMin(tabLen - centerWidth - startPadding, qMax(centerPadding, endPadding));
+                rect.moveRight(tabRect.right() - endOffset);
 
                 return rect;
             }
@@ -3065,7 +3040,7 @@ QRect Style::subControlRect(QStyle::ComplexControl cc, const QStyleOptionComplex
                         const QRect groove = subControlRect(CC_Dial, dial, SC_DialGroove, widget);
                         const int arcLen = dial->dialWrapping ? 360 : config.dialRangeNonWaraping;  // length in degrees, of the line
                         const int startAngle = (360 - arcLen) / 2;
-                        const qreal handleRadius = (groove.width() - config.dialHandleDiameter) / 2;
+                        const qreal handleRadius = (groove.width() - config.dialHandleDiameter) / 2.0;
                         const int value = sliderPositionFromValue(dial->minimum, dial->maximum, dial->sliderPosition, arcLen, dial->upsideDown);
                         const qreal handleX = qSin(qDegreesToRadians(qreal(startAngle + value))) * handleRadius;  // this x and y is for a circle with
                         const qreal handleY = qCos(qDegreesToRadians(qreal(startAngle + value))) * handleRadius;  // the centre at 0,0 and radius radius
@@ -3362,6 +3337,11 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                 if (!tab->text.isEmpty()) {
                     textSize = tab->fontMetrics.size(Qt::TextShowMnemonic, tab->text);
                 }
+                QSize iconSize;
+                if (!tab->icon.isNull() && tab->iconSize.isValid()) {
+                    iconSize = tab->icon.actualSize(tab->iconSize);
+                }
+
                 if (tabIsHorizontal(tab->shape)) {
                     int elements = 0;
                     int width = 2 * config.tabHorizontalPadding;
@@ -3379,10 +3359,10 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                         maxHeight = qMax(maxHeight, tab->rightButtonSize.height());
                     }
 
-                    if (tab->iconSize.isValid() && !tab->icon.isNull()) {
+                    if (iconSize.isValid()) {
                         elements++;
-                        width += tab->iconSize.width();
-                        maxHeight = qMax(maxHeight, tab->iconSize.height());
+                        width += iconSize.width();
+                        maxHeight = qMax(maxHeight, iconSize.height());
                     }
 
                     if (textSize.isValid()) {
@@ -3418,10 +3398,10 @@ QSize Style::sizeFromContents(QStyle::ContentsType ct, const QStyleOption* opt, 
                     maxWidth = qMax(maxWidth, tab->rightButtonSize.width());
                 }
 
-                if (tab->iconSize.isValid() && !tab->icon.isNull()) {
+                if (iconSize.isValid()) {
                     elements++;
-                    height += tab->iconSize.width();
-                    maxWidth = qMax(maxWidth, tab->iconSize.height());
+                    height += iconSize.width();
+                    maxWidth = qMax(maxWidth, iconSize.height());
                 }
 
                 if (textSize.isValid()) {
@@ -3646,29 +3626,23 @@ QRect Style::tabBarTabIconRect(const QStyleOptionTab* tab, const Lilac::State& s
         return QRect();
     }
 
+    const bool horizontal = tabIsHorizontal(tab->shape);
     const bool centerIcon = config.tabContentAlignment == Config::Center ||
                             (config.tabContentAlignment == Config::IconStartTextCenter && !textRect.isValid());
-    const bool horizontal = tabIsHorizontal(tab->shape);
-    const bool west = tab->shape == QTabBar::RoundedWest || tab->shape == QTabBar::TriangularWest;
 
-    const int tabLen = horizontal ? tab->rect.width() : tab->rect.height();
-    const int iconLen = horizontal ? tab->iconSize.width() : tab->iconSize.height();
+    const QRect tabRect = horizontal ? tab->rect : QRect(0, 0, tab->rect.height(), tab->rect.width());
+    const int tabLen = tabRect.width();
     const int leftBtnLen = horizontal ? tab->leftButtonSize.width() : tab->leftButtonSize.height();
     const int rightBtnLen = horizontal ? tab->rightButtonSize.width() : tab->rightButtonSize.height();
 
     QRect iconRect;
-    iconRect.setWidth(tab->iconSize.width());
-    iconRect.setHeight(qMin(tab->iconSize.height(), tab->rect.height()));
-    iconRect.moveCenter(tab->rect.center());
+    iconRect.setSize(tab->icon.actualSize(QSize(tab->iconSize.width(),
+                                                qMin(tab->iconSize.height(), tab->rect.height()))));
+
+    iconRect.moveCenter(tabRect.center());
 
     if (centerIcon && textRect.isValid()) {
-        if (horizontal) {
-            iconRect.moveRight(textRect.left() - config.tabElementSpacing);
-        } else if (west) {
-            iconRect.moveTop(textRect.bottom() + config.tabElementSpacing);
-        } else {
-            iconRect.moveBottom(textRect.top() - config.tabElementSpacing);
-        }
+        iconRect.moveRight(textRect.left() - config.tabElementSpacing);
         return iconRect;
     }
 
@@ -3677,29 +3651,17 @@ QRect Style::tabBarTabIconRect(const QStyleOptionTab* tab, const Lilac::State& s
         startPadding += (leftBtnLen + config.tabElementSpacing);
 
     if (!centerIcon) {
-        if (horizontal) {
-            iconRect.moveLeft(tab->rect.left() + startPadding);
-        } else if (west) {
-            iconRect.moveBottom(tab->rect.bottom() - startPadding);
-        } else {
-            iconRect.moveTop(tab->rect.top() + startPadding);
-        }
+        iconRect.moveLeft(tabRect.left() + startPadding);
         return iconRect;
     }
 
-    const int centerPadding = (tabLen - iconLen) / 2;
+    const int centerPadding = (tabLen - iconRect.width()) / 2;
     int endPadding = config.tabHorizontalPadding;
     if (tab->rightButtonSize.isValid())
         endPadding += (rightBtnLen + config.tabElementSpacing);
 
-    const int startOffset = qMin(qMax(startPadding, centerPadding), tabLen - iconLen - endPadding);
-    if (horizontal) {
-        iconRect.moveLeft(tab->rect.left() + startOffset);
-    } else if (west) {
-        iconRect.moveBottom(tab->rect.bottom() - startOffset);
-    } else {
-        iconRect.moveTop(tab->rect.top() + startOffset);
-    }
+    const int startOffset = qMin(qMax(startPadding, centerPadding), tabLen - iconRect.width() - endPadding);
+    iconRect.moveLeft(tabRect.left() + startOffset);
     return iconRect;
 }
 
