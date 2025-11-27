@@ -1109,9 +1109,9 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 // groove
                 p->setBrush(getBrush(bar->palette, Color::progressBarIndicatorBg, state));
                 if (horizontal) {
-                    p->drawRoundedRect(bar->rect, bar->rect.height() / 2, bar->rect.height() / 2);
+                    p->drawRoundedRect(bar->rect, bar->rect.height() / 2.0, bar->rect.height() / 2.0);
                 } else {
-                    p->drawRoundedRect(bar->rect, bar->rect.width() / 2, bar->rect.width() / 2);
+                    p->drawRoundedRect(bar->rect, bar->rect.width() / 2.0, bar->rect.width() / 2.0);
                 }
 
                 if (bar->progress <= 0 && bar->maximum > 0) {
@@ -1165,9 +1165,9 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
 
                 p->setBrush(getBrush(bar->palette, Color::progressBarIndicator, state));
                 if (horizontal) {
-                    p->drawRoundedRect(progressRect, bar->rect.height() / 2, bar->rect.height() / 2);
+                    p->drawRoundedRect(progressRect, bar->rect.height() / 2.0, bar->rect.height() / 2.0);
                 } else {
-                    p->drawRoundedRect(progressRect, bar->rect.width() / 2, bar->rect.width() / 2);
+                    p->drawRoundedRect(progressRect, bar->rect.width() / 2.0, bar->rect.width() / 2.0);
                 }
                 p->restore();
                 return;
@@ -1933,8 +1933,8 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->setRenderHints(QPainter::Antialiasing);
             p->setPen(Qt::NoPen);
             p->setBrush(getBrush(opt->palette, Color::indicatorArrow, state));
-            p->translate(opt->rect.left() + (opt->rect.width() - width) / 2,
-                         opt->rect.top() + (opt->rect.height() - height) / 2);
+            p->translate(opt->rect.left() + (opt->rect.width() - width) / 2.0,
+                         opt->rect.top() + (opt->rect.height() - height) / 2.0);
             p->drawPolygon(points, 3 + tipOffset);
             p->restore();
             return;
@@ -1960,8 +1960,8 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             auto dockWidget = qobject_cast<const QDockWidget*>(widget);
             if (dockWidget && dockWidget->isFloating()) {
                 p->drawRoundedRect(opt->rect.toRectF().adjusted(0.5, 0.5, -0.5, -0.5),
-                                   config.cornerRadius / 2,
-                                   config.cornerRadius / 2);
+                                   config.cornerRadius / 2.0,
+                                   config.cornerRadius / 2.0);
             } else {
                 p->drawRect(opt->rect.toRectF().adjusted(0.5, 0.5, -0.5, -0.5));
             }
