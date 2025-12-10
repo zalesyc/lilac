@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
-                          http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
 
-    <kcfgfile name="lilacrc"/>
+    <kcfgfile name="lilacrc" />
 
     <group name="General">
         <entry name="CornerRadius" type="Int">
@@ -44,7 +43,7 @@
             </tooltip>
             <default>false</default>
         </entry>
-         <entry name="TabBarTabContentAlignment" type="Enum">
+        <entry name="TabBarTabContentAlignment" type="Enum">
             <label>How to align the contents of a tab.</label>
             <tooltip>
             How to align the icon and the text in a tab.
@@ -55,11 +54,19 @@
                 Center: Both are centered
             </tooltip>
             <choices>
-                <choice name="Start"/>
-                <choice name="IconStartTextCenter"/>
-                <choice name="Center"/>
+                <choice name="Start" />
+                <choice name="IconStartTextCenter" />
+                <choice name="Center" />
             </choices>
             <default>2</default> <!-- Center -->
+        </entry>
+        <entry name="MenuDrawOutline" type="Bool">
+            <label>Whether to draw a thin outline around menus</label>
+            <tooltip>
+                Whether to draw a 1px outline/border around menus.
+                The outline uses the same color used for menu separators, dynamicaly calcualted from the opacity and the line color.
+            </tooltip>
+            <default>false</default>
         </entry>
     </group>
 </kcfg>

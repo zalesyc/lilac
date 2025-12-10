@@ -277,6 +277,14 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
             return isDarkMode(pal) ? base.lighter(120) : base.darker(120);
         }
 
+        case menuOutline: {
+            QColor mixed = mixAtContrast(getColor(pal, Color::menuBg, state),
+                                         getColor(pal, Color::line, state),
+                                         qMax<qreal>(.5, (255 - Config::get().menuBgOpacity) / 255.0));
+            mixed.setAlpha(qMax<int>(Config::get().menuBgOpacity, 140));
+            return mixed;
+        }
+
         case toolBarBgHeader:
         case toolBarBgOther:
         case viewHeaderEmptyAreaBg:
@@ -479,7 +487,7 @@ CGroup groupFromState(const State& state) {
 }
 
 QColor mixAtContrast(const QColor& background, const QColor& foreground, const qreal contrast) {
-    const qreal bgContrast = 1 - bgContrast;
+    const qreal bgContrast = 1 - contrast;
     return QColor(qBound(0, qRound(background.red() * bgContrast + foreground.red() * contrast), 255),
                   qBound(0, qRound(background.green() * bgContrast + foreground.green() * contrast), 255),
                   qBound(0, qRound(background.blue() * bgContrast + foreground.blue() * contrast), 255),

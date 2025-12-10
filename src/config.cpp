@@ -52,12 +52,12 @@ void Config::onSettingsChanged() {
     settings->load();
 
     int settingsCornerRadius = settings->cornerRadius();
-    this->cornerRadius = settingsCornerRadius;
-    this->menuBorderRadius = settingsCornerRadius;
-    this->menuItemBorderRadius = settingsCornerRadius / 2;
-    this->listViewItemBorderRadius = settingsCornerRadius / 2;
-    this->controlsCornerRadius = settingsCornerRadius;
-    this->tabCornerRadius = settingsCornerRadius;
+    cornerRadius = settingsCornerRadius;
+    menuBorderRadius = settingsCornerRadius;
+    menuItemBorderRadius = settingsCornerRadius / 2;
+    listViewItemBorderRadius = settingsCornerRadius / 2;
+    controlsCornerRadius = settingsCornerRadius;
+    tabCornerRadius = settingsCornerRadius;
 
     circleCheckBox = settings->circleCheckBox();
     animationSpeed = settings->animationSpeed();
@@ -65,6 +65,7 @@ void Config::onSettingsChanged() {
     menuBlurBehind = settings->menuBlurBehind();
     spinVerticalControlsForNullWidgets = settings->spinBoxVerticalControls();
     tabContentAlignment = (TabContentAlignment)settings->tabBarTabContentAlignment();
+    menuDrawOutline = settings->menuDrawOutline();
 
     emit configChanged();
 }

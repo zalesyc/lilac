@@ -113,9 +113,10 @@ class Config : public QObject {
     static constexpr int menuSeparatorMinLen = 5;
     static constexpr qreal menuShadowBlurRadius = 3.3;
     static constexpr QPointF menuShadowOffset = QPointF(0.3, 0.8);
-    static constexpr QPointF menuHighlightDirection = QPointF(0.2, 15);  // the direction and size of the gradient creating the highlight, only used in dark mode
-    quint8 menuBgOpacity = 200;                                          // value between 0 and 255, 0: transparent; 255: opaque
-    bool menuBlurBehind = true;                                          // whether to blur behind the menu if menuBgOpacity < 255; only if compiled without NO_KWINDOWSYSTEM
+    static constexpr QPointF menuHighlightSize = QPointF(0.2, 15);  // the direction and size of the gradient creating the highlight, only used in dark mode when Config::menuDrawOutline == false
+    quint8 menuBgOpacity = 200;                                     // value between 0 and 255, 0: transparent; 255: opaque
+    bool menuBlurBehind = true;                                     // whether to blur behind the menu if menuBgOpacity < 255; only if compiled without NO_KWINDOWSYSTEM
+    bool menuDrawOutline = true;
 
     static constexpr int menuBarItemMinHeight = 24;  // without the margin
     static constexpr int menuBarItemBorderRadius = 4;

@@ -26,7 +26,7 @@ class SettingsApp : public QWidget {
     void changed(bool changed);
 
    private:
-    void setFromSettings();
+    void loadFromSettings();
 
    private slots:
     void widgetChanged();

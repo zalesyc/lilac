@@ -28,17 +28,18 @@ SettingsApp::SettingsApp(QWidget* parent)
     connect(ui->animationSpeedSlider, &QSlider::valueChanged, this, &SettingsApp::widgetChanged);
     connect(ui->menuOpacitySlider, &QSlider::valueChanged, this, &SettingsApp::widgetChanged);
     connect(ui->blurBehindMenusCheck, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
+    connect(ui->menuOutlineCheck, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
     connect(ui->tabAlignmentComboBox, &QComboBox::currentIndexChanged, this, &SettingsApp::widgetChanged);
 
     connect(ui->menuOpacitySlider, &QSlider::valueChanged, this, [this](int value) { ui->blurBehindMenusCheck->setEnabled(HAS_KWINDOWSYSTEM && value < 255); });
 
-    setFromSettings();
+    loadFromSettings();
 }
 
 void SettingsApp::defaults() {
     settings->setDefaults();
     settings->save();
-    setFromSettings();
+    loadFromSettings();
 }
 
 void SettingsApp::save() {
@@ -50,6 +51,7 @@ void SettingsApp::save() {
     settings->setMenuBlurBehind(ui->blurBehindMenusCheck->isChecked());
     settings->setSpinBoxVerticalControls(ui->spinVerticalControlsCheck->isChecked());
     settings->setTabBarTabContentAlignment(ui->tabAlignmentComboBox->currentIndex());
+    settings->setMenuDrawOutline(ui->menuOutlineCheck->isChecked());
     settings->save();
 #if HAS_DBUS
     auto msg = QDBusMessage::createSignal(
@@ -60,7 +62,7 @@ void SettingsApp::save() {
 #endif
 }
 
-void SettingsApp::setFromSettings() {
+void SettingsApp::loadFromSettings() {
     settings->load();
     ui->radiusSpin->setValue(settings->cornerRadius());
     ui->circleCheckCheckBox->setChecked(settings->circleCheckBox());
@@ -70,6 +72,7 @@ void SettingsApp::setFromSettings() {
     ui->menuOpacitySlider->setValue(settings->menuOpacity());
     ui->blurBehindMenusCheck->setChecked(settings->menuBlurBehind());
     ui->tabAlignmentComboBox->setCurrentIndex(settings->tabBarTabContentAlignment());
+    ui->menuOutlineCheck->setChecked(settings->menuDrawOutline());
 }
 
 SettingsApp::~SettingsApp() {

@@ -1664,12 +1664,18 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
             p->save();
             p->setRenderHints(QPainter::Antialiasing);
             p->setCompositionMode(QPainter::CompositionMode_Source);
-            p->setPen(Qt::NoPen);
+            if (config.menuDrawOutline) {
+                p->setPen(getPen(opt->palette, Color::menuOutline, state, 1));
+            } else {
+                p->setPen(Qt::NoPen);
+            }
             p->setBrush(getBrush(opt->palette, Color::menuBg, state));
-            p->drawRoundedRect(contentRect, config.menuBorderRadius, config.menuBorderRadius);
+            const qreal outlineAdjust = config.menuDrawOutline ? 0.5 : 0.0;
+            p->drawRoundedRect(contentRect.toRectF().adjusted(outlineAdjust, outlineAdjust, -outlineAdjust, -outlineAdjust),
+                               config.menuBorderRadius, config.menuBorderRadius);
             p->restore();
 
-            if (isQMenu && isDarkMode(opt->palette)) {
+            if (isQMenu && isDarkMode(opt->palette) && !config.menuDrawOutline) {
                 // the highlinght is visible only in dark mode, because in light mode
                 // white on white would not be visible and also
                 // in light mode the shadow creates enough contrant for the menu
@@ -1681,7 +1687,7 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
                 highlightGradient.setColorAt(0, getColor(opt->palette, Color::menuHighlight));
                 highlightGradient.setColorAt(1, Qt::transparent);
                 highlightGradient.setStart(contentRect.topLeft());
-                highlightGradient.setFinalStop(contentRect.topLeft().toPointF() + config.menuHighlightDirection);
+                highlightGradient.setFinalStop(contentRect.topLeft().toPointF() + config.menuHighlightSize);
                 p->setBrush(Qt::NoBrush);
                 p->setPen(QPen(QBrush(highlightGradient), 1));
                 p->drawRoundedRect(contentRect, config.menuBorderRadius, config.menuBorderRadius);

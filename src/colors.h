@@ -73,6 +73,7 @@ enum Color {
     menuText,          // D
     menuShortcutText,  // D
     menuSeparator,     // D
+    menuOutline,
     menuItemHoverBg,
     menuBg,
     menuShadow,
