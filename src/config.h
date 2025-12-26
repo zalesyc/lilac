@@ -154,9 +154,11 @@ class Config : public QObject {
     static constexpr int treeIndicatorLastCornerRadius = 5;  // the radius of the curve on the last indicator
 
     static constexpr int groupBoxCheckSize = checkBoxSize;
-    static constexpr int groupBoxTextCheckSpacing = 8;                                // spacing between the label and the checkbox
-    static constexpr int groupBoxHeaderHorizontalPadding = 5;                         // space between the end of the line and the label/check
-    static constexpr int groupBoxLabelOffset = groupBoxHeaderHorizontalPadding + 10;  // length between the side of the groupbox and the label/check
+    static constexpr int groupBoxTextCheckSpacing = 8;                    // spacing between the label and the checkbox
+    static constexpr int groupBoxHeaderHorizontalMargin = 15;             // distance between the side of the groupbox and the label/check
+    static constexpr int groupBoxNormalStyleHeaderHorizontalPadding = 5;  // space between the end of the line and the label/check
+    static constexpr int groupBoxAltStyleHeaderVerticalMargin = 5;
+    bool groupBoxAltStyle = false;
 
     static constexpr int dialHandleDiameter = 12;
     static constexpr int dialHandleHoverCircleDiameter = 32;

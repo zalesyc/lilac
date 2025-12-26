@@ -103,6 +103,7 @@ enum Color {
 
     groupBoxLine,  // D
     groupBoxText,  // D
+    groupBoxAltStyleBg,
 
     viewHeaderBg,           // DHP - when with table: pressed - the row/collumn is selected
     viewHeaderEmptyAreaBg,  // D

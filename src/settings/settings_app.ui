@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>598</width>
-    <height>587</height>
+    <width>600</width>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -125,6 +125,20 @@
           <string>Both centered</string>
          </property>
         </item>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Use an alternative style for groupboxes</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QCheckBox" name="groupBoxAltStyleCheck">
+        <property name="text">
+         <string/>
+        </property>
        </widget>
       </item>
      </layout>

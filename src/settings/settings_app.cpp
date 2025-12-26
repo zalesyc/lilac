@@ -30,7 +30,7 @@ SettingsApp::SettingsApp(QWidget* parent)
     connect(ui->blurBehindMenusCheck, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
     connect(ui->menuOutlineCheck, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
     connect(ui->tabAlignmentComboBox, &QComboBox::currentIndexChanged, this, &SettingsApp::widgetChanged);
-
+    connect(ui->groupBoxAltStyleCheck, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
     connect(ui->menuOpacitySlider, &QSlider::valueChanged, this, [this](int value) { ui->blurBehindMenusCheck->setEnabled(HAS_KWINDOWSYSTEM && value < 255); });
 
     loadFromSettings();
@@ -52,6 +52,7 @@ void SettingsApp::save() {
     settings->setSpinBoxVerticalControls(ui->spinVerticalControlsCheck->isChecked());
     settings->setTabBarTabContentAlignment(ui->tabAlignmentComboBox->currentIndex());
     settings->setMenuDrawOutline(ui->menuOutlineCheck->isChecked());
+    settings->setGroupBoxAltStyle(ui->groupBoxAltStyleCheck->isChecked());
     settings->save();
 #if HAS_DBUS
     auto msg = QDBusMessage::createSignal(
@@ -73,6 +74,7 @@ void SettingsApp::loadFromSettings() {
     ui->blurBehindMenusCheck->setChecked(settings->menuBlurBehind());
     ui->tabAlignmentComboBox->setCurrentIndex(settings->tabBarTabContentAlignment());
     ui->menuOutlineCheck->setChecked(settings->menuDrawOutline());
+    ui->groupBoxAltStyleCheck->setChecked(settings->groupBoxAltStyle());
 }
 
 SettingsApp::~SettingsApp() {

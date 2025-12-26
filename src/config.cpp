@@ -66,6 +66,7 @@ void Config::onSettingsChanged() {
     spinVerticalControlsForNullWidgets = settings->spinBoxVerticalControls();
     tabContentAlignment = (TabContentAlignment)settings->tabBarTabContentAlignment();
     menuDrawOutline = settings->menuDrawOutline();
+    groupBoxAltStyle = settings->groupBoxAltStyle();
 
     emit configChanged();
 }

@@ -68,5 +68,13 @@
             </tooltip>
             <default>false</default>
         </entry>
+        <entry name="GroupBoxAltStyle" type="Bool">
+            <label>Whether to use the alternate style for groupboxes</label>
+            <tooltip>
+                Whether to use the alternate style for groupboxes.
+                The alternate style is more similar to breeze.
+            </tooltip>
+            <default>false</default>
+        </entry>
     </group>
 </kcfg>

@@ -387,6 +387,9 @@ static QColor getColorFromPallete(const QPalette& pal, const Color color, const 
         case itemViewItemDefaultAlternateBg:
             return pal.color(CGroup::Normal, CRole::AlternateBase);
 
+        case groupBoxAltStyleBg:
+            return pal.color(CGroup::Normal, CRole::Base);
+
         case tooltipBg:
             return QColor(20, 20, 20, 235);
 
