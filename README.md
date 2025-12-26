@@ -1,6 +1,6 @@
 # Lilac
 
-**Lilac**, a Qt6 theme inspired by the [Orchis GTK theme](https://github.com/vinceliuice/Orchis-theme) by [Vinceliuice](https://github.com/vinceliuice)
+**Lilac**, a Qt6 theme based on the [Orchis GTK theme](https://github.com/vinceliuice/Orchis-theme) by [Vinceliuice](https://github.com/vinceliuice)
 
 ## About
 
@@ -21,7 +21,7 @@ Screenshot: Icons: _Vimix_, ColorScheme: _FluentDark/FluentLight_, Window Decora
 
 - **Default behavior**: `OFF` (i.e. KStyle will be used)
 - **Available options**:
-  - `-DNO_KSTYLE=ON`: Doesn't use KStyle
+  - `-DNO_KSTYLE=ON`: Don't use KStyle
 
 **Recommendation**: Use KStyle with KDE Plasma, otherwise probably use QCommonStyle (KStyle has a lot of dependencies)
 
@@ -31,7 +31,7 @@ Screenshot: Icons: _Vimix_, ColorScheme: _FluentDark/FluentLight_, Window Decora
 
 - **Default behavior**: `OFF` (i.e. KColorScheme will be used)
 - **Available options**:
-  `-DNO_KCOLORSCHEME=ON`: Disables KColorScheme support
+  `-DNO_KCOLORSCHEME=ON`: Disable KColorScheme support
 
 **Note**: KColorScheme is recommended for better color consistency, but can be disabled to reduce dependencies.
 
@@ -42,7 +42,7 @@ When enabled, two additional targets will be created, a standalone settings app 
 
 - **Default behavior**: `OFF` (i.e. Settings will be enabled)
 - **Available options**:
-  `-DNO_SETTINGS=ON`: Disables settings
+  `-DNO_SETTINGS=ON`: Disable settings
 
 #### KWindow System
 
@@ -50,7 +50,7 @@ When enabled, two additional targets will be created, a standalone settings app 
 
 - **Default behavior**: `OFF` (i.e. KWindowSystem will be included)
 - **Available options**:
-  `-DNO_KWINDOWSYSTEM=ON`: Disables KWindowSystem
+  `-DNO_KWINDOWSYSTEM=ON`: Disable KWindowSystem
 
 ### Installation steps:
 
@@ -63,7 +63,7 @@ When enabled, two additional targets will be created, a standalone settings app 
     _Build:_ `git` `cmake` `gcc-c++`
 
     _Run:_ <br>
-    `cmake(Qt6Widgets)` `cmake(Qt6Gui)`, KStyle:&nbsp; `cmake(KF6FrameworkIntegration)`, KColorScheme:&nbsp;`cmake(KF6ColorScheme)`, Settings:&nbsp;`cmake(KF6Config)` `cmake(Qt6DBus)`, KWindowSystem:&nbsp;`cmake(KF6WindowSystem)`
+    `cmake(Qt6Widgets)` `cmake(Qt6Gui)`, KStyle:&nbsp;`cmake(KF6FrameworkIntegration)`, KColorScheme:&nbsp;`cmake(KF6ColorScheme)`, Settings:&nbsp;`cmake(KF6Config)` `cmake(Qt6DBus)`, KWindowSystem:&nbsp;`cmake(KF6WindowSystem)`
 
     **OpenSUSE:**
 
