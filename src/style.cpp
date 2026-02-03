@@ -1390,6 +1390,7 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 sliderOpt.sliderPosition = slider->sliderPosition();
                 sliderOpt.sliderValue = slider->value();
                 sliderOpt.upsideDown = (slider->orientation() == Qt::Horizontal) == slider->invertedAppearance();
+                sliderOpt.tickPosition = slider->tickPosition();
 
                 Lilac::State sliderState(sliderOpt.state);
                 const QRect handleRect = subControlRect(CC_Slider, &sliderOpt, SC_SliderHandle, slider);
