@@ -1425,6 +1425,20 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                 return;
             }
 
+            if (const QTabBar* tabBar = qobject_cast<const QTabBar*>(focusedWidget)) {
+                QRect tabRect = tabBar->tabRect(tabBar->currentIndex());
+                if (tabBar->currentIndex() == 0) {
+                    tabRect.setLeft(tabRect.left() + config.tabBarStartMargin);
+                }
+                if (tabBar->currentIndex() == tabBar->count() - 1) {
+                    tabRect.setRight(tabRect.right() - config.tabBarStartMargin);
+                }
+
+                p->fillRect(QRect(tabRect.left() + 2, tabRect.bottom() + 1, tabRect.width() - 2, 2),
+                            getColor(tabBar->palette(), Color::tabCheckedFill));
+                return;
+            }
+
             break;
         }
 
@@ -2096,6 +2110,12 @@ void Style::polish(QWidget* widget) {
     } else if (QSlider* slider = qobject_cast<QSlider*>(widget)) {
         SliderFocusFrame* focusFrame = new SliderFocusFrame(slider);
         focusFrame->setWidget(slider);
+
+    } else if (QTabBar* tabbar = qobject_cast<QTabBar*>(widget)) {
+        if (tabbar->inherits("DolphinTabBar")) {
+            QFocusFrame* focusFrame = new QFocusFrame(tabbar);
+            focusFrame->setWidget(tabbar);
+        }
     }
 
 #if HAS_KWINDOWSYSTEM
@@ -2247,6 +2267,10 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
             } else if (const QSlider* slider = qobject_cast<const QSlider*>(focusedWidget)) {
                 // This is not an exact value, the required value may be smaller, but htat would require calcualtions which are unnesesary in the end
                 return qCeil((config.sliderHandleHoverCircleDiameter - config.sliderHandleDiameter) / 2.0);
+
+            } else if (const QTabBar* tabbar = qobject_cast<const QTabBar*>(focusedWidget)) {
+                // DolphinTabBar
+                return 1;
             }
             return SuperStyle::pixelMetric(m, opt, widget);
         }
