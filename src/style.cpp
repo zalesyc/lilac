@@ -1262,10 +1262,13 @@ void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt,
                     p->fillRect(band->rect, getColor(band->palette, Color::rubberbandLine, state));
                     return;
                 }
+                const QRectF rect = band->rect.toRectF().adjusted(0.5, 0.5, -0.5, -0.5);
+                const qreal cornerRadius = qMin(config.cornerRadius / 2.0, qMin(rect.width(), rect.height()));
                 p->save();
+                p->setRenderHint(QPainter::Antialiasing);
                 p->setPen(getPen(band->palette, Color::rubberBandRectOutline, state, 1));
                 p->setBrush(getBrush(band->palette, band->opaque ? Color::rubberBandRectBgOpaque : Color::rubberBandRectBg, state));
-                p->drawRect(band->rect.toRectF().adjusted(0.5, 0.5, -0.5, -0.5));
+                p->drawRoundedRect(rect, cornerRadius, cornerRadius);
                 p->restore();
                 return;
             }
