@@ -64,11 +64,13 @@ void Config::onSettingsChanged() {
     menuBgOpacity = settings->menuOpacity();
     menuBlurBehind = settings->menuBlurBehind();
     spinVerticalControlsForNullWidgets = settings->spinBoxVerticalControls();
-    tabContentAlignment = (TabContentAlignment)settings->tabBarTabContentAlignment();
+    tabContentAlignment = static_cast<TabContentAlignment>(settings->tabBarTabContentAlignment());
     menuDrawOutline = settings->menuDrawOutline();
     groupBoxAltStyle = settings->groupBoxAltStyle();
+    windowDragMode = static_cast<WindowDragMode>(settings->windowDragMode());
 
-    emit configChanged();
+    emit
+    configChanged();
 }
 #endif
 

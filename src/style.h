@@ -17,6 +17,7 @@
 #include "blur_manager.h"
 #include "config.h"
 #include "utils/state.h"
+#include "window_manager.h"
 
 namespace Lilac {
 
@@ -56,6 +57,7 @@ class Style : public SuperStyle {
    protected:
     const Lilac::Config& config;  // conveninece variable so Config::Get() does not have to be always called;
     mutable Lilac::AnimationManager animationMgr;
+    mutable Lilac::WindowManager windowMgr; // for dragging windows by their contents
 #if HAS_KWINDOWSYSTEM
     mutable Lilac::BlurManager blurMgr;
 #endif

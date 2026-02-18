@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>600</height>
+    <width>630</width>
+    <height>650</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -139,6 +139,32 @@
         <property name="text">
          <string/>
         </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>WIndow drag mode</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QComboBox" name="windowDragModeCombo">
+        <item>
+         <property name="text">
+          <string>Drag from titlebar only</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Drag from TItlebar, Menubars or Toolbars</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Drag from all empty areas</string>
+         </property>
+        </item>
        </widget>
       </item>
      </layout>

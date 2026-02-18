@@ -47,6 +47,8 @@ add_library(LilacStyle SHARED
     src/blur_manager.cpp
     src/animation_manager.cpp
     src/animation_manager.h
+    src/window_manager.cpp
+    src/window_manager.h
     src/utils/state.h
     src/utils/slider_focus_frame.cpp
     src/utils/slider_focus_frame.h

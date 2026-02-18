@@ -76,5 +76,17 @@
             </tooltip>
             <default>false</default>
         </entry>
+        <entry name="WindowDragMode" type="Enum">
+            <label>From what areas to allow dragging windows</label>
+            <tooltip>
+
+            </tooltip>
+            <choices>
+                <choice name="None" />
+                <choice name="ToolbarOnly" />
+                <choice name="Everywhere" />
+            </choices>
+            <default>1</default> <!-- ToolbarOnly -->
+        </entry>
     </group>
 </kcfg>

@@ -2068,7 +2068,11 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
 }
 
 void Style::polish(QWidget* widget) {
-    SuperStyle::polish(widget);
+    if (!widget)
+        return;
+
+    windowMgr.registerWidget(widget);
+
     if (widget->inherits("QAbstractButton") ||
         widget->inherits("QTabBar") ||
         widget->inherits("QScrollBar") ||
@@ -2126,6 +2130,7 @@ void Style::polish(QWidget* widget) {
         blurMgr.registerWidget(widget);
     }
 #endif
+    SuperStyle::polish(widget);
 }
 
 void Style::unpolish(QWidget* widget) {
