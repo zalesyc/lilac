@@ -494,7 +494,7 @@ QColor mixAtContrast(const QColor& background, const QColor& foreground, const q
     return QColor(qBound(0, qRound(background.red() * bgContrast + foreground.red() * contrast), 255),
                   qBound(0, qRound(background.green() * bgContrast + foreground.green() * contrast), 255),
                   qBound(0, qRound(background.blue() * bgContrast + foreground.blue() * contrast), 255),
-                  qBound(0, qRound(background.alpha() * bgContrast + foreground.alphaF() * contrast), 255));
+                  qBound(0, qRound(background.alpha() * bgContrast + foreground.alpha() * contrast), 255));
 }
 
 }  // namespace Lilac
