@@ -44,7 +44,7 @@ This file is taken from the Breeze project
 #include "config.h"
 #include "window_manager.h"
 
-#if LILAC_HAVE_QTQUICK
+#if HAS_QTQUICK
 // needed to enable dragging from QQuickWindows
 #include <QQuickRenderControl>
 #include <QQuickWindow>
@@ -156,7 +156,7 @@ void WindowManager::registerWidget(QWidget* widget) {
     }
 }
 
-#if LILAC_HAVE_QTQUICK
+#if HAS_QTQUICK
 //_____________________________________________________________
 void WindowManager::registerQuickItem(QQuickItem* item) {
     if (!item) {
@@ -223,7 +223,7 @@ bool WindowManager::eventFilter(QObject* object, QEvent* event) {
 
         case QEvent::MouseMove:
             if (object == _target.data()
-#if LILAC_HAVE_QTQUICK
+#if HAS_QTQUICK
                 || object == _quickTarget.data()
 #endif
             ) {
@@ -233,7 +233,7 @@ bool WindowManager::eventFilter(QObject* object, QEvent* event) {
 
         case QEvent::MouseButtonRelease:
             if (_target
-#if LILAC_HAVE_QTQUICK
+#if HAS_QTQUICK
                 || _quickTarget
 #endif
             ) {
@@ -256,7 +256,7 @@ void WindowManager::timerEvent(QTimerEvent* event) {
         if (_target) {
             startDrag(_target.data()->window()->windowHandle());
         }
-#if LILAC_HAVE_QTQUICK
+#if HAS_QTQUICK
         else if (_quickTarget) {
             _quickTarget.data()->ungrabMouse();
             startDrag(_quickTarget.data()->window());
@@ -297,18 +297,13 @@ bool WindowManager::mousePressEvent(QObject* object, QEvent* event) {
         setLocked(true);
     }
 
-#if LILAC_HAVE_QTQUICK
+#if HAS_QTQUICK
     // check QQuickItem - we can immediately start drag, because QQuickWindow's contentItem
     // only receives mouse events that weren't handled by children
     if (auto item = qobject_cast<QQuickItem*>(object)) {
         _quickTarget = item;
         _dragPoint = mouseEvent->pos();
-        _globalDragPoint =
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-            mouseEvent->globalPosition().toPoint();
-#else
-            mouseEvent->globalPos();
-#endif
+        _globalDragPoint = mouseEvent->globalPosition().toPoint();
 
         if (_dragTimer.isActive()) {
             _dragTimer.stop();
@@ -343,12 +338,7 @@ bool WindowManager::mousePressEvent(QObject* object, QEvent* event) {
     // save target and drag point
     _target = widget;
     _dragPoint = position;
-    _globalDragPoint =
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        mouseEvent->globalPosition().toPoint();
-#else
-        mouseEvent->globalPos();
-#endif
+    _globalDragPoint = mouseEvent->globalPosition().toPoint();
     _dragAboutToStart = true;
 
     // send a move event to the current child with same position
@@ -361,9 +351,7 @@ bool WindowManager::mousePressEvent(QObject* object, QEvent* event) {
     }
     QMouseEvent localMouseEvent(QEvent::MouseMove,
                                 localPoint,
-#if QT_VERSION >= QT_VERSION_CHECK(6, 4, 0)
                                 QCursor::pos(),
-#endif
                                 Qt::NoButton,
                                 Qt::LeftButton,
                                 Qt::NoModifier);
@@ -388,12 +376,8 @@ bool WindowManager::mouseMoveEvent(QObject* object, QEvent* event) {
     if (mouseEvent->source() != Qt::MouseEventNotSynthesized) {
         return false;
     }
-    auto eventPos =
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        mouseEvent->globalPosition().toPoint();
-#else
-        mouseEvent->globalPos();
-#endif
+    auto eventPos = mouseEvent->globalPosition().toPoint();
+
     if (!_dragInProgress) {
         if (_dragAboutToStart) {
             if (mouseEvent->pos() == _dragPoint) {
@@ -729,7 +713,7 @@ bool WindowManager::canDrag(QWidget* widget, QWidget* child, const QPoint& posit
 //____________________________________________________________
 void WindowManager::resetDrag() {
     _target.clear();
-#if LILAC_HAVE_QTQUICK
+#if HAS_QTQUICK
     _quickTarget.clear();
 #endif
     if (_dragTimer.isActive()) {
@@ -750,7 +734,7 @@ void WindowManager::startDrag(QWindow* window) {
         return;
     }
 
-#if LILAC_HAVE_QTQUICK
+#if HAS_QTQUICK
     if (_quickTarget) {
         if (QQuickWindow* qw = qobject_cast<QQuickWindow*>(window)) {
             QWindow* renderWindow = QQuickRenderControl::renderWindowFor(qw);

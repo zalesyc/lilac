@@ -13,6 +13,10 @@
 #include <QStyleFactory>
 #include <QtMath>
 
+#if HAS_QTQUICK
+#include <QQuickItem>
+#endif
+
 #include "animation_manager.h"
 #include "colors.h"
 #include "style.h"
@@ -31,6 +35,8 @@ Style::~Style() {
 
 void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptionComplex* opt, QPainter* p, const QWidget* widget) const {
     Lilac::State state(opt->state);  // this had to be defined as Lilac::State because just State would conflict with State from QStyle
+    installOnQuickItems(opt->styleObject);
+
     switch (control) {
         case CC_ScrollBar:
             if (const auto* bar = qstyleoption_cast<const QStyleOptionSlider*>(opt)) {
@@ -445,6 +451,8 @@ void Style::drawComplexControl(QStyle::ComplexControl control, const QStyleOptio
 
 void Style::drawControl(QStyle::ControlElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget) const {
     Lilac::State state(opt->state);
+    installOnQuickItems(opt->styleObject);
+
 #if HAS_KSTYLE
     // kstyle_CE_CapacityBar is not part of QStyle::ControlElement, but is acquired from kstyle, so it cannot be used in the switch
     if (kstyle_CE_CapacityBar && element == kstyle_CE_CapacityBar) {
@@ -2134,6 +2142,8 @@ void Style::polish(QWidget* widget) {
 }
 
 void Style::unpolish(QWidget* widget) {
+    windowMgr.unregisterWidget(widget);
+
     if (widget->inherits("QAbstractButton") ||
         widget->inherits("QTabBar") ||
         widget->inherits("QScrollBar") ||
@@ -3839,6 +3849,14 @@ void Style::drawDropShadow(QPainter* p, const QRectF& rect, const qreal cornerRa
     p->fillRect(centerRect, color);
 
     p->restore();
+}
+
+inline void Style::installOnQuickItems(QObject* object) const {
+#if HAS_QTQUICK
+    if (auto quickItem = qobject_cast<QQuickItem*>(object)) {
+        windowMgr.registerQuickItem(quickItem);
+    }
+#endif
 }
 
 }  // namespace Lilac

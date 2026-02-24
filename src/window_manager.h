@@ -19,7 +19,7 @@ This file is taken from the Breeze project
 #include <QString>
 #include <QWidget>
 
-#if LILAC_HAVE_QTQUICK
+#if HAS_QTQUICK
 #include <QQuickItem>
 #endif
 
@@ -42,7 +42,7 @@ class WindowManager : public QObject {
     //* register widget
     void registerWidget(QWidget*);
 
-#if LILAC_HAVE_QTQUICK
+#if HAS_QTQUICK
     //* register quick item
     void registerQuickItem(QQuickItem*);
 #endif
@@ -237,8 +237,8 @@ class WindowManager : public QObject {
     /** Weak pointer is used in case the target gets deleted while drag is in progress */
     QPointer<QWidget> _target;
 
-#if LILAC_HAVE_QTQUICK
-    WeakPointer<QQuickItem> _quickTarget;
+#if HAS_QTQUICK
+    QPointer<QQuickItem> _quickTarget;
 #endif
 
     //* true if drag is about to start
