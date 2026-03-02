@@ -16,6 +16,9 @@ class Config : public QObject {
     enum TabContentAlignment { Start,
                                IconStartTextCenter,
                                Center };
+    enum WindowDragMode { None,
+                          ToolbarOnly,
+                          Everywhere };
 
    public:
     Config(const Config&) = delete;
@@ -53,6 +56,7 @@ class Config : public QObject {
      */
    public:
     int cornerRadius = 12;  // for the elements that dont have their own corner radius
+    WindowDragMode windowDragMode = ToolbarOnly;
 
     static constexpr int smallArrowSize = 10;
     static constexpr int dolphinUrlNavigatorArrowSize = 12;  // the maximal size of the arrows in the dolphin url navigator bar, at the top, workaround - beacuse without this limit, they were too big

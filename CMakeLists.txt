@@ -9,6 +9,7 @@ option(NO_KSTYLE "Whether to not use KStyle" OFF)
 option(NO_KCOLORSCHEME "Whether to not use KColorScheme" OFF)
 option(NO_SETTINGS "Whether to not use KConfig and thus disabling runtime settings" OFF)
 option(NO_KWINDOWSYSTEM "Whether to not use KWindowSystem and thus disabling the ability to blur behind windows on supported platforms" OFF)
+option(NO_QTQUICK "Whether to not use QtQuick, disabling some integrations with QtQuick applications" OFF)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Gui)
 
@@ -26,7 +27,11 @@ if(NOT NO_SETTINGS)
 endif()
 
 if(NOT NO_KWINDOWSYSTEM)
-    find_package(KF6WindowSystem  "6.5.0...<7.0.0" REQUIRED)
+    find_package(KF6WindowSystem "6.5.0...<7.0.0" REQUIRED)
+endif()
+
+if(NOT NO_QTQUICK)
+    find_package(Qt6 REQUIRED COMPONENTS Quick)
 endif()
 
 set(CMAKE_AUTOUIC ON)
@@ -47,6 +52,8 @@ add_library(LilacStyle SHARED
     src/blur_manager.cpp
     src/animation_manager.cpp
     src/animation_manager.h
+    src/window_manager.cpp
+    src/window_manager.h
     src/utils/state.h
     src/utils/slider_focus_frame.cpp
     src/utils/slider_focus_frame.h
@@ -134,6 +141,13 @@ if (NOT NO_KWINDOWSYSTEM)
     target_compile_definitions(LilacStyle PRIVATE HAS_KWINDOWSYSTEM=1)
 else()
     target_compile_definitions(LilacStyle PRIVATE HAS_KWINDOWSYSTEM=0)
+endif()
+
+if (NOT NO_QTQUICK)
+    target_link_libraries(LilacStyle PRIVATE Qt6::Quick)
+    target_compile_definitions(LilacStyle PRIVATE HAS_QTQUICK=1)
+else()
+    target_compile_definitions(LilacStyle PRIVATE HAS_QTQUICK=0)
 endif()
 
 target_compile_definitions(LilacStyle PRIVATE LILAC_LIBRARY)

@@ -32,6 +32,7 @@ SettingsApp::SettingsApp(QWidget* parent)
     connect(ui->tabAlignmentComboBox, &QComboBox::currentIndexChanged, this, &SettingsApp::widgetChanged);
     connect(ui->groupBoxAltStyleCheck, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
     connect(ui->menuOpacitySlider, &QSlider::valueChanged, this, [this](int value) { ui->blurBehindMenusCheck->setEnabled(HAS_KWINDOWSYSTEM && value < 255); });
+    connect(ui->windowDragModeCombo, &QComboBox::currentIndexChanged, this, &SettingsApp::widgetChanged);
 
     loadFromSettings();
 }
@@ -53,6 +54,7 @@ void SettingsApp::save() {
     settings->setTabBarTabContentAlignment(ui->tabAlignmentComboBox->currentIndex());
     settings->setMenuDrawOutline(ui->menuOutlineCheck->isChecked());
     settings->setGroupBoxAltStyle(ui->groupBoxAltStyleCheck->isChecked());
+    settings->setWindowDragMode(ui->windowDragModeCombo->currentIndex());
     settings->save();
 #if HAS_DBUS
     auto msg = QDBusMessage::createSignal(
@@ -75,6 +77,7 @@ void SettingsApp::loadFromSettings() {
     ui->tabAlignmentComboBox->setCurrentIndex(settings->tabBarTabContentAlignment());
     ui->menuOutlineCheck->setChecked(settings->menuDrawOutline());
     ui->groupBoxAltStyleCheck->setChecked(settings->groupBoxAltStyle());
+    ui->windowDragModeCombo->setCurrentIndex(settings->windowDragMode());
 }
 
 SettingsApp::~SettingsApp() {

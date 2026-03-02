@@ -44,13 +44,21 @@ When enabled, two additional targets will be created, a standalone settings app 
 - **Available options**:
   `-DNO_SETTINGS=ON`: Disable settings
 
-#### KWindow System
+#### KWindowSystem
 
 [KWindowSystem](https://api.kde.org/kwindowsystem-index.html) is a library abstracting the window system. This style uses KWindowSystem to create a blur behind menus. Note that your system may not support this way of blurring behind windows/menus.
 
 - **Default behavior**: `OFF` (i.e. KWindowSystem will be included)
 - **Available options**:
   `-DNO_KWINDOWSYSTEM=ON`: Disable KWindowSystem
+
+#### Qt Quick
+
+[Qt Quick](https://doc.qt.io/qt-6/qtquick-index.html) is part of Qt, used to interface between C++ and Qt Quick applications. This style uses this library to allow Qt Quick windows to be dragged by their contents.
+
+- **Default behavior**: `OFF` (i.e. Qt Quick will be included)
+- **Available options**:
+  `-DNO_QTQUICK=ON`: Disable Qt Quick
 
 ### Installation steps:
 
@@ -63,30 +71,30 @@ When enabled, two additional targets will be created, a standalone settings app 
     _Build:_ `git` `cmake` `gcc-c++`
 
     _Run:_ <br>
-    `cmake(Qt6Widgets)` `cmake(Qt6Gui)`, KStyle:&nbsp;`cmake(KF6FrameworkIntegration)`, KColorScheme:&nbsp;`cmake(KF6ColorScheme)`, Settings:&nbsp;`cmake(KF6Config)` `cmake(Qt6DBus)`, KWindowSystem:&nbsp;`cmake(KF6WindowSystem)`
+    `cmake(Qt6Widgets)` `cmake(Qt6Gui)`, KStyle:&nbsp;`cmake(KF6FrameworkIntegration)`, KColorScheme:&nbsp;`cmake(KF6ColorScheme)`, Settings:&nbsp;`cmake(KF6Config)` `cmake(Qt6DBus)`, KWindowSystem:&nbsp;`cmake(KF6WindowSystem)`, Qt Quick:&nbsp;`cmake(Qt6Quick)`
 
     **OpenSUSE:**
 
     ```shell
-    sudo zypper in git cmake gcc-c++ 'cmake(Qt6Widgets)' 'cmake(Qt6Gui)' 'cmake(KF6FrameworkIntegration)' 'cmake(KF6ColorScheme)' 'cmake(KF6Config)' 'cmake(Qt6DBus)' 'cmake(KF6WindowSystem)'
+    sudo zypper in git cmake gcc-c++ 'cmake(Qt6Widgets)' 'cmake(Qt6Gui)' 'cmake(KF6FrameworkIntegration)' 'cmake(KF6ColorScheme)' 'cmake(KF6Config)' 'cmake(Qt6DBus)' 'cmake(KF6WindowSystem)' 'cmake(Qt6Quick)'
     ```
 
     **Fedora:**
 
     ```shell
-    sudo dnf install git cmake gcc-c++ 'cmake(Qt6Widgets)' 'cmake(Qt6Gui)' 'cmake(KF6FrameworkIntegration)' 'cmake(KF6ColorScheme)' 'cmake(KF6Config)' 'cmake(Qt6DBus)' 'cmake(KF6WindowSystem)'
+    sudo dnf install git cmake gcc-c++ 'cmake(Qt6Widgets)' 'cmake(Qt6Gui)' 'cmake(KF6FrameworkIntegration)' 'cmake(KF6ColorScheme)' 'cmake(KF6Config)' 'cmake(Qt6DBus)' 'cmake(KF6WindowSystem)' 'cmake(Qt6Quick)'
     ```
 
     **Ubuntu/Debian:**
 
     ```shell
-    sudo apt install git cmake g++ qt6-base-dev libkf6style-dev libkf6colorscheme-dev libkf6config-dev libkf6windowsystem-dev
+    sudo apt install git cmake g++ qt6-base-dev libkf6style-dev libkf6colorscheme-dev libkf6config-dev libkf6windowsystem-dev qt6-declarative-dev
     ```
 
     **Arch:**
 
     ```shell
-    sudo pacman -Sy git cmake gcc qt6-base frameworkintegration kcolorscheme kconfig kwindowsystem
+    sudo pacman -Sy git cmake gcc qt6-base frameworkintegration kcolorscheme kconfig kwindowsystem qt6-declarative
     ```
 
 2.  **Clone the repository**
