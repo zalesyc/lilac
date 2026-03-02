@@ -69,8 +69,7 @@ void Config::onSettingsChanged() {
     groupBoxAltStyle = settings->groupBoxAltStyle();
     windowDragMode = static_cast<WindowDragMode>(settings->windowDragMode());
 
-    emit
-    configChanged();
+    emit configChanged();
 }
 #endif
 

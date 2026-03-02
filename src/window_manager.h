@@ -5,7 +5,7 @@
  */
 
 /*
-This file is taken from the Breeze project
+This file is originally from the Breeze style
 */
 
 #pragma once

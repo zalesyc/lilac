@@ -79,7 +79,7 @@
         <entry name="WindowDragMode" type="Enum">
             <label>From what areas to allow dragging windows</label>
             <tooltip>
-
+                This style supports dragging windows by their contents, by which parts of the windows should it be possible to drag them. 
             </tooltip>
             <choices>
                 <choice name="None" />
