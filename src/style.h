@@ -42,6 +42,7 @@ class Style : public SuperStyle {
     void drawControl(QStyle::ControlElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget = nullptr) const override;
     void drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* opt, QPainter* p, const QWidget* widget = nullptr) const override;
 
+    void polish(QApplication* app) override;
     void polish(QWidget* widget) override;
     void unpolish(QWidget* widget) override;
 
@@ -61,6 +62,8 @@ class Style : public SuperStyle {
 #if HAS_KWINDOWSYSTEM
     mutable Lilac::BlurManager blurMgr;
 #endif
+    QSet<QWidget*> translucentWidgets;
+    bool isWindowTransparent = false;
 
    private:
     struct MenuItemText {
@@ -76,6 +79,7 @@ class Style : public SuperStyle {
     QRect tabBarTabIconRect(const QStyleOptionTab* tab, const Lilac::State& state, const QRect& textRect) const;
     static void drawDropShadow(QPainter* p, const QRectF& rect, const qreal cornerRadius, const qreal blurRadius, const QPointF offset, const QColor color);
     inline void installOnQuickItems(QObject* object) const;  // does something only if HAS_QTQUICK
+    void setSurfaceFormat(QWidget* w) const;
 
    private:
 #if HAS_KSTYLE

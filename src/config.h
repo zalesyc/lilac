@@ -58,6 +58,10 @@ class Config : public QObject {
     int cornerRadius = 12;  // for the elements that dont have their own corner radius
     WindowDragMode windowDragMode = ToolbarOnly;
 
+    quint8 windowOpacity = 255;
+    bool blurBehindWindows = true;
+    QStringList transparentWindowBlackList;
+
     static constexpr int smallArrowSize = 10;
     static constexpr int dolphinUrlNavigatorArrowSize = 12;  // the maximal size of the arrows in the dolphin url navigator bar, at the top, workaround - beacuse without this limit, they were too big
 

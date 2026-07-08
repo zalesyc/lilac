@@ -31,8 +31,14 @@ SettingsApp::SettingsApp(QWidget* parent)
     connect(ui->menuOutlineCheck, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
     connect(ui->tabAlignmentComboBox, &QComboBox::currentIndexChanged, this, &SettingsApp::widgetChanged);
     connect(ui->groupBoxAltStyleCheck, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
-    connect(ui->menuOpacitySlider, &QSlider::valueChanged, this, [this](int value) { ui->blurBehindMenusCheck->setEnabled(HAS_KWINDOWSYSTEM && value < 255); });
+    connect(ui->menuOpacitySlider, &QSlider::valueChanged, this, [this](int value) { ui->blurBehindMenusCheck->setEnabled(HAS_KWINDOWSYSTEM && value < 255); widgetChanged(); });
     connect(ui->windowDragModeCombo, &QComboBox::currentIndexChanged, this, &SettingsApp::widgetChanged);
+    connect(ui->windowOpacitySlider, &QSlider::valueChanged, this, [this](int value) {
+         ui->blurBehindWindowsCheckBox->setEnabled(HAS_KWINDOWSYSTEM && value < 255);
+         ui->windowOpacityBlackListLineEdit->setEnabled(HAS_KWINDOWSYSTEM && value < 255);
+         widgetChanged(); });
+    connect(ui->blurBehindWindowsCheckBox, &QCheckBox::clicked, this, &SettingsApp::widgetChanged);
+    connect(ui->windowOpacityBlackListLineEdit, &QLineEdit::textChanged, this, &SettingsApp::widgetChanged);
 
     loadFromSettings();
 }
@@ -55,7 +61,12 @@ void SettingsApp::save() {
     settings->setMenuDrawOutline(ui->menuOutlineCheck->isChecked());
     settings->setGroupBoxAltStyle(ui->groupBoxAltStyleCheck->isChecked());
     settings->setWindowDragMode(ui->windowDragModeCombo->currentIndex());
+    settings->setWindowOpacity(ui->windowOpacitySlider->value());
+    settings->setWindowBlurBehind(ui->blurBehindWindowsCheckBox->isChecked());
+    settings->setWindowTransparencyBlacklist(ui->windowOpacityBlackListLineEdit->text().split(';', Qt::SkipEmptyParts));
+
     settings->save();
+    
 #if HAS_DBUS
     auto msg = QDBusMessage::createSignal(
         "/LilacStyle",
@@ -78,6 +89,9 @@ void SettingsApp::loadFromSettings() {
     ui->menuOutlineCheck->setChecked(settings->menuDrawOutline());
     ui->groupBoxAltStyleCheck->setChecked(settings->groupBoxAltStyle());
     ui->windowDragModeCombo->setCurrentIndex(settings->windowDragMode());
+    ui->windowOpacitySlider->setValue(settings->windowOpacity());
+    ui->blurBehindWindowsCheckBox->setChecked(settings->windowBlurBehind());
+    ui->windowOpacityBlackListLineEdit->setText(settings->windowTransparencyBlacklist().join(';'));
 }
 
 SettingsApp::~SettingsApp() {

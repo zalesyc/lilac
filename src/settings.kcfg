@@ -88,5 +88,29 @@
             </choices>
             <default>1</default> <!-- ToolbarOnly -->
         </entry>
+        <entry name="WindowOpacity" type="Int">
+            <label>Opacity of the window background; value between 0 and 255, 0: transparent; 255: opaque.</label>
+            <default>255</default>
+            <min>0</min>
+            <max>255</max>
+        </entry>
+        <entry name="WindowBlurBehind" type="Bool">
+            <label>Whether to blur behind the transparent windows.</label>
+            <tooltip>
+            For blur to show, the window opacity must be set to not fully opaque. It's also only supported on X11 and Wayland compositors that support the kde-blur or ext-background-effect-v1 protocols.
+
+            If your compositor doesn't support this, you might still be able to get a blurred background by creating custom window rule.
+            </tooltip>
+            <default>true</default>
+        </entry>
+        <entry name="WindowTransparencyBlacklist" type="StringList">
+            <label>Whether to blur behind the transparent windows.</label>
+            <tooltip>
+            For blur to show, the window opacity must be set to not fully opaque. It's also only supported on X11 and Wayland compositors that support the kde-blur or ext-background-effect-v1 protocols.
+
+            If your compositor doesn't support this, you might still be able to get a blurred background by creating custom window rule.
+            </tooltip>
+            <default>soffice.bin,konsole</default>
+        </entry>
     </group>
 </kcfg>

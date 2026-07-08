@@ -5,6 +5,9 @@
 #include <QDockWidget>
 #include <QFocusFrame>
 #include <QGraphicsDropShadowEffect>
+#include <QLabel>
+#include <QMainWindow>
+#include <QMdiSubWindow>
 #include <QMenu>
 #include <QPaintEvent>
 #include <QPainter>
@@ -2074,6 +2077,22 @@ void Style::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* 
     }
     SuperStyle::drawPrimitive(element, opt, p, widget);
 }
+void Style::polish(QApplication* app) {
+    isWindowTransparent = config.windowOpacity < 255;
+    const QString appName = app->applicationName();
+    if (appName == "Qt-subapplication" ||
+        appName == "plasma" ||
+        appName.startsWith("plasma-") ||
+        appName == "plasmashell" ||
+        appName == "kded4" ||
+        config.transparentWindowBlackList.contains(appName, Qt::CaseInsensitive)) {
+        isWindowTransparent = false;
+    }
+    QPalette pal = app->palette();
+    app->setPalette(pal);
+
+    SuperStyle::polish(app);
+}
 
 void Style::polish(QWidget* widget) {
     if (!widget)
@@ -2090,11 +2109,15 @@ void Style::polish(QWidget* widget) {
         widget->inherits("QLineEdit")) {
         widget->setAttribute(Qt::WA_Hover, true);
     }
+
     if (widget->inherits("QScrollBar")) {
         widget->setAttribute(Qt::WA_OpaquePaintEvent, false);
 
     } else if (QMenu* menu = qobject_cast<QMenu*>(widget)) {
         menu->setAttribute(Qt::WA_TranslucentBackground);
+#if HAS_KWINDOWSYSTEM
+        blurMgr.registerWidget(menu);
+#endif
 
     } else if (widget->inherits("QDockWidget") ||
                widget->inherits("QTipLabel")) {
@@ -2133,11 +2156,59 @@ void Style::polish(QWidget* widget) {
         }
     }
 
+    /*
+     * This code block is taken from the Darkly project by Bali10050 and modified to fit this project
+     *
+     * We assume that compositing is enabled
+     */
+    // translucent (window) color scheme support
+    switch (widget->windowFlags() & Qt::WindowType_Mask) {
+        case Qt::Window:
+        case Qt::Dialog:
+        case Qt::Popup:
+        case Qt::ToolTip:
+        case Qt::Sheet: {
+            if (!isWindowTransparent ||
+                qobject_cast<QMenu*>(widget) ||
+                widget->inherits("QTipLabel") ||
+                qobject_cast<QLabel*>(widget) ||                  // a floating label, as in Filelight
+                widget->inherits("QComboBoxPrivateContainer") ||  // at most, a menu
+                /* like Vokoscreen's (old) QvkRegionChoise */
+                (widget->windowFlags().testFlag(Qt::WindowStaysOnTopHint) && widget->testAttribute(Qt::WA_NoSystemBackground) && ((widget->windowFlags() & Qt::WindowType_Mask) == Qt::ToolTip || (widget->windowState() & Qt::WindowFullScreen))) ||
+                !widget->isWindow() ||
+                widget->testAttribute(Qt::WA_PaintOnScreen) ||
+                widget->testAttribute(Qt::WA_X11NetWmWindowTypeDesktop) ||
+                widget->inherits("KScreenSaver") ||
+                widget->inherits("QSplashScreen") ||
+                widget->windowFlags().testFlag(Qt::FramelessWindowHint))
+                break;
+
+            // make window translucent
+            if (!widget->testAttribute(Qt::WA_TranslucentBackground))
+                widget->setAttribute(Qt::WA_TranslucentBackground);
+
+            if (!widget->testAttribute(Qt::WA_StyledBackground))
+                widget->setAttribute(Qt::WA_StyledBackground);
+
+            // setting Qt::WA_TranslucentBackground enables Qt::WA_NoSystemBackground unset here to stop flickering during repaint events on resizing
+            // TODO: implement
+            // if (config.windowOpacity < 100 && widget->testAttribute(Qt::WA_NoSystemBackground))
+            //     widget->setAttribute(Qt::WA_NoSystemBackground, false);
+
+            translucentWidgets.insert(widget);
+
+            // paint the background in event filter
+            widget->removeEventFilter(this);
+            widget->installEventFilter(this);
+
 #if HAS_KWINDOWSYSTEM
-    if (BlurManager::shouldBlurBehindWidget(widget)) {
-        blurMgr.registerWidget(widget);
-    }
+            if (config.blurBehindWindows) {
+                blurMgr.registerWidget(widget);
+            }
 #endif
+        }
+    }
+
     SuperStyle::polish(widget);
 }
 
@@ -2299,6 +2370,7 @@ int Style::pixelMetric(QStyle::PixelMetric m, const QStyleOption* opt, const QWi
 }
 
 int Style::styleHint(QStyle::StyleHint hint, const QStyleOption* option, const QWidget* widget, QStyleHintReturn* returnData) const {
+    setSurfaceFormat(const_cast<QWidget*>(widget));
     switch (hint) {
         case SH_UnderlineShortcut:
             return false;
@@ -3597,6 +3669,24 @@ bool Style::eventFilter(QObject* object, QEvent* event) {
         p.end();
         return true;
     }
+
+    if (isWindowTransparent && eventType == QEvent::Paint && widget->isWindow() && widget->testAttribute(Qt::WA_StyledBackground) && widget->testAttribute(Qt::WA_TranslucentBackground)) {
+        switch (widget->windowFlags() & Qt::WindowType_Mask) {
+            case Qt::Window:
+            case Qt::Dialog:
+            case Qt::Sheet: {
+                if (qobject_cast<QMenu*>(widget))
+                    break;
+                if (!translucentWidgets.contains(widget))
+                    break;
+                QPainter p(widget);
+                p.setClipRegion(static_cast<QPaintEvent*>(event)->region());
+                auto color = widget->palette().window().color();
+                color.setAlpha(config.windowOpacity);
+                p.fillRect(widget->rect(), color);
+            }
+        }
+    }
     return SuperStyle::eventFilter(object, event);
 }
 
@@ -3857,6 +3947,81 @@ inline void Style::installOnQuickItems(QObject* object) const {
         windowMgr.registerQuickItem(quickItem);
     }
 #endif
+}
+
+/*
+ * This function is taken from the Darkly project by Bali10050 and modified
+ *
+ * We assume that compositing is enabled
+ */
+/*
+   To make Qt windows translucent, we should set the surface format of
+   their native handles BEFORE they're created but Qt5 windows are
+   often polished AFTER they're created, so that setting the attribute
+   "WA_TranslucentBackground" in "Style::polish()" would have no effect.
+
+   Early creation of native handles could have unpredictable side effects,
+   especially for menus. However, it seems that setting of the attribute
+   "WA_TranslucentBackground" in an early stage -- before the widget is
+   created -- sets the alpha buffer size to 8 safely and automatically.
+*/
+void Style::setSurfaceFormat(QWidget* widget) const {
+    if (!isWindowTransparent ||
+        !widget ||
+        !widget->isWindow() ||
+        widget->testAttribute(Qt::WA_WState_Created) ||
+        widget->testAttribute(Qt::WA_TranslucentBackground) ||
+        widget->testAttribute(Qt::WA_NoSystemBackground) ||
+        widget->autoFillBackground() ||  // video players like kaffeine
+        translucentWidgets.contains(widget) ||
+        widget->inherits("QTipLabel") ||
+        qobject_cast<QMenu*>(widget)) {
+        return;
+    }
+
+    switch (widget->windowFlags() & Qt::WindowType_Mask) {
+        case Qt::Window:
+        case Qt::Dialog:
+        case Qt::Popup:
+        case Qt::Sheet:
+            break;
+        default:
+            return;
+    }
+    if (widget->windowHandle()                                                                                                                                         // too late
+        || widget->windowFlags().testFlag(Qt::FramelessWindowHint) || widget->windowFlags().testFlag(Qt::X11BypassWindowManagerHint) || qobject_cast<QFrame*>(widget)  // a floating frame, as in Filelight
+        || /* widget->windowType() == Qt::Desktop || */ widget->testAttribute(Qt::WA_PaintOnScreen) || widget->testAttribute(Qt::WA_X11NetWmWindowTypeDesktop) || widget->inherits("KScreenSaver") || widget->inherits("QSplashScreen"))
+        return;
+
+    QWidget* p = widget->parentWidget();
+    if (p && (                                   /*!p->testAttribute(Qt::WA_WState_Created) // FIXME: too soon?
+                                               ||*/
+              qobject_cast<QMdiSubWindow*>(p)))  // as in linguist
+    {
+        return;
+    }
+
+    if (QMainWindow* mw = qobject_cast<QMainWindow*>(widget)) {
+        /* it's possible that a main window is inside another one
+            (like FormPreviewView in linguist), in which case,
+            translucency could cause weird effects */
+        if (p)
+            return;
+        /* stylesheets with background can cause total transparency */
+        QString ss = mw->styleSheet();
+        if (!ss.isEmpty() && ss.contains("background"))
+            return;
+        if (QWidget* cw = mw->centralWidget()) {
+            if (cw->autoFillBackground())
+                return;
+            ss = cw->styleSheet();
+            if (!ss.isEmpty() && ss.contains("background"))
+                return;  // as in smplayer
+        }
+        // }
+    }
+
+    widget->setAttribute(Qt::WA_TranslucentBackground);
 }
 
 }  // namespace Lilac

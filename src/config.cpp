@@ -68,6 +68,9 @@ void Config::onSettingsChanged() {
     menuDrawOutline = settings->menuDrawOutline();
     groupBoxAltStyle = settings->groupBoxAltStyle();
     windowDragMode = static_cast<WindowDragMode>(settings->windowDragMode());
+    windowOpacity = settings->windowOpacity();
+    blurBehindWindows = settings->windowBlurBehind();
+    transparentWindowBlackList = settings->windowTransparencyBlacklist();
 
     emit configChanged();
 }

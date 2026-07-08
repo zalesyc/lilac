@@ -1,6 +1,7 @@
 #if HAS_KWINDOWSYSTEM
 
 #include <KWindowEffects>
+#include <QMenu>
 
 #include "blur_manager.h"
 #include "config.h"
@@ -63,10 +64,10 @@ void BlurManager::reapplyBlur() {
 
 void BlurManager::enableBlur(QWidget* widget) {
     const Config& config = Config::get();
-
-    if (config.menuBlurBehind &&
-        config.menuBgOpacity != 255 &&
-        (widget->testAttribute(Qt::WA_WState_Created) || widget->internalWinId())) {
+    if (qobject_cast<QMenu*>(widget) && (!config.menuBlurBehind || config.menuBgOpacity >= 255)) {
+        return;
+    }
+    if (widget->testAttribute(Qt::WA_WState_Created) || widget->internalWinId()) {
         widget->winId();
         KWindowEffects::enableBlurBehind(widget->windowHandle(), true, getBlurRegion(widget));
         if (widget->isVisible()) {
